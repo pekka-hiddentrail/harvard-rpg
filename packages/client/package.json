@@ -1,0 +1,12 @@
+{
+  "name": "@harvard/client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/main.tsx",
+  "comment": "No dependency on @harvard/engine, deliberately. The client holds zero game rules — it asks the server what a build costs (ARCHITECTURE §4).",
+  "dependencies": {
+    "ink": "^5.0.1",
+    "react": "^18.3.1"
+  }
+}
