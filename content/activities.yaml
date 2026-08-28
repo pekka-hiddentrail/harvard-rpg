@@ -1,0 +1,161 @@
+# What you can put in a band. GAME_DESIGN.md §3.1, §3.5.
+#
+# TIER 1. Deliberately small — twelve entries, no courses, no people. Lectures, sections and
+# arrangements are *calendar events* (§3.6) and arrive at Tier 2 and Tier 3; nothing here
+# needs to change when they do, because a class occupies bands the same way a gym session
+# does.
+#
+# Two things are worth reading before touching the numbers:
+#
+# `curve` is the spin-up rule (§3.1) and nothing else implements it. It lists hours banked
+# by duration — `curve[halves - 1]` — so its first entry is what a *half-band* of this
+# activity is worth. Study opens at 0.0 because the first half is spent finding the seat and
+# opening the notes; reading opens at full rate because the notes are already open. The
+# 1.5-band entry being ~1.7× the 1-band entry is the whole of "continuity beats duration",
+# and it is one number in one array rather than a mechanic.
+#
+# `allowedBands` is how an anchor names its drift (§3.5). Lunch lives in band 4 and may be
+# moved one band either way; the wakeup run is band 0 or it is not the wakeup run. Anything
+# with an empty list goes anywhere, which is what lets you convert a meal band to study and
+# let the gap clock charge you for it.
+
+version: 1
+
+activities:
+  # ── the anchors ──────────────────────────────────────────────────────────────────────
+  - id: run
+    name: Morning run
+    blurb: Down to the river and back. The Stress buffer you will want in November.
+    kind: exercise
+    minHalves: 2
+    maxHalves: 2
+    fixed: true
+    allowedBands: [0]
+    perBand: { energy: -1, stress: -4, condition: 3 }
+
+  - id: sleep_in
+    name: Sleep in
+    blurb: The run does not happen. Nothing bad happens today, either.
+    kind: rest
+    minHalves: 2
+    maxHalves: 2
+    allowedBands: [0]
+    perBand: { energy: 1, condition: -1 }
+
+  - id: breakfast
+    name: Breakfast
+    blurb: Shower, coffee, whoever else is up this early.
+    kind: meal
+    minHalves: 2
+    maxHalves: 2
+    allowedBands: [0, 1, 2]
+    food: meal
+    perBand: { energy: 0.5, stress: -1 }
+
+  - id: lunch
+    name: Lunch
+    blurb: Annenberg. The highest-value social band in the day, because it is where the
+      other bands get negotiated.
+    kind: meal
+    minHalves: 2
+    maxHalves: 2
+    allowedBands: [3, 4, 5]
+    food: meal
+    perBand: { energy: 0.5, stress: -1 }
+
+  - id: dinner
+    name: Dinner
+    blurb: Later, longer, and the table stays sat at.
+    kind: meal
+    minHalves: 2
+    maxHalves: 2
+    allowedBands: [7, 8, 9]
+    food: meal
+    perBand: { energy: 0.5, stress: -2 }
+
+  - id: eat_out
+    name: Eat out
+    blurb: A closed table — nobody wanders up, and the roster is fixed when you book it.
+      Expensive in exactly the currency this game is about.
+    kind: meal
+    minHalves: 3
+    maxHalves: 4
+    allowedBands: [7, 8, 9]
+    food: meal
+    perBand: { energy: 0.5, stress: -3 }
+
+  - id: snack
+    name: Snack
+    blurb: Grab-and-go. Buys you an afternoon, never a day.
+    kind: snack
+    minHalves: 1
+    maxHalves: 1
+    food: snack
+    perBand: { energy: 0.5, condition: -1.5 }
+
+  - id: sleep
+    name: Sleep
+    blurb: Ends the day. How much Stress it pays back depends on Condition.
+    kind: sleep
+    minHalves: 2
+    maxHalves: 4
+    allowedBands: [9, 10]
+    sleep: true
+
+  # ── the work ─────────────────────────────────────────────────────────────────────────
+  - id: study
+    name: Study
+    blurb: Problem sets, essays, the actual work. Costs a half-band to get into, and pays
+      the cheapest hour in the game once you are already in it.
+    kind: study
+    targets: subject
+    minHalves: 1
+    maxHalves: 6
+    # 0.5 band banks nothing · 1 band = 1.0 h · 1.5 bands = 1.7 h · then it flattens.
+    curve: [0.0, 1.0, 1.7, 2.3, 2.8, 3.2]
+    perBand: { energy: -1, stress: 2 }
+
+  - id: read
+    name: Reading
+    blurb: Assigned reading, notes already open. Usable in a leftover half at full rate,
+      and worth less per band than real work.
+    kind: study
+    targets: subject
+    minHalves: 1
+    maxHalves: 6
+    curve: [0.4, 0.8, 1.2, 1.5, 1.8, 2.0]
+    perBand: { energy: -0.5, stress: 1 }
+
+  # ── everything else ──────────────────────────────────────────────────────────────────
+  - id: gym
+    name: Gym
+    kind: exercise
+    minHalves: 2
+    maxHalves: 2
+    fixed: true
+    perBand: { energy: -2, stress: -6, condition: 4 }
+
+  - id: errand
+    name: Errands
+    blurb: Laundry, the post office, the walk to the Yard. Fits in a half-band because
+      there is nothing to get into.
+    kind: errand
+    minHalves: 1
+    maxHalves: 2
+    perBand: { energy: -0.5, stress: -1 }
+
+  - id: hang_out
+    name: Hang out
+    blurb: Nothing in particular, with people. Tier 3 makes this the good half of the game.
+    kind: social
+    minHalves: 1
+    maxHalves: 4
+    perBand: { energy: -0.5, stress: -4 }
+
+  - id: rest
+    name: Rest
+    blurb: Lie down and do nothing on purpose.
+    kind: rest
+    minHalves: 1
+    maxHalves: 4
+    perBand: { energy: 1.5, stress: -3 }

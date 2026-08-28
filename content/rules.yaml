@@ -12,6 +12,64 @@ creation:
   # the schedule validates, it does not generate.
   priceTolerance: 1
 
+# The day's numbers. GAME_DESIGN §3.1, §3.5, §8.
+#
+# TIER 1 PLACEHOLDER, in the same sense as `tagWeights` below: these are authored guesses
+# whose job is to be *falsified* by the balance bot (`npm run balance`), not settled truths.
+# Every one of them is a difficulty lever and every one is meant to move.
+day:
+  # Tier 1 plays one authored day. Move-in is Thu 26 Aug 2027 (§9.5), so this is the
+  # Monday after it. Tier 2's calendar deletes this field.
+  firstDay: "2027-08-30"
+
+  startEnergy: 8
+  startStress: 30
+  startCondition: 55
+
+  # You slept; you did not eat. Breakfast sits in band 1, so waking at a gap of 2 makes
+  # skipping breakfast cost the *morning* — which is the bands you were stealing.
+  startBandsSinceFood: 2
+
+  # A snack buys about two bands, and the next one buys half as many (§3.5). So living on
+  # them is possible — the system lets you — and the cost lands on Condition instead.
+  snackDefersBands: 2
+
+  # The gap clock, in bands elapsed since food, and the only thing that prices a meal.
+  # Normal spacing (breakfast 1 → lunch 4 → dinner 8) peaks at a gap of 4 and is clean.
+  # Skipping lunch means breakfast-to-dinner on nothing, and bands 6 and 7 pay for it.
+  hunger:
+    - { after: 5, yieldMult: 0.85, energy: -0.5 }
+    - { after: 7, yieldMult: 0.65, energy: -1.0 }
+    - { after: 9, yieldMult: 0.40, energy: -1.5 }
+
+  # Low energy is a yield penalty, not a hard stop. Nothing in this game forbids you.
+  fatigue:
+    - { atOrBelow: 1, yieldMult: 0.45 }
+    - { atOrBelow: 3, yieldMult: 0.70 }
+    - { atOrBelow: 5, yieldMult: 0.90 }
+
+  # Working the Night band is borrowing against tomorrow, and it is priced, not blocked.
+  night:
+    energyPerBand: -2
+    stressPerBand: 6
+
+  # Energy is meant to be tight: the routine roughly holds, and the ceiling strategy —
+  # every free band on study — drains. If nothing ever drains, the Night band is not a loan.
+  sleepEnergyPerBand: 7
+  # Scaled by Condition at resolution: rate = 0.5 + condition/100. This one line is why
+  # cutting the wakeup run is a loan against the rest of the term (§8, r9).
+  #
+  # Modest on purpose. Tier 1 has **no source of Stress** — §8 accrues it from deadlines,
+  # conflict and broken promises, and none of those exist until Tier 2 — so a generous
+  # recovery rate here just pins the meter at 0 and teaches the player nothing. Retune this
+  # against the balance bot when the calendar lands, not before.
+  sleepStressPerBand: 5
+
+  # Condition decays without maintenance, and gains taper as it rises (see day.ts). The
+  # balance bot found this on its first run: without either, every strategy sat at 97 and
+  # the slow axis was not slow. A daily run now settles Condition around 70.
+  conditionDailyDrift: -0.8
+
 # The seven closed subject tags (§4.1). Closed because ~120 course stubs carry them,
 # so an eighth means revisiting all of them.
 subjectTags: [math, stats, code, writing, reading, lab, discussion]

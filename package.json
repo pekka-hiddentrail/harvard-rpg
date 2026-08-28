@@ -11,6 +11,8 @@
   "scripts": {
     "test": "node --import tsx --test \"packages/*/test/*.test.ts\"",
     "server": "tsx packages/server/src/index.ts",
+    "balance": "tsx scripts/balance.ts",
+    "screen": "tsx scripts/screen.ts",
     "play": "tsx scripts/play.ts",
     "play:here": "tsx packages/client/src/main.tsx"
   },

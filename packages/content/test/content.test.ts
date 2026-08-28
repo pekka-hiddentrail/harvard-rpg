@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, it } from 'node:test'
-import { priceTrait, validateBuild } from '@harvard/engine'
+import { parseDate, priceTrait, validateBuild, weekdayName } from '@harvard/engine'
 import { loadContent } from '../src/index.ts'
 
 /**
@@ -126,4 +127,88 @@ describe('the trait graph is sound', () => {
     assert.ok(kinds.size > 0)
     for (const tag of content.rules.subjectTags) assert.ok(!kinds.has(tag))
   })
+})
+
+describe('the activity pack (Tier 1)', () => {
+  it('loads into the index the engine resolves days against', () => {
+    assert.ok(content.activities.length > 0)
+    assert.equal(content.activityIndex.size, content.activities.length)
+    for (const a of content.activities) assert.equal(content.activityIndex.get(a.id)?.name, a.name)
+  })
+
+  it('is inside the content hash, so a save pins the day it was played under', () => {
+    // Not a formality: retuning a curve changes what every logged day meant. The hash is how
+    // that announces itself instead of silently rewriting history on the next replay.
+    const text = readFileSync(join(root, 'activities.yaml'), 'utf8')
+    assert.ok(text.includes('curve:'), 'the file the hash covers must be the one with the curves')
+  })
+
+  it('gives study the two numbers §3.1 names', () => {
+    // These two are the whole spin-up rule, and they are content rather than code — which
+    // means this test is the only thing standing between a tuning pass and deleting the rule
+    // by accident. A half-band banks nothing; a band and a half banks 1.7× a band.
+    const study = content.activityIndex.get('study')
+    assert.ok(study, 'the pack must contain `study`')
+    assert.equal(study.curve[0], 0.0, 'half a band of study must bank exactly nothing')
+    const band = study.curve[1] ?? 0
+    const oneAndAHalf = study.curve[2] ?? 0
+    assert.ok(band > 0)
+    assert.equal(Math.round((oneAndAHalf / band) * 100) / 100, 1.7)
+  })
+
+  it('gives reading a half-band worth having, so a stranded half is not dead', () => {
+    // The counterpart to study's zero. Without at least one activity whose `curve[0] > 0`,
+    // the leftover half after a 1.5-band session would be unusable and the half grid would
+    // be a tax rather than a decision.
+    const read = content.activityIndex.get('read')
+    assert.ok(read)
+    assert.ok((read.curve[0] ?? 0) > 0)
+    assert.ok(content.activities.some((a) => a.minHalves === 1 && a.curve.length > 0))
+  })
+
+  it('never lets a curve fall, so stopping early is not a strategy', () => {
+    // The loader enforces this; asserted here because a falling curve is a *silent* exploit
+    // — the planner would show it as a price and the player would simply take it.
+    for (const a of content.activities) {
+      for (let i = 1; i < a.curve.length; i++) {
+        assert.ok(
+          (a.curve[i] ?? 0) >= (a.curve[i - 1] ?? 0),
+          `${a.id}'s curve falls at ${i + 1} halves`,
+        )
+      }
+    }
+  })
+
+  it('anchors the meals where the band table expects them', () => {
+    // The gap clock's numbers in rules.yaml were tuned against breakfast 1 → lunch 4 →
+    // dinner 8. If an anchor's `allowedBands` moves off that spacing, the hunger table is
+    // describing a day that no longer exists.
+    for (const [id, band] of [['breakfast', 1], ['lunch', 4], ['dinner', 8]] as const) {
+      const a = content.activityIndex.get(id)
+      assert.ok(a, `the pack must contain \`${id}\``)
+      assert.ok(a.allowedBands.includes(band), `${id} must be placeable in band ${band}`)
+      assert.equal(a.food, 'meal')
+    }
+    const run = content.activityIndex.get('run')
+    assert.ok(run && run.allowedBands.length === 1 && run.allowedBands[0] === 0)
+  })
+
+  it('lets the day be survivable: a meal, a bed, and something that banks hours', () => {
+    assert.ok(content.activities.some((a) => a.food === 'meal'))
+    assert.ok(content.activities.some((a) => a.sleep))
+    assert.ok(content.activities.some((a) => a.curve.length > 0))
+  })
+
+  it('declares a first day that is a Monday', () => {
+    // Tier 1 plays one authored day and §9.5 puts move-in on Thursday 26 August 2027, so the
+    // first day of the term is the Monday after. Tier 2's calendar deletes this field.
+    assert.equal(weekdayName(parseDate(content.rules.day.firstDay)), 'Monday')
+  })
+
+  it('sorts both threshold tables ascending, because resolution walks them in order', () => {
+    const asc = (ns: number[]) => ns.every((n, i) => i === 0 || n >= (ns[i - 1] ?? n))
+    assert.ok(asc(content.rules.day.hunger.map((h) => h.after)))
+    assert.ok(asc(content.rules.day.fatigue.map((f) => f.atOrBelow)))
+  })
+
 })

@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react'
 import { Box, Text, render, useApp, useInput } from 'ink'
 import { Canvas, claimScreen } from './Canvas.tsx'
 import { COLUMNS, FRAME, PANES, pad, rule, sign } from './layout.ts'
+import { Planner, type Catalogue } from './Planner.tsx'
+import { Row, fill, type Line } from './ui.tsx'
 
 /**
- * The Tier 0 client: character creation, then the character sheet.
+ * The client: character creation, the character sheet, then the day planner (Tier 1).
  *
  * Full-screen monospace, ASCII, keyboard only (GAME_DESIGN §10). It holds no rules —
  * every number on this screen came out of the engine over HTTP. The budget arithmetic in
@@ -80,6 +82,15 @@ type Sheet = {
   traitNames: string[]
   levels: Record<string, number> | null
   actionCount: number
+  /** Replayed from the action log, never stored. The sheet leads into the day. */
+  state: {
+    day: number
+    date: string
+    dateLong: string
+    body: { energy: number; stress: number; condition: number }
+    hoursBySubject: Record<string, number>
+    log: string[]
+  }
 }
 
 const post = async (path: string, body: unknown) => {
@@ -108,6 +119,8 @@ function App() {
   const [valid, setValid] = useState<Validation | null>(null)
   const [sheet, setSheet] = useState<Sheet | null>(null)
   const [busy, setBusy] = useState(false)
+  const [catalogue, setCatalogue] = useState<Catalogue | null>(null)
+  const [planning, setPlanning] = useState(false)
 
   useEffect(() => {
     fetch(`${BASE}/api/creation/options`)
@@ -117,6 +130,16 @@ function App() {
         setError(`No server on ${BASE}. Start it with \`npm run server\` in another window.`),
       )
   }, [])
+
+  // Fetched once the character exists, so that `enter` on the sheet opens the planner
+  // instantly rather than on a spinner.
+  useEffect(() => {
+    if (!sheet || catalogue) return
+    fetch(`${BASE}/api/day/activities`)
+      .then((r) => r.json() as Promise<Catalogue>)
+      .then(setCatalogue)
+      .catch(() => {})
+  }, [sheet, catalogue])
 
   const build = () => ({
     hometown,
@@ -190,7 +213,12 @@ function App() {
     // "Quebec" has every right to expect.
     if (key.escape || (key.ctrl && input === 'c')) return exit()
     if (input === 'q' && pane !== 'identity') return exit()
-    if (sheet) return
+    if (sheet) {
+      // The only move the sheet offers. Everything after this belongs to the planner, which
+      // installs its own handler; this one falls through to `q` and nothing else.
+      if (!planning && key.return && catalogue) setPlanning(true)
+      return
+    }
     if (!options) return
 
     if (key.tab) {
@@ -245,7 +273,24 @@ function App() {
   }
   if (!options) return <Text dimColor>reading content…</Text>
 
-  if (sheet) return <CharacterSheet sheet={sheet} />
+  if (sheet && planning && catalogue) {
+    return (
+      <Planner
+        gameId={sheet.id}
+        catalogue={catalogue}
+        onClose={() => {
+          setPlanning(false)
+          // Re-read the save rather than patch the copy in memory. The day that just resolved
+          // exists as one action in SQLite; everything on the sheet is replayed from it.
+          void fetch(`${BASE}/api/game/${sheet.id}`)
+            .then((r) => r.json() as Promise<Sheet>)
+            .then(setSheet)
+            .catch(() => {})
+        }}
+      />
+    )
+  }
+  if (sheet) return <CharacterSheet sheet={sheet} ready={catalogue !== null} />
 
   const picked = new Set(picks.map((p) => p.id))
   const net = (valid?.spent ?? 0) - (valid?.refunded ?? 0)
@@ -366,25 +411,6 @@ function App() {
   )
 }
 
-type Line = { text: string; color?: string; bold?: boolean; dim?: boolean }
-
-/** One row of a fixed-height pane. Always full width, so a blank row still clears the row. */
-const Row = ({ line }: { line: Line | undefined }) => (
-  <Text
-    {...(line?.color === undefined ? {} : { color: line.color })}
-    {...(line?.bold === undefined ? {} : { bold: line.bold })}
-    {...(line?.dim === undefined ? {} : { dimColor: line.dim })}
-  >
-    {pad(line?.text ?? '', FRAME.cols)}
-  </Text>
-)
-
-/** Pad a pane's contents to its declared height, so the panes below it never move. */
-const fill = (lines: Line[], height: number): (Line | undefined)[] => [
-  ...lines.slice(0, height),
-  ...Array<undefined>(Math.max(0, height - lines.length)).fill(undefined),
-]
-
 /**
  * The highlighted trait, explained. Deliberately the same five rows for every trait —
  * a pane that grows when a trait happens to exclude three others is a pane that shoves the
@@ -417,8 +443,9 @@ function detailLines(t: TraitOpt): Line[] {
   return lines
 }
 
-function CharacterSheet({ sheet }: { sheet: Sheet }) {
+function CharacterSheet({ sheet, ready }: { sheet: Sheet; ready: boolean }) {
   const c = sheet.creation
+  const s = sheet.state
   return (
     <Box flexDirection="column">
       <Text bold>HARVARD — the character, read back from the save</Text>
@@ -462,10 +489,30 @@ function CharacterSheet({ sheet }: { sheet: Sheet }) {
           {v === 0 ? '  0' : sign(v).padStart(3)}
         </Text>
       ))}
+      <Text> </Text>
+      <Text bold>the day ahead</Text>
+      <Text>
+        {'  '}
+        {s.dateLong}
+        <Text dimColor>{`  ·  day ${s.day}`}</Text>
+      </Text>
+      <Text dimColor>
+        {'  '}
+        energy {s.body.energy.toFixed(0)} · stress {s.body.stress.toFixed(0)} · condition{' '}
+        {s.body.condition.toFixed(0)}
+      </Text>
+      {/* The log is the save. Nothing here is stored — it is replayed from the actions. */}
+      {s.log.slice(-4).map((line, i) => (
+        <Text key={i} dimColor>
+          {'  '}
+          {pad(line, FRAME.cols - 2)}
+        </Text>
+      ))}
       <Box flexGrow={1} />
       <Text dimColor>{rule()}</Text>
       <Text dimColor>
-        {sheet.actionCount} actions logged. Term has not started — that is Tier 1. · q quit
+        {sheet.actionCount} {sheet.actionCount === 1 ? 'day' : 'days'} logged ·{' '}
+        {ready ? 'enter PLAN THE DAY' : 'reading the day…'} · q quit
       </Text>
     </Box>
   )

@@ -20,6 +20,22 @@ import {
 
 const rules = Rules.parse({
   creation: { budget: 10, refundCap: 5, priceTolerance: 1 },
+  // Present because `Rules` requires it, and irrelevant to everything below: creation and
+  // the day share a rules file but not a single number. `day.test.ts` owns these.
+  day: {
+    firstDay: '2027-08-30',
+    startEnergy: 8,
+    startStress: 30,
+    startCondition: 55,
+    startBandsSinceFood: 2,
+    snackDefersBands: 2,
+    hunger: [{ after: 5, yieldMult: 0.85, energy: -0.5 }],
+    fatigue: [{ atOrBelow: 3, yieldMult: 0.7 }],
+    night: { energyPerBand: -2, stressPerBand: 6 },
+    sleepEnergyPerBand: 7,
+    sleepStressPerBand: 5,
+    conditionDailyDrift: -0.8,
+  },
   subjectTags: ['math', 'stats', 'code', 'writing', 'reading', 'lab', 'discussion'],
   schedule: {
     buy: [
