@@ -1,6 +1,6 @@
 # Harvard RPG — Game Design Document
 
-**Status:** proposal, revision 7. No code written yet.
+**Status:** proposal, revision 10. No code written yet.
 **Working title:** *Veritas* (placeholder)
 
 Revision history:
@@ -63,6 +63,19 @@ Revision history:
   daily wakeup run your stress buffer, and turns the prototype's most routine habit into
   a real allocation decision. Nothing was invented: four stats were removed and one
   existing habit was given a consequence.
+- **r10** — **character creation becomes a priced trait economy**, on the Project Zomboid
+  model the player named (§7.8). Traits cost points and hindrances refund them, so a build is
+  assembled by choosing what you are willing to be bad at. Two consequences follow. Points
+  now buy **nothing but traits** — starting subject levels are *derived* from the build via
+  **subject tags**, finishing the job r9 started, since there is no longer any number in the
+  game a point can be placed on. And **min-maxing is explicitly a feature**: a dumb jock
+  reading CS, or an environmentalist reading Government, should be buildable and hard, so the
+  rule is not "no build is stronger" but **no build is strictly stronger**. What guarantees
+  a hindrance bites is not a balance pass but §9.1's college requirements — you cannot dodge
+  a math-tagged course at Harvard, so `bad with numbers` is a bet with a due date. Separately,
+  **Affinity gains a second tier** (§7.4): traits carry **kind tags**, so two people who speak
+  different non-English languages bond over *being multilingual* — which repairs a real
+  sparsity flaw, since exact matching alone left most of a 115-person cast at zero.
 
 ---
 
@@ -952,6 +965,37 @@ fall — so the full ~10 is a milestone 8 problem, not a blocker on anything ear
 the review pass is where the hours actually go: drafting a syllabus is fast, reading one
 closely enough to catch that week 4's problem set needs week 6's material is not.
 
+**r10 adds the second real authoring job, and it is not small.** The priced trait economy
+(§7.8) needs roughly 40–60 trait records, and unlike a course stub a trait record is not two
+minutes: each one wants a cost, tag effects, `requires`/`excludes`, a `contagious` flag, an
+Affinity weight, and a line of prose for the creation screen. Two mitigations, both real. The
+vocabulary is not invented — §7.4's table is lifted from the prototype's own `Students` sheet,
+so most of the personality and strengths traits already have names and are already in use on
+~115 NPCs. And **subject tags are the cheap part**: a handful of tags (`math`, `writing`,
+`code`, `lab`, `reading-heavy`, `discussion`) annotated onto subjects once, which the course
+stubs can carry from the start at almost no marginal cost.
+
+The genuine risk here is balance surface, not typing. Costs on 50 interacting traits is the
+first thing in this design that cannot be reasoned about on paper, which is why §7.8's
+no-dominant-build check has to be a balance-bot assertion rather than a review item.
+
+**Which is why traits ship as packs.** Start with a `core` pack of roughly twelve to sixteen
+traits — enough to exercise every mechanic once: two languages and an `international` for both
+Affinity tiers, one athletic trait plus one gated child for the prerequisite DAG, two
+subject-positive, two hindrances, three contagious personality traits, one conviction — and add
+packs during development as the balance bot tells you what the existing costs are worth.
+
+This is a better shape than authoring fifty traits up front for a reason beyond scheduling: a
+trait's cost is only meaningful *relative to the others in the pool*, so a large first pass
+would be fifty numbers guessed simultaneously against each other. Sixteen can be tuned; fifty
+cannot. It also keeps the creation screen legible in a terminal (§12) during the months when
+the game is being played mostly by its author.
+
+The one thing packs must get right from the first commit is **pinning** — a save records which
+packs it was created under, because rarity is computed against the live pool (§7.4) and adding
+a pack would otherwise silently move every Affinity weight in every existing save. That is
+cheap now and very expensive later, so it belongs in the schema before the second pack exists.
+
 ### 4.10 Probation: what failing actually does
 
 **r8.** Until now the academic system had no downside beyond a closed track, which
@@ -1397,6 +1441,45 @@ the actual NPC pool at boot, so a tag's weight is a property of the cast rather 
 a hand-tuned number — which means adding NPCs automatically dilutes what was once
 distinctive, exactly as it should.
 
+#### r10: Affinity matches on two tiers, exact and kind
+
+**Traits carry kind tags, and a match on the kind counts for something even when the traits
+differ.** The player's example is the one that proves it: two people who each speak a
+language other than English have something real in common *even if it is Swedish and
+Mandarin* — neither of them grew up doing this in their first language. So:
+
+| Tier | Example | Weight | Rarity |
+|---|---|---|---|
+| **Exact trait** | `speaks Swedish` × `speaks Swedish` | large | rare |
+| **Kind tag** | `speaks Swedish` × `speaks Mandarin` → both `language` | small | common |
+
+This is not a nicety; it repairs a flaw in the paragraph above. Exact matching alone makes
+Affinity **sparse** — across ~115 NPCs the player has one or two real matches and everyone
+else sits at zero, which makes the whole cast interchangeable and the social budget (§7.2) a
+non-decision. The kind tier gives a dense weak layer underneath the sparse strong one, so
+most people are slightly more or less reachable and a few are transformative.
+
+The invariant that keeps this honest, and it is machine-checkable:
+
+> **The sum of every possible kind-tag match must stay below a single rare exact match.**
+> Otherwise a build that collects one trait from each of six kinds out-bonds the shared
+> rare language, and the prototype's central finding is quietly overturned by arithmetic.
+
+Which in practice means kind-tag contributions have **strong diminishing returns** — the
+second `language`-tag acquaintance is worth much less than the first — rather than a flat
+per-tag bonus.
+
+Some kinds worth having, all already present in the content: `language` · `international` ·
+`athletic` · `conviction` · `creative` · `service` (the prototype's military reserve, and
+Phillips Brooks House volunteering) · `first-gen`. `international student` × `international
+student` from different countries is the second case that sells the mechanic — two people who
+both left home, with no other overlap at all.
+
+**Hindrances weigh 0 on both tiers by default.** Since traits are now point-priced (§7.8),
+letting a cheap hindrance contribute would make hindrances a way to buy social reach. A few
+may be authored `bonding` — two people drowning in the same Gen Ed genuinely is a
+friendship — but it is an opt-in per trait, never the default.
+
 ### 7.5 The romance track
 
 An explicit state machine in the engine, not an emergent LLM phenomenon:
@@ -1511,6 +1594,11 @@ Until r6, traits flowed one way — the player had traits, they fed Affinity (§
 NPCs were fixed. That is backwards from the thing a university year is actually
 *about*. So: **sustained time with a person can give you one of their traits.**
 
+**r10: only positive-cost traits are ever contagious.** Once traits have prices (§7.8),
+hindrances must be excluded from the pool entirely — catching *bad with numbers* from a
+friend would punish the player for the one behaviour this whole section exists to reward,
+and traits do not come off again.
+
 Some traits are marked `contagious` in content; most are not. Contagious ones are
 habits and dispositions — *highly organized* · *quietly intense, works best alone* ·
 *outgoing, thrives in group settings* · *pragmatic, career-focused* · *restless
@@ -1564,14 +1652,32 @@ design that claims replay is a mastery curve (§4.7).
 So: **you build a character, and Pekka ships as a preset.**
 
 ```
-background     Finland · international student · public school · military reserve
-languages      Finnish (native) · Swedish · English
-school type    public, non-US
-subject levels Math +2   CS 0   Psych 0   Expos −1        ← the points
-traits         works best alone · highly organized · endurance athlete
-program        degree                                    (§9.5)
-intended track Computer Science — MBB              (a target, not a commitment)
+  PEKKA VIRTANEN — preset                          budget 9 · spent 9 · left 0
+  ─────────────────────────────────────────────────────────────────────────────
+  hometown       Tampere, Finland
+  school type    public, non-US
+  program        degree                                              (§9.5)
+  intended track Computer Science — MBB               (a target, not a commitment)
+
+  traits         international student                                  +3
+                 long mathematics                                      −3
+                 speaks Swedish                                        −2
+                 highly organized                                      −4
+                 works best alone                                      −1
+                 endurance athlete                                     −2
+  ─────────────────────────────────────────────────────────────────────────────
+  resulting levels     math +2      writing −1      code 0      lab 0
+  ─────────────────────────────────────────────────────────────────────────────
+  Costs are illustrative, not balanced. − spends, + refunds.
 ```
+
+**Nothing but traits is ever bought.** The levels on the bottom line are not a second
+spend — they are what the traits above them *did*. `long mathematics` is +2 to everything
+tagged `math`; `international student` is −1 to everything tagged `writing`, because
+writing sustained argument in a second language is genuinely harder. This is r9's argument
+carried one step further: r9 removed points from four attributes and moved them onto
+subject levels, and r10 removes them from there too. You cannot put a point on a number
+anywhere in this game. You choose facts about a person, and the numbers follow.
 
 What creation sets, and nothing more: **hometown, school type, family background,
 language(s), a spend of points across starting subject levels, and three or four starting
@@ -1583,7 +1689,9 @@ the game *will* change.
 
 **r9.** There are no attributes to spend points on (§8 explains why all four were
 deleted). Points go into **starting per-subject levels**, and the budget is zero-sum:
-every subject you begin ahead in is one you begin behind in.
+every subject you begin ahead in is one you begin behind in. *(r10 refines the mechanism —
+points buy traits and traits move the levels — but the argument below is what survived, so
+it is stated first.)*
 
 That single constraint does a lot of work:
 
@@ -1605,6 +1713,162 @@ And it is more distinct than a stat block, not less. *"Strong in Math, hopeless 
 English, works best alone, runs every morning, speaks Swedish"* is a person.
 `Int 62 / Dis 71 / Cha 44 / Res 55` is a character sheet.
 
+#### Traits have prices, and hindrances pay them back
+
+**r10.** Every trait carries a **cost**. Most spend from the budget; some *refund* into it.
+The reference is Project Zomboid, and it is the right reference — a build is assembled by
+deciding what you are willing to be bad at.
+
+```
+  ATHLETE BACKGROUND                                                       −2
+  Six years of organised sport. You know how to show up.
+    → Condition floor +2, and Condition falls slower over a bad week   (§3.5)
+    → unlocks   RECRUITED ATHLETE · OLYMPIAD · TEAM CAPTAIN
+    → reaches   14 people in the pool
+
+  BAD WITH NUMBERS                                                        +2
+  Arithmetic was always someone else's talent.
+    → −2 to every subject tagged `math`                                (§4.5)
+    → math-tagged requirements exist in every track — see below
+    → excludes  LONG MATHEMATICS · OLYMPIAD
+```
+
+Four rules make this an economy rather than a shopping list:
+
+- **Traits move *subject tags*, not named courses.** `bad with numbers` is −2 to everything
+  tagged `math`; it does not enumerate CS 50 and Stat 110. Subject tags are authored on
+  subjects in `content/` alongside the syllabi, so adding a course never means revisiting the
+  trait list, and one trait can shape a whole area of the curriculum. This is also the only
+  version that survives four years of content (§11).
+
+  > **Two tag namespaces, and they must never be merged.** A trait's `affects:` are
+  > **subject tags** — `math`, `writing`, `code` — the curriculum surface it modifies. A
+  > trait's `tags:` are **kind tags** — `language`, `athletic`, `international` — what sort
+  > of fact it is, used by Affinity's kind tier (§7.4). `speaks Swedish` has kind tag
+  > `language` and affects nothing academic; `bad with numbers` affects `math` and has no kind
+  > tag at all. They are different fields with different vocabularies, and a schema that lets
+  > one string serve both will eventually let a trait grant Affinity for being bad at
+  > calculus.
+- **Levels are priced non-linearly, refunds are priced flatly.** Stacking three
+  math-positive traits should cost more than the first one did, and stacking three
+  hindrances should pay less than the first one did. Without this, the dominant strategy is
+  always "one enormous spike, everything else dumped."
+- **Refunds are capped at about half the budget.** Not a cap on the *number* of hindrances,
+  which is arbitrary and scales badly — a cap on total refund, which scales automatically
+  with the budget and therefore with difficulty.
+- **The budget is one number in `content/`** (§4.9), which keeps r9's free difficulty lever
+  intact: a smaller budget means fewer defining facts about you, in either direction.
+
+#### Min-maxing is the feature; dominance is the bug
+
+The player's own framing, and it is the correct one: *a hard game with a dumb jock who wants
+to be a computer nerd, or an environmentalist studying Government.* Those builds should be
+**buildable and bad**, and the fact that they are bad is the entire appeal. A player who
+takes `bad with numbers` and then targets CS has set their own difficulty, diegetically,
+on the creation screen. That is a better hard mode than a slider, because it comes with a
+story attached.
+
+So r8's rule needs restating, because as written it was too strong. It is not *no build is
+stronger* — the jock **is** weaker, on purpose. It is:
+
+> **No build is strictly stronger.** A refund must buy something the player actually
+> wanted, and a hindrance must cost something they cannot route around.
+
+Only the second clause is hard to guarantee, and it is where Project Zomboid actually leaks:
+its notorious builds take hindrances whose downside never arrives, because a survival sandbox
+lets you control your own exposure. A university does not, and that difference is already
+built.
+
+#### Why a hindrance always bites, and it isn't the balance pass
+
+**College requirements are held separately from track requirements** (§9.1), and they are not
+negotiable. Harvard makes everyone satisfy a distribution spread and a quantitative
+requirement. So `bad with numbers` cannot be dodged by never declaring CS — the *college*
+puts you in a math-tagged course, in a term you did not choose, at a workload you did not
+plan, and the −2 applies for the whole of it.
+
+That converts the min-max from an exploit into **a bet with a due date**. And a lost bet is
+fully playable with machinery that already exists: a Gen Ed you have to survive (§4.4), a
+track that closes with the reason stated (§9.3), or a term that ends below 2.0 (§4.10).
+
+One content invariant makes this a guarantee rather than an intention, and it is
+machine-checkable:
+
+> **Every tag a hindrance can target must appear in at least one requirement no student can
+> avoid.** If someone authors a hindrance against a tag the college never forces, CI fails.
+
+That is a better safeguard than tuning, because it cannot silently rot as courses are added.
+
+There is also a second bite, and it is the more interesting one. §4.5 says a subject level
+moves with hours banked, and that the joint-study multiplier peaks against a partner **one to
+two levels ahead**. A player who starts −2 in their own concentration is therefore the player
+for whom the ×1.6 band is widest and most necessary. **The handicap build is the build that
+has to use other people.** Hard mode does not just make the game harder; it forces the player
+through the best mechanic in it — which is a thoroughly appropriate thing for a game about
+university to do.
+
+#### Traits gate traits
+
+`requires` and `excludes` on trait records, exactly as the player described: `athlete
+background` unlocks `recruited athlete`, `olympiad`, `team captain`; `bad with numbers`
+excludes `long mathematics`. This is a small prerequisite DAG, and §9.3 already built the
+part that is actually hard — a solver that reports **why** something is closed rather than
+merely greying it out. Creation reuses that reporter verbatim: *"Olympiad requires Athlete
+background or Long mathematics; you have neither."*
+
+Two consequences worth having:
+
+- **`international student` becomes a trait, not a field.** It was a `background` string;
+  it should be a priced, gating trait, since it is the single most consequential fact about
+  the prototype's protagonist. It refunds — no US school network, `writing` is harder,
+  Thanksgiving is a logistics problem, and `program` interacts with it (§9.5) — and it opens
+  the rare-language traits that §7.4 weights most heavily. The orientation-week
+  international check-ins already sit in the campus calendar waiting for it.
+- **Gating is how a build acquires a theme.** `environmentalist` is not a stat; it is a
+  conviction that opens a cluster of extracurriculars and people and closes another cluster
+  (you are not going to enjoy the finance club), and it pairs with Government — a
+  `writing`-heavy track — to produce a genuinely hard run if you also took a `writing`
+  hindrance. Theme, difficulty, and social graph from one choice.
+
+#### What an athlete build buys, and what it does not
+
+One correction, because it matters for what gets authored. There is no sports concentration
+at Harvard, and §4.7 forbids inventing one, so `recruited athlete` must not grant academic
+levels in a subject that does not exist. It should not route through an `esteem` tag either;
+that would be an attribute wearing a costume, which is exactly what r9 deleted.
+
+What it buys instead is already fully modelled, and it is substantial:
+
+| Athlete traits give you | Via |
+|---|---|
+| Extracurricular **Reputation**, tracked separately from academic | §8 |
+| A **closed roster** of teammates seen daily — the deepest-bond mechanic | §3.5, §7.2 |
+| A **Condition** floor, which is now the Stress recovery rate | §3.5, §8 |
+| Access to traditions and away trips as authored beats | §10 |
+
+And it costs the calendar, brutally, with no new rules: a varsity sport is a §3.4 standing
+commitment eating roughly two bands a day six days a week, with travel that removes whole
+weekends, and breaking it has the same consequences as breaking any other promise. That is a
+real price, paid in the game's actual currency, and it prices itself. A dumb jock is not
+short of ability — he is short of bands, and behind in `math`.
+
+#### Where this collides with the rest of §7, and the rules that fix it
+
+Adding prices to traits touches two systems that already assumed traits were free.
+
+- **Hindrances are never `contagious`** (§7.7). Catching `bad with numbers` from a friend
+  would punish the player for the exact behaviour this design is built to reward, and since
+  traits are acquired-essentially-never-lost, it would be permanent. Only positive-cost
+  traits enter the contagion pool.
+- **A trait acquired by contagion is free, and that is a legitimate strategy.** Costs exist
+  only at creation, so declining to buy `highly organized` and instead catching it from
+  someone in November is a real play — one that costs a semester of investment in one
+  person, which is precisely the §7.7 fork in the road. Deliberate, not a loophole.
+- **Hindrances carry Affinity weight 0 by default** (§7.4). Otherwise cheap hindrances buy
+  social reach, which is a second dominance vector. A few may be flagged `bonding` where a
+  shared weakness genuinely is one — two people drowning in the same Gen Ed is a real
+  friendship — but that is an authored opt-in, never the default.
+
 Why this is cheap rather than a new system: the trait vocabulary already exists, rarity
 is already computed against the actual NPC pool at boot (§7.4), and the tracks already
 exist (§9.1). Creation is a screen over machinery that r6 and r7 already built. What it
@@ -1621,10 +1885,11 @@ buys is large:
   playable, the authored relationships attached to him still work, and there is a known
   configuration to balance and test against.
 
-One rule to prevent the obvious failure: **creation must not be optimisable.** No trait
-is strictly better than another — every one opens some people and closes others, exactly
-as §7.7 requires — and the creation screen shows what a choice *reaches*, never what it
-scores. If the balance bot finds a dominant build, the trait weights are wrong.
+One rule to prevent the obvious failure: **no trait is strictly better than another** —
+every one opens some people and closes others, exactly as §7.7 requires — and the creation
+screen shows what a choice *reaches* and what it *unlocks*, never what it scores. If the
+balance bot finds a build that is better at everything, the costs are wrong. A build that is
+much worse at everything is not a bug; it is r10's hard mode, and someone chose it.
 
 ---
 
@@ -1644,7 +1909,7 @@ simplification in the document's history. What replaced each one:
 
 | Deleted | Its job now belongs to | Why that is better |
 |---|---|---|
-| **Intellect** | starting **per-subject levels** (§4.5, set at creation §7.8) | Asymmetric by construction, and a global stat actively damaged the joint-study gap |
+| **Intellect** | **per-subject levels** (§4.5), derived at creation from the trait build (§7.8, r10) | Asymmetric by construction, and a global stat actively damaged the joint-study gap |
 | **Discipline** | the traits `highly organized`, `works best alone` (§7.7) | Already specified there, with effects. A scalar beside a trait doing the same job is duplication |
 | **Charisma** | traits (`outgoing` accelerates the acquaintance curve, §7.7) | Same. Affinity is trait overlap; a global charm multiplier flattens it |
 | **Resilience** | **Condition drives Stress recovery** (below) | Turns a number you were dealt into something you maintain 180 times |
@@ -1711,9 +1976,17 @@ status (`none` → `comping` → `member` → `board`) and Standing.
 or acquired from a named NPC on a named date (§7.7). The provenance is not
 bookkeeping; it is epilogue material.
 
-**Creation** (§7.8) — hometown, school type, family background, languages. Set once,
-never mutated, and referenced by Affinity every time a new NPC is met. Distinct from
-`Player traits` precisely because these are the dimensions the game will never change.
+**Creation** (§7.8) — hometown, school type, family background, languages, plus the
+**resolved build**: the trait set as purchased, each trait's cost, and the budget it was
+spent against. Set once, never mutated, and referenced by Affinity every time a new NPC is
+met. Distinct from `Player traits` precisely because these are the dimensions the game will
+never change.
+
+The costs are kept even though nothing reads them in play, for two reasons: the epilogue can
+say what you chose to be bad at, and a save must remain re-validatable against the content it
+was created under. **Starting subject levels are not stored here** — r10 made them derived
+from traits (§7.8), so they are computed at boot from the build and the tag table, and only
+their *movement* through banked hours is state.
 
 **Standing** (§4.10) — probation history per term, the current extracurricular band cap
 if any, and whether honours eligibility has been lost. On the record permanently, and
@@ -1783,8 +2056,21 @@ college_requirements:
   - { id: expos,        need: 1, from: [expos20] }
   - { id: gen_ed,       need: 4, one_from_each: [aesthetics, ethics, histories, science_society] }
   - { id: distribution, need: 3, one_from_each: [arts_hum, social_sci, sci_eng] }
+  - { id: quant,        need: 1, subject_tag: math }
   - { id: language,     need: 2, testable_out: true }
 ```
+
+**r10 added the `quant` row, and it is not decoration.** Harvard requires quantitative
+reasoning of everyone, and §7.8's hindrance economy depends on that being true in content:
+`bad with numbers` is only a real cost if the college can put you in a math-tagged course
+against your will. Note it is expressed as a **subject tag** rather than a course list, which
+is what lets the CI invariant in `ARCHITECTURE.md` §10 check it mechanically.
+
+`language: testable_out` is the mirror image, and worth noticing because it is the clearest
+case of a refund trait paying for itself: a native Finnish speaker tests out and recovers two
+course slots — roughly half a term of freedom — which is a large, concrete benefit sitting
+opposite `international student`'s refund. That is what §7.8 means by *a refund must buy
+something the player actually wanted*, and it was already in the content before r10 needed it.
 
 Different fields also have different **assessment mixtures**, and that is where the
 track choice reaches the daily loop: a CS track's hours go into problem sets and
