@@ -1,0 +1,23 @@
+# Pekka Virtanen — the preset. GAME_DESIGN.md §7.8.
+#
+# Not a fixed protagonist: a starting point you can edit or ignore. The arithmetic:
+#   spends   nordic -3 · long_mathematics -3 · highly_organized -4
+#            works_best_alone -1 · endurance_athlete -2            = -13
+#   refunds  international_student                                 = +3
+#   net                                                            = -10   budget 10 ✓
+
+id: pekka
+name: Pekka Virtanen
+hometown: Tampere, Finland
+schoolType: public, non-US
+program: degree
+targetTrack: cs_mbb          # a target, not a commitment (§9.4)
+
+traits:
+  - id: international_student
+  - id: nordic
+    language: Swedish
+  - id: long_mathematics
+  - id: highly_organized
+  - id: works_best_alone
+  - id: endurance_athlete

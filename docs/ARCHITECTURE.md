@@ -1,6 +1,6 @@
 # Harvard RPG — Technical Architecture
 
-**Status:** proposal, revision 11. No code written yet.
+**Status:** revision 12. Tier 0 in progress; §11 is the plan of record.
 Companion to `GAME_DESIGN.md`.
 
 - **r2** — daily calendar loop instead of a weekly planner; narration tiers drive
@@ -83,6 +83,17 @@ Companion to `GAME_DESIGN.md`.
   must be strictly convex, and the refund schedule must be strictly *concave* in
   points-per-level — the first draft was convex, which paid the player for going deeper into
   a hindrance (§10).
+- **r12** — **the build order is rewritten and implementation begins** (§11). No design
+  changes; this revision is entirely about sequencing. Every earlier plan put the interface
+  at milestone 6 behind five headless milestones, which deferred the two risks that were
+  actually unknown — can Ink draw this, and does the stack hang together — until after
+  everything had been built assuming they were fine. The order is now vertical slices,
+  thinnest first, with the LLM at Tier 4 because nothing before it needs prose. Creation
+  leads (Tier 0) because its validator needs no NPC pool; only the reach display and the
+  kind-tag weights do, and both are additive at Tier 3. Three things are pulled forward and
+  held non-negotiable at Tier 0 regardless: the complete save shape, the boundary greps, and
+  content-hash pinning (§11.1). The lint rules promised in r10 ship as a **grep test**
+  instead of an ESLint config — same enforcement, no toolchain.
 
 ---
 
@@ -1080,77 +1091,83 @@ key — and with the tier system, most of the game doesn't call the API at all.
 
 ## 11. Build order
 
-| # | Milestone | Deliverable |
+**r12 replaced this section wholesale, and the reason is worth recording.** Every earlier
+revision put the interface at milestone 6, behind five headless milestones. That was wrong
+for this project: it is one person building a game they abandoned once already because it
+was tedious, and three weeks of green tests with nothing on screen is how the second
+attempt dies too. It also deferred the genuinely unknown risks — whether Ink can do
+full-screen redraw with an ASCII calendar, whether Ink → Fastify → SQLite hangs together —
+until after everything had been built against the assumption that they could.
+
+So the order is now **vertical slices, thinnest first**, and the LLM arrives late because
+nothing before it needs prose.
+
+| Tier | Scope | LLM |
 |---|---|---|
-| 1 | Engine skeleton | State schemas (built for four years, §9), calendar, seeded RNG, `applyAction`, replay, content loader + hash pinning. Tests green. No server, no LLM. |
-| 1.5 | **Port the prototype** | The files are read (see note below); this is now a data job. `xlsx → TSV → YAML` for the eight sheets: ~115 NPC records across both tiers, 30 staff, the four-year course plan, the four-year traditions calendar, the campus locations, the 11-band weekly grid, and the Fall term's per-date lecture topics and deadlines. Write it as a **one-shot script, kept in `tools/`, not a runtime importer** — the spreadsheet stops being the source of truth the moment the YAML exists. |
-| 2 | **Academic spine** | Syllabus schema, semantic validator (§3.2), syllabus queries, attendance→hour-cost multiplier, **`demands.ts` + the demand-gap curve** (r11), **`grading.ts` with its full test block plus the leak test** (§10), and `standing.ts` probation (§4.10 of the design — cheap here, and it makes the balance bot able to assert a downside exists). Plus **two real syllabi** — ported or authored — to prove the format survives contact with actual content. |
-| 2.5 | **Calendar engine** | The event model, recurrence expansion with exceptions, conflict detection, density classification (§2 `calendar/`). Ahead of the day loop because the day loop is a consumer of it, and because a recurrence bug found later is found in every system at once. |
-| 3 | **Day loop, headless** | Band allocation **on halves** with spin-up cost, day resolution, `meals.ts` gap clock, standing commitments with planned-vs-actual, fast-forward. Driven by a test harness and the balance bot. **Go/no-go gate** — see below. |
-| 3.5 | **Study plan** | `studyPlan.ts` (§3.4), ~120 course stubs **with `demands` profiles**, 7 track graphs, college requirements (incl. r10's `quant` row), the feasibility query with reasons and r11's **"not yet, here are the routes"** output. Deliberately early: it is pure, testable, needs no prose, and it is the system most likely to change what content gets authored at milestone 8. |
-| 4 | Beats + people | Triggers, tier assignment, selection, `cast.ts`, `affinity.ts`, `social.ts` acquaintance curve, `levels.ts` + `studyGroup.ts`, `arrangements.ts`, `traits.ts` contagion, `creation.ts` + the preset content, romance state machine and sacrifice log. Creation lands here because rarity weights are only meaningful once the NPC pool is loaded, and r10 sharpens that: the two-tier Affinity and the `core.yaml` trait pack both need the real cast to mean anything. Ship `core.yaml` here (~12-16 traits) and treat later packs as milestone 8 content. r11 adds `priceTrait()` and its ±1 conformance check here for the same reason — the kind-tag weight is rarity against the loaded cast — plus NPC dispositions on `relationships.ts`. Authored fallback prose only. Still no LLM. |
-| 5 | Narrator | `renderScene` + `renderOutcome` + `renderFlavor` against the real API, with syllabus grounding. Caching verified via `usage`. |
-| 6 | Server + **TUI** | Fastify, SQLite, and the Ink client: character creation, day planner, week grid, **calendar**, shopping week, **study plan**, assessment, scene, journal. SSE into a streaming prose pane. **First actually playable build.** |
-| 7 | Free-text valve | `interpretFreeText`, clamping, injection tests. |
-| 8 | Freshman year content | ~8-10 full syllabi, ~60 beats, **~60 background + ~55 foreground NPCs** (most of them ported at 1.5, not written here), 5 orgs, full calendar, epilogue. The largest single chunk of work. |
+| **0** | **Vertical slice + character creation.** Ink → HTTP → Fastify → engine → SQLite, end to end. Content loader with Zod validation and hash pinning, `core.yaml` (~14 traits), `rules.yaml`. `creation.ts`: budget check, `requires`/`excludes` DAG, mandatory children, refund cap, `priceTrait()` conformance, `resolveLevels()`. The creation screen, with a live budget and derived levels — **but no reach number** (see below). Save written, save reloaded, character rendered. | no |
+| **1** | **One day.** The eleven bands on halves, spin-up cost, `minDuration`, the meals gap clock, day resolution into a Tier 0 log line, and the day-planner screen. First primitive balance bot. | no |
+| **2** | **The academic spine + the calendar.** Recurrence with exceptions, conflict detection, density classification. Two real syllabi with *differing* `demands` profiles. `demands.ts` and the demand-gap curve. Hidden grading, the bracket, `confidence`, and the leak test. Probation. Shopping week. Port the campus-calendar and weekly-grid sheets. **Go/no-go gate.** | no |
+| **3** | **People.** ~115 NPCs ported from the prototype. `cast.ts`, two-tier Affinity, the acquaintance curve, `studyGroup.ts` and the partner gap, arrangements, contagion, the romance state machine and sacrifice log. Creation's reach number lights up here. | no |
+| **4** | **Narrator.** Scene, outcome, and batched flavor against the real API; the frozen cache prefix verified through `usage`; the Chronicle and its token budget. First use of `ANTHROPIC_API_KEY`. | **yes** |
+| **n** | Free-text valve and clamping. `studyPlan.ts` and the feasibility query. Full freshman-year content — ~10 syllabi, ~60 beats, orgs, epilogue. Later trait packs. | yes |
 
-**Two milestones moved forward in r6, for the same reason.** The calendar engine (2.5)
-and the study plan (3.5) are both pure functions over content with no prose and no
-model, and both are *consumed* by things later in the list — the day loop reads the
-calendar, and content authoring at milestone 8 depends on knowing which courses the
-requirement graphs actually need. Building them late means building against
-assumptions and then discovering the mismatch while also debugging prose.
+**Why creation can lead despite needing the cast.** Earlier revisions put creation at
+milestone 4 *because* rarity weights are only meaningful once the NPC pool is loaded. That
+is half true, and the half that is false is what makes Tier 0 possible: the **validator**
+(budget, DAG, `resolveLevels`, `priceTrait`) needs no NPCs at all, and Affinity is not
+exercised at creation time — it is exercised when you meet someone. Only two things need the
+pool: the `reaches 14 people` display line, and the kind-tag Affinity weights. Both are
+additive at Tier 3. So creation ships without reach, and the field is filled in later — a
+clean seam rather than a dependency.
 
-**On milestone 1.5 — the read is done, and the bet paid off.** The claim this note
-used to make was that the prototype's spreadsheet would be a *field-tested
-specification of the state model*: someone playing the game by hand tracked exactly
-what the game needed and nothing it didn't, so every column is a surviving
-requirement and every absence is a place this document may be over-engineering.
+**Why "one day" rather than "the main interface."** An interface displays something, and at
+Tier 1 there are no courses and no calendar to display, so a general shell would be built
+against placeholders and would not fit the content that arrived later. The creation screen
+already proves the shell — navigation, a list, keyboard input, numbered choices, a counter
+that redraws. Tier 1 should instead put the interface risk on the **hardest screen in the
+game**: the day planner. If allocating a Tuesday on a half-band grid is unpleasant to look
+at, that is a fact worth owning at Tier 1.
 
-That was a guess about a file named `harvard_campus_map.xlsx`. It turned out to be
-eight sheets containing the state model, the trait vocabulary, an 11-band weekly
-grid, a per-date daily calendar for a full term, and a four-year course plan — and it
-corrected three mechanics in `GAME_DESIGN.md` that had already been committed to
-here. The read cost an hour and moved the grading model, the band grid, and standing
-commitments before any code existed rather than after milestone 6.
+**The prototype port is split, not done in one lump.** Earlier revisions had it as a single
+milestone. It should follow demand: the campus calendar and the weekly grid are wanted at
+Tier 2, the ~115 NPC records at Tier 3. Transcribing NPCs three tiers before anything reads
+them is inventory, not progress. Everything else about the port is unchanged — it is a
+one-shot script in `tools/`, never a runtime loader, and the prototype's own dedupe notes
+are test cases for the boot validator (§3.2).
 
-What remains at 1.5 is therefore transcription, not design. Two things to hold to
-while doing it:
+**The balance harness is not optional and it is not expensive.** Once a day resolves at
+Tier 1, a headless bot that plays a hundred days is nearly free, and it is the only way to
+answer *"is planning a Tuesday in mid-October actually an interesting decision?"* without
+playing 180 days by hand — which is the exact activity that ended the prototype. Several
+claims in `GAME_DESIGN.md` are unfalsifiable without it: cutting exercise to buy study bands
+must **lose** over a term, at least one strategy must **reach** probation, and no legal build
+may **strictly dominate** another.
 
-- **The importer is a one-shot tool, not a dependency.** It lives in `tools/`, runs
-  once per sheet, and its output — YAML in `content/` — is what gets committed and
-  hand-edited from then on. A runtime xlsx reader would make a spreadsheet part of
-  the build.
-- **The prototype's manual dedupe notes are test cases.** The rename threads and the
-  "name-collision watch" comments scattered through the Students sheet are a record
-  of a bug the boot validator now catches (§3.2). Port the names, then let the
-  validator find what the human missed.
+**Tier 2 is the go/no-go gate**, and it is the same gate every revision has had, just
+reached sooner: with two real syllabi loaded and the calendar running, does planning a
+Tuesday in mid-October — three deadlines converging, a lecture you would rather skip —
+present an interesting decision *before any prose exists*? If it does not, the game has a
+design problem that writing cannot fix. Answering that at Tier 2 rather than at milestone 6
+is the whole point of reordering.
 
-**r11 splits across milestones 2 and 4, and the order matters.** `demands.ts` and the
-demand-gap curve belong at **milestone 2**, with the syllabi and the hour-cost multiplier
-they modify — they are pure content queries with no dependency on the NPC pool, and the
-alternative is that milestone 3's go/no-go gate runs against generic workload numbers and
-therefore tests the wrong game. The **cost schedule** stays at **milestone 4** with
-`creation.ts`, because the kind-tag half of its weight is rarity against the loaded cast.
-So the demand gap is validated before the decision it exists to make is ever tested, and the
-price schedule arrives with the screen that prints it.
+### 11.1 Three things that must be right at Tier 0
 
-One consequence for milestone 2's two syllabi: they need `demands` profiles that **differ**,
-or the gate at milestone 3 cannot see the mechanic. CS 50 and Expos 20 are the right pair —
-`code`/`math` against `writing`/`reading`, no overlap at all.
+These are cheap now and expensive at Tier 2, which is the only reason they are called out
+in a plan that otherwise defers everything it can.
 
-Milestone 2 moves ahead of the day loop because the day loop needs real
-assignments to allocate time against — building it on placeholder coursework would
-mean tuning it twice. Authoring two syllabi at this stage rather than one is
-deliberate: a single syllabus can't produce a workload *collision*, and collisions
-are the mechanic §4.6 of the design doc is built on.
-
-**Milestone 3 is the go/no-go gate.** With two real syllabi loaded, does planning a
-Tuesday in mid-October — three deadlines converging, a lecture you'd rather skip —
-actually present an interesting decision *before any prose exists*? If it doesn't,
-the game has a design problem that writing cannot fix. The balance harness answers
-that in days rather than weeks, and it's much cheaper to answer at milestone 3
-than at milestone 8.
+- **The save format, complete, from the first commit:**
+  `{ seed, contentHash, creation, actions: [] }`. Tier 0 barely exercises replay — creation
+  is seed material, not an action (§4) — so the `actions` array ships empty. The *shape*
+  still has to be there, because the alternative is retrofitting event sourcing through
+  three layers at Tier 2, and by then the day loop, the calendar, and grading are all
+  mutating state directly.
+- **The boundaries, enforced by tests rather than by discipline.** `Math.random` and
+  `Date.now` appear nowhere in `engine/`; `engine` imports neither `narrator` nor `content`'s
+  loader; the client holds zero game rules. A grep test over the source is enough — the same
+  device r9 used for the deleted attribute names — and it costs one file.
+- **Content hash pinning.** Trait packs shift rarity and therefore every Affinity weight, so
+  a save has to record what it was created under before there is a second pack to prove it
+  (§4, §7.8 of the design). It is one field and one hash function at Tier 0.
 
 ## 12. Decisions I made for you
 

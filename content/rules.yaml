@@ -1,0 +1,52 @@
+# Creation rules. GAME_DESIGN.md §7.8, §4.9.
+#
+# Everything in this file is a difficulty lever, which is why it is content and not code.
+# A smaller budget means fewer defining facts about you, in either direction.
+
+creation:
+  # Σ spend must equal this exactly. Not ≤ — there is no banking, so "left 0" is the goal.
+  budget: 10
+  # Cap on total refund, not on the *number* of hindrances: scales with the budget.
+  refundCap: 5
+  # Tolerance when checking an authored `cost` against priceTrait(). §7.8:
+  # the schedule validates, it does not generate.
+  priceTolerance: 1
+
+# The seven closed subject tags (§4.1). Closed because ~120 course stubs carry them,
+# so an eighth means revisiting all of them.
+subjectTags: [math, stats, code, writing, reading, lab, discussion]
+
+# The r11 cost schedule (§7.8). Shape → points, before the tag weight is applied.
+#
+# Buying is convex in the primary axis: +2 primary costs 3, not 2.
+# Refunding is concave in points-per-level-of-damage: 1.00 then 0.67, never rising.
+# A rising curve would pay the player for going deeper into a hindrance, which is a farm.
+schedule:
+  buy:
+    - { primary: 1, secondary: 0, points: 1 }
+    - { primary: 1, secondary: 1, points: 2 }   # breadth
+    - { primary: 2, secondary: 1, points: 3 }   # depth
+    # primary 3 is deliberately absent. You are eighteen.
+  refund:
+    - { primary: 1, secondary: 0, points: 1 }   # 1 level of damage → 1.00 per level
+    - { primary: 2, secondary: 1, points: 2 }   # 3 levels of damage → 0.67 per level
+  # No single trait refunds more than this many points in levels (§7.8).
+  maxRefundPerTrait: 2
+
+# TIER 0 PLACEHOLDER. §7.8 derives the subject-tag weight from requirement coverage —
+# how many requirements demand this tag and how avoidable they are. `requirements.yaml`
+# does not exist until Tier 2, so these are hand-set stand-ins with the right *ordering*
+# (`math` and `writing` are unavoidable, `lab` and `discussion` are dodgeable).
+#
+# When Tier 2 lands, this block is deleted and the weight becomes the same join as the
+# hindrance invariant, so the query that proves a hindrance bites is the query that
+# prices it. The ±1 tolerance above is what lets the swap happen without re-pricing
+# every trait by hand.
+tagWeights:
+  math: 1.3
+  writing: 1.2
+  stats: 1.0
+  code: 1.0
+  reading: 0.9
+  discussion: 0.8
+  lab: 0.8

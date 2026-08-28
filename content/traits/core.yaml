@@ -1,0 +1,209 @@
+# core.yaml — the first trait pack. GAME_DESIGN.md §7.8, §4.9.
+#
+# Deliberately small. A trait's cost is only meaningful relative to the others in the
+# pool, so fifty records would be fifty numbers guessed simultaneously against each
+# other. This pack is sized to exercise every mechanic exactly once: both Affinity tiers,
+# a parent with a mandatory child, an any-of prerequisite, an exclusion pair, both
+# directions of the price schedule, and three contagious personality traits.
+#
+# IDS ARE APPEND-ONLY. Never renamed, never removed — presets and every save reference
+# them. Deprecate with `hidden: true` instead.
+#
+# `cost` sign: negative spends from the budget, positive refunds into it.
+#
+# `structural: true` means the trait's effect is not a subject-level change, so
+# priceTrait() cannot check it and does not try (§7.8: "structural effects are outside
+# the schedule, and that is admitted"). Every structural trait must say `why`, because
+# the flag is otherwise an excuse. Note that kind-tag grants are structural *at Tier 0
+# specifically*: §7.8 prices them by rarity against the live NPC pool, and there is no
+# cast until Tier 3.
+
+version: 1
+id: core
+
+traits:
+  # ── origin ────────────────────────────────────────────────────────────────────────
+  - id: international_student
+    name: INTERNATIONAL STUDENT
+    blurb: You did not grow up here, and it shows in more places than you expected.
+    cost: +3
+    kinds: [international]
+    affects: { writing: -1 }
+    excludes: [us_school, hometown_us]
+    requiresOneOf: [nordic, east_asian, south_asian, anglophone]
+    structural: true
+    why: >-
+      Only -1 writing is a level. The rest of the refund is no US school network,
+      breaks as a logistics problem, and visa constraints — none of which a level table
+      can price.
+
+  - id: nordic
+    name: NORDIC
+    blurb: Long winters, flat hierarchies, and a language almost nobody here speaks.
+    cost: -3
+    kinds: [language, international]
+    grantsLanguageFrom: [Finnish, Swedish, Norwegian, Danish]
+    structural: true
+    why: Grants a rare language — a kind-tag price, which needs the NPC pool (Tier 3).
+
+  - id: east_asian
+    name: EAST ASIAN
+    blurb: A schooling system that asked more of you than this one will.
+    cost: -3
+    kinds: [language, international]
+    grantsLanguageFrom: [Mandarin, Korean, Japanese, Cantonese]
+    structural: true
+    why: Grants a rare language — a kind-tag price, which needs the NPC pool (Tier 3).
+
+  - id: south_asian
+    name: SOUTH ASIAN
+    blurb: You have been explaining where you are from your whole life.
+    cost: -2
+    kinds: [language, international]
+    grantsLanguageFrom: [Hindi, Urdu, Tamil, Bengali]
+    structural: true
+    why: Grants a rare language — a kind-tag price, which needs the NPC pool (Tier 3).
+
+  - id: anglophone
+    name: ANGLOPHONE
+    blurb: Foreign on paper, fluent in the hallway.
+    cost: +1
+    kinds: [international]
+    structural: true
+    why: >-
+      The mildest child, and it refunds rather than costs: genuinely international with
+      no US network, but no rare language gained, so it is the pure-cost version and
+      should pay.
+
+  - id: us_school
+    name: US SCHOOL
+    blurb: You know how this place works because it was built for people like you.
+    cost: -1
+    structural: true
+    why: Buys network and unspoken procedural knowledge, not a subject level.
+
+  - id: hometown_us
+    name: HOMETOWN US
+    blurb: Close enough to go home for a weekend.
+    cost: -1
+    structural: true
+    why: Buys travel cost and break logistics, not a subject level.
+
+  # ── academic shape ────────────────────────────────────────────────────────────────
+  - id: long_mathematics
+    name: LONG MATHEMATICS
+    blurb: You took the harder syllabus and you finished it.
+    cost: -3
+    affects: { math: +2, stats: +1 }
+    excludes: [bad_with_numbers]
+
+  - id: prep_school_writer
+    name: PREP SCHOOL WRITER
+    blurb: Somebody spent four years marking up your paragraphs.
+    cost: -4
+    affects: { writing: +2, reading: +1 }
+    excludes: [hopeless_at_essays]
+
+  - id: debate_team
+    name: DEBATE TEAM
+    blurb: You are comfortable being the one talking.
+    cost: -2
+    affects: { discussion: +1, writing: +1 }
+
+  - id: lab_hands
+    name: LAB HANDS
+    blurb: You have broken enough glassware to stop breaking glassware.
+    cost: -1
+    affects: { lab: +1 }
+
+  - id: olympiad
+    name: OLYMPIAD
+    blurb: You have sat in a silent room for five hours with one problem.
+    cost: -4
+    affects: { math: +2, stats: +1 }
+    requiresAnyOf: [athlete_background, long_mathematics]
+    excludes: [bad_with_numbers]
+
+  # ── hindrances ────────────────────────────────────────────────────────────────────
+  - id: bad_with_numbers
+    name: BAD WITH NUMBERS
+    blurb: Arithmetic was always someone else's talent.
+    cost: +2
+    affects: { math: -2, stats: -1 }
+    excludes: [long_mathematics, olympiad]
+    contagious: false
+
+  - id: hopeless_at_essays
+    name: HOPELESS AT ESSAYS
+    blurb: You can think it. Getting it onto the page is the problem.
+    cost: +2
+    affects: { writing: -2, reading: -1 }
+    excludes: [prep_school_writer]
+    contagious: false
+
+  - id: never_touched_a_computer
+    name: NEVER TOUCHED A COMPUTER
+    blurb: Beyond a browser and a word processor, it is a sealed box.
+    cost: +2
+    affects: { code: -2, math: -1 }
+    contagious: false
+
+  # ── habits, all three contagious (§7.7) ───────────────────────────────────────────
+  - id: highly_organized
+    name: HIGHLY ORGANIZED
+    blurb: You keep the calendar, and the calendar keeps you.
+    cost: -4
+    contagious: true
+    structural: true
+    why: >-
+      Buys §3.1 spin-up behaviour and §3.4 commitment adherence — worth more than any two
+      levels, and priced by judgement rather than by table.
+
+  - id: works_best_alone
+    name: WORKS BEST ALONE
+    blurb: Quietly intense. You would rather just get on with it.
+    cost: -1
+    affects: { discussion: -1 }
+    contagious: true
+    structural: true
+    why: >-
+      A mixed trait: nets to -1 because a solo-study benefit is offset by the discussion
+      penalty it comes with. A trait is allowed to be both.
+
+  - id: outgoing
+    name: OUTGOING
+    blurb: You talk to the person next to you before the lecture starts.
+    cost: -2
+    contagious: true
+    structural: true
+    why: Accelerates §7.2's acquaintance curve. Not an academic level.
+
+  # ── body and conviction ───────────────────────────────────────────────────────────
+  - id: endurance_athlete
+    name: ENDURANCE ATHLETE
+    blurb: You run before it is light, and you have done for years.
+    cost: -2
+    kinds: [athletic]
+    structural: true
+    why: Buys a Condition floor, which is the Stress recovery rate (§3.5, r9). Not a level.
+
+  - id: athlete_background
+    name: ATHLETE BACKGROUND
+    blurb: Six years of organised sport. You know how to show up.
+    cost: -2
+    kinds: [athletic]
+    structural: true
+    why: >-
+      Buys a Condition floor plus a closed teammate roster, and unlocks OLYMPIAD. It must
+      not grant academic levels — there is no sports concentration and §4.7 forbids
+      inventing one.
+
+  - id: environmentalist
+    name: ENVIRONMENTALIST
+    blurb: A conviction you will be asked to defend at dinner.
+    cost: -2
+    kinds: [conviction]
+    structural: true
+    why: >-
+      Opens one cluster of extracurriculars and people and closes another. Theme and
+      social graph, not a level.
