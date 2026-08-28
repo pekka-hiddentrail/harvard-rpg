@@ -11,7 +11,8 @@
   "scripts": {
     "test": "node --import tsx --test \"packages/*/test/*.test.ts\"",
     "server": "tsx packages/server/src/index.ts",
-    "play": "tsx packages/client/src/main.tsx"
+    "play": "tsx scripts/play.ts",
+    "play:here": "tsx packages/client/src/main.tsx"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.11",

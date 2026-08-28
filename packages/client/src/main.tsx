@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Box, Text, render, useApp, useInput } from 'ink'
+import { Canvas, claimScreen } from './Canvas.tsx'
+import { COLUMNS, FRAME, PANES, pad, rule, sign } from './layout.ts'
 
 /**
  * The Tier 0 client: character creation, then the character sheet.
@@ -88,8 +90,6 @@ const post = async (path: string, body: unknown) => {
   })
   return { status: res.status, json: (await res.json()) as any }
 }
-
-const sign = (n: number) => (n > 0 ? `+${n}` : `${n}`)
 
 function App() {
   const { exit } = useApp()
@@ -186,11 +186,11 @@ function App() {
   }
 
   useInput((input, key) => {
+    // `q` quits everywhere except the identity pane, where it is a letter someone typing
+    // "Quebec" has every right to expect.
     if (key.escape || (key.ctrl && input === 'c')) return exit()
-    if (sheet) {
-      if (input === 'q') exit()
-      return
-    }
+    if (input === 'q' && pane !== 'identity') return exit()
+    if (sheet) return
     if (!options) return
 
     if (key.tab) {
@@ -232,7 +232,17 @@ function App() {
     if (key.return && valid?.ok && !busy) void submit()
   })
 
-  if (error) return <Text color="red">{error}</Text>
+  if (error) {
+    return (
+      <Box flexDirection="column">
+        <Text bold>HARVARD</Text>
+        <Text> </Text>
+        <Text color="red">{error}</Text>
+        <Text> </Text>
+        <Text dimColor>q to quit</Text>
+      </Box>
+    )
+  }
   if (!options) return <Text dimColor>reading content…</Text>
 
   if (sheet) return <CharacterSheet sheet={sheet} />
@@ -241,54 +251,65 @@ function App() {
   const net = (valid?.spent ?? 0) - (valid?.refunded ?? 0)
   const left = options.budget - net
 
-  // A window on the list, so the layout does not depend on the terminal being tall.
-  const WINDOW = 14
-  const start = Math.max(0, Math.min(cursor - Math.floor(WINDOW / 2), options.traits.length - WINDOW))
-  const window = options.traits.slice(Math.max(0, start), Math.max(0, start) + WINDOW)
+  // A scrolling window on the list, kept exactly PANES.list rows tall whether the pool holds
+  // 21 traits or 200. The cursor sits mid-pane until it reaches either end.
+  const half = Math.floor(PANES.list / 2)
+  const last = Math.max(0, options.traits.length - PANES.list)
+  const start = Math.min(Math.max(0, cursor - half), last)
+  const window = options.traits.slice(start, start + PANES.list)
   const here = options.traits[cursor]
+
+  // Every pane below is given a fixed height and every row a fixed width. The screen is a
+  // grid the player learns the shape of, not a document that reflows under them.
+  const detail = here ? detailLines(here) : []
 
   return (
     <Box flexDirection="column">
-      <Box justifyContent="space-between">
-        <Text bold>HARVARD — character creation</Text>
-        <Text dimColor>
-          content {options.contentHash} · budget {options.budget} · refund cap{' '}
-          {options.refundCap}
-        </Text>
-      </Box>
-      <Text dimColor>{'─'.repeat(78)}</Text>
-
       <Box>
-        <Box flexDirection="column" width={46}>
+        <Box width={38}>
+          <Text bold>HARVARD — character creation</Text>
+        </Box>
+        <Box width={FRAME.cols - 38} justifyContent="flex-end">
+          <Text dimColor>
+            content {options.contentHash} · budget {options.budget} · refunds ≤{' '}
+            {options.refundCap}
+          </Text>
+        </Box>
+      </Box>
+      <Text dimColor>{rule()}</Text>
+
+      <Box height={PANES.list}>
+        <Box flexDirection="column" width={COLUMNS.list}>
           {window.map((t) => {
             const on = picked.has(t.id)
             const lang = picks.find((p) => p.id === t.id)?.language
-            const isHere = options.traits[cursor]?.id === t.id
+            const row =
+              (on ? '[x] ' : '[ ] ') +
+              pad(t.name, 30) +
+              sign(t.cost).padStart(4) +
+              (lang ? `  ${lang}` : '')
             return (
-              <Text key={t.id} inverse={isHere && pane === 'traits'}>
-                {on ? '[x] ' : '[ ] '}
-                {t.name.padEnd(28).slice(0, 28)}
-                {String(sign(t.cost)).padStart(4)}
-                {lang ? `  ${lang}` : ''}
+              <Text key={t.id} inverse={here?.id === t.id && pane === 'traits'}>
+                {pad(row, COLUMNS.list)}
               </Text>
             )
           })}
         </Box>
 
-        <Box flexDirection="column" marginLeft={2}>
+        <Box flexDirection="column" marginLeft={COLUMNS.gap}>
           <Text>
             spent <Text bold>{valid?.spent ?? 0}</Text> · refunded{' '}
             <Text bold>{valid?.refunded ?? 0}</Text> · net <Text bold>{net}</Text>
           </Text>
           <Text color={left === 0 ? 'green' : 'yellow'}>
-            {left === 0 ? 'budget spent exactly ✓' : left > 0 ? `${left} left` : `over by ${-left}`}
+            {left === 0 ? 'budget spent exactly' : left > 0 ? `${left} left` : `over by ${-left}`}
           </Text>
           <Text> </Text>
           {options.subjectTags.map((tag) => {
             const v = valid?.levels?.[tag] ?? 0
             return (
               <Text key={tag} dimColor={v === 0}>
-                {tag.padEnd(12)}
+                {pad(tag, 12)}
                 {v === 0 ? '  0' : sign(v).padStart(3)}
               </Text>
             )
@@ -296,64 +317,104 @@ function App() {
         </Box>
       </Box>
 
-      <Text dimColor>{'─'.repeat(78)}</Text>
+      <Text dimColor>{rule()}</Text>
 
-      {here ? (
-        <Box flexDirection="column">
-          <Text>
-            <Text bold>{here.name}</Text>
-            {here.kinds.length > 0 ? <Text dimColor> [{here.kinds.join(' · ')}]</Text> : null}
-          </Text>
-          {here.blurb ? <Text dimColor>{here.blurb}</Text> : null}
-          {here.requiresOneOf.length > 0 ? (
-            <Text color="cyan">requires exactly one of: {here.requiresOneOf.join(' · ')}</Text>
-          ) : null}
-          {here.requiresAnyOf.length > 0 ? (
-            <Text color="cyan">requires: {here.requiresAnyOf.join(' or ')}</Text>
-          ) : null}
-          {here.excludes.length > 0 ? (
-            <Text color="magenta">closes: {here.excludes.join(' · ')}</Text>
-          ) : null}
-          {here.structural && here.why ? <Text dimColor>{here.why}</Text> : null}
-          {here.derivedCost !== null && here.derivedCost !== here.cost ? (
-            <Text dimColor>schedule says {sign(here.derivedCost)}, authored {sign(here.cost)}</Text>
-          ) : null}
-        </Box>
-      ) : null}
+      <Box flexDirection="column" height={PANES.detail}>
+        {fill(detail, PANES.detail).map((line, i) => (
+          <Row key={i} line={line} />
+        ))}
+      </Box>
 
-      <Text> </Text>
+      <Text dimColor>{rule()}</Text>
+
       <Box flexDirection="column">
         <Text>
           <Text dimColor>hometown </Text>
-          <Text inverse={pane === 'identity' && field === 0}>{hometown || '—'}</Text>
-          <Text dimColor>  school </Text>
-          <Text inverse={pane === 'identity' && field === 1}>{schoolType || '—'}</Text>
+          <Text inverse={pane === 'identity' && field === 0}>{pad(hometown || '—', 26)}</Text>
+          <Text dimColor> school </Text>
+          <Text inverse={pane === 'identity' && field === 1}>{pad(schoolType || '—', 28)}</Text>
         </Text>
         <Text>
-          <Text dimColor>program </Text>
-          <Text inverse={pane === 'identity' && field === 2}>{PROGRAMS[programIdx]}</Text>
-          <Text dimColor>  track </Text>
-          <Text inverse={pane === 'identity' && field === 3}>{targetTrack || 'undecided'}</Text>
+          <Text dimColor>program  </Text>
+          <Text inverse={pane === 'identity' && field === 2}>{pad(PROGRAMS[programIdx]!, 26)}</Text>
+          <Text dimColor> track  </Text>
+          <Text inverse={pane === 'identity' && field === 3}>
+            {pad(targetTrack || 'undecided', 28)}
+          </Text>
         </Text>
       </Box>
 
-      {valid && !valid.ok ? (
-        <Box flexDirection="column" marginTop={1}>
-          {(valid.problems ?? []).map((p, i) => (
-            <Text key={i} color="yellow">
-              · {p.message}
-            </Text>
-          ))}
-        </Box>
-      ) : null}
+      <Box flexDirection="column" height={PANES.problems} marginTop={1}>
+        {fill(
+          (valid?.ok === false ? valid.problems ?? [] : []).map((p) => ({
+            text: `· ${p.message}`,
+            color: 'yellow',
+          })),
+          PANES.problems,
+        ).map((line, i) => (
+          <Row key={i} line={line} />
+        ))}
+      </Box>
 
-      <Text> </Text>
+      <Box flexGrow={1} />
+      <Text dimColor>{rule()}</Text>
       <Text dimColor>
         ↑↓ move · space take/drop · ←→ language · p preset · x clear · tab identity ·{' '}
-        {valid?.ok ? 'enter MATRICULATE' : 'enter (blocked)'} · esc quit
+        {busy ? 'matriculating…' : valid?.ok ? 'enter MATRICULATE' : 'enter (blocked)'} · q quit
       </Text>
     </Box>
   )
+}
+
+type Line = { text: string; color?: string; bold?: boolean; dim?: boolean }
+
+/** One row of a fixed-height pane. Always full width, so a blank row still clears the row. */
+const Row = ({ line }: { line: Line | undefined }) => (
+  <Text
+    {...(line?.color === undefined ? {} : { color: line.color })}
+    {...(line?.bold === undefined ? {} : { bold: line.bold })}
+    {...(line?.dim === undefined ? {} : { dimColor: line.dim })}
+  >
+    {pad(line?.text ?? '', FRAME.cols)}
+  </Text>
+)
+
+/** Pad a pane's contents to its declared height, so the panes below it never move. */
+const fill = (lines: Line[], height: number): (Line | undefined)[] => [
+  ...lines.slice(0, height),
+  ...Array<undefined>(Math.max(0, height - lines.length)).fill(undefined),
+]
+
+/**
+ * The highlighted trait, explained. Deliberately the same five rows for every trait —
+ * a pane that grows when a trait happens to exclude three others is a pane that shoves the
+ * keybindings around while the player is reading them.
+ */
+function detailLines(t: TraitOpt): Line[] {
+  const lines: Line[] = [
+    {
+      text: t.name + (t.kinds.length > 0 ? `  [${t.kinds.join(' · ')}]` : ''),
+      bold: true,
+    },
+  ]
+  if (t.blurb) lines.push({ text: t.blurb, dim: true })
+  if (t.requiresOneOf.length > 0) {
+    lines.push({ text: `then exactly one of: ${t.requiresOneOf.join(' · ')}`, color: 'cyan' })
+  }
+  if (t.requiresAnyOf.length > 0) {
+    lines.push({ text: `needs: ${t.requiresAnyOf.join(' or ')}`, color: 'cyan' })
+  }
+  if (t.excludes.length > 0) {
+    lines.push({ text: `closes: ${t.excludes.join(' · ')}`, color: 'magenta' })
+  }
+  if (t.structural && t.why) lines.push({ text: t.why, dim: true })
+  if (t.derivedCost !== null && t.derivedCost !== t.cost) {
+    lines.push({
+      text: `schedule says ${sign(t.derivedCost)}, authored ${sign(t.cost)}`,
+      dim: true,
+    })
+  }
+  return lines
 }
 
 function CharacterSheet({ sheet }: { sheet: Sheet }) {
@@ -361,7 +422,7 @@ function CharacterSheet({ sheet }: { sheet: Sheet }) {
   return (
     <Box flexDirection="column">
       <Text bold>HARVARD — the character, read back from the save</Text>
-      <Text dimColor>{'─'.repeat(78)}</Text>
+      <Text dimColor>{rule()}</Text>
       <Text>
         <Text dimColor>save    </Text>
         {sheet.id}
@@ -401,7 +462,8 @@ function CharacterSheet({ sheet }: { sheet: Sheet }) {
           {v === 0 ? '  0' : sign(v).padStart(3)}
         </Text>
       ))}
-      <Text> </Text>
+      <Box flexGrow={1} />
+      <Text dimColor>{rule()}</Text>
       <Text dimColor>
         {sheet.actionCount} actions logged. Term has not started — that is Tier 1. · q quit
       </Text>
@@ -409,4 +471,9 @@ function CharacterSheet({ sheet }: { sheet: Sheet }) {
   )
 }
 
-render(<App />)
+claimScreen()
+render(
+  <Canvas>
+    <App />
+  </Canvas>,
+)

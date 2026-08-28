@@ -1,6 +1,6 @@
 # Harvard RPG — Game Design Document
 
-**Status:** proposal, revision 11. No code written yet.
+**Status:** revision 13, approved. Tier 0 is built and played; see `ARCHITECTURE.md` §11.
 **Working title:** *Veritas* (placeholder)
 
 Revision history:
@@ -99,6 +99,14 @@ Revision history:
   symmetric facts are kind tags, behaviours (`mentor type`, `guarded at first`) are
   **dispositions** and never bond, because a player holding `mentor type` would gain
   Affinity with every mentor in the cast.
+- **r13** — **the canvas is fixed, and the game opens its own window** (§12). The first
+  revision written *after* playing rather than before: Tier 0 shipped, creation was
+  played, and the complaints were all one complaint. A layout that adapts to the terminal
+  is a layout with no shape, so the screen is now 100 × 34, declared once, opened at that
+  size by the launcher, and **refused below it** — with a card naming the shortfall, since
+  a squeezed screen reads as a broken game rather than a small window. Every pane gets a
+  fixed height for the same reason. No mechanic changed; the game just stopped moving
+  while being looked at. (r12 was `ARCHITECTURE.md` only — the tier plan.)
 
 ---
 
@@ -2633,9 +2641,22 @@ Four rules that keep this honest:
 - **The Chronicle is readable in-game** as a journal view, because the prototype's
   player kept one by hand and it was where the game's memory lived (§5.1).
 
+- **The canvas is fixed at 100 × 34, and the game opens its own window at that size**
+  (r13, from play). Reflowing to fit the terminal sounds accommodating and is in fact
+  where every layout glitch comes from: a column that loses four characters truncates a
+  trait name, and a pane that gains two lines pushes the keybindings off the bottom. So
+  one size, declared once, and the app **refuses to draw below it** with a card saying
+  what the window is and what it needs to be — a squeezed screen reads as a broken game
+  rather than a small window. Every pane has a **fixed height** for the same reason:
+  nothing below a pane may move when its contents change.
+  100 × 34 rather than the iconic 80 × 25 because of the day planner (§3): eleven band
+  rows plus chrome vertically, and horizontally a band label, the activity, a duration,
+  an effect hint *and* the status pane beside them.
+
 Practically: a terminal application, monospace, drawn with a TUI toolkit rather than
-`console.log`. If it should later run in a browser it can be the same renderer in a
-monospace canvas — the view models don't care. Details in `ARCHITECTURE.md` §1 and §4.
+`console.log`, on the alternate screen buffer so it leaves the terminal as it found it.
+If it should later run in a browser it can be the same renderer in a monospace canvas —
+the view models don't care. Details in `ARCHITECTURE.md` §1 and §4.
 
 ---
 
