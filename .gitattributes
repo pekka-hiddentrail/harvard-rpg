@@ -1,0 +1,6 @@
+# Content is hashed and the hash is pinned into every save. The loader normalises CRLF
+# before hashing, but keeping the repo on LF means the normalisation never has to be
+# trusted — a checkout on Windows and one on Linux produce the same bytes.
+* text=auto eol=lf
+*.png binary
+*.xlsx binary
