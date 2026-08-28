@@ -45,6 +45,16 @@ Revision history:
   can't tell" is a playable state and a reason to study that isn't "raise the mean"
   (§4.4). And **the interface is a text UI** — full-screen, monospace, keyboard,
   ASCII calendars, numbered choices (§12).
+- **r8** — four gaps closed, all of which were quietly blocking work. **You build a
+  character** and Pekka ships as a preset, because Affinity runs on the player's own
+  trait set and a fixed one means a fixed social graph forever (§7.8). **Failing has
+  consequences** — academic probation with an advisor scene, an extracurricular cap and
+  a permanent record, but no game over (§4.10). **Syllabi are drafted then reviewed then
+  committed**, and §4.7 now says plainly that play-invariance is a rule about runtime,
+  not about who typed the first draft. **Tone is dry and observant** (§5.4), with the
+  romance track and epilogues as the deliberate exception. Also a cleanup pass on §8:
+  money is gone, `Health`/`Wellbeing`/`Condition` collapse into one axis, and the four
+  attributes are flagged as unearned and due for deletion.
 
 ---
 
@@ -853,6 +863,24 @@ for a game about time management.
 It also means the game is **balanceable at all**, and that a difficulty tuning
 pass is a real thing you can do.
 
+**r8, and this needs saying plainly because it looks like a loophole and isn't: the
+rule is about *runtime*, not about authoring time.** "Nothing academic is ever
+LLM-generated" means no syllabus, assignment, due date or weight is ever produced
+*while someone is playing*. It does not mean a human hand had to type every line.
+
+A syllabus that gets drafted once, reviewed and corrected by a person, committed to
+`content/`, and covered by the content hash is **play-invariant in exactly the way this
+section requires** — it is identical for every player on every run, it can be read in
+advance, and it can be tuned. How the first draft came into existence is invisible to
+the mechanic. The review step is the load-bearing part, not the typing: a syllabus that
+nobody checked can be internally inconsistent, and the boot validator (`ARCHITECTURE.md`
+§3.2) catches structural contradictions but cannot tell you that a course's week 4
+problem set assumes material it teaches in week 6.
+
+So: drafts get written against real course structures, then read and corrected, then
+committed. What is forbidden is a generated syllabus reaching a player unreviewed, and
+that is a process rule the content hash happens to enforce for free.
+
 ### 4.8 What the narrator may and may not say
 
 The narrator receives the relevant syllabus context — the topic of today's
@@ -900,6 +928,46 @@ for — no sessions, no assignments. A stub is two minutes; ~120 of them cover f
 of every track. Full syllabi are still only needed for courses the player can actually
 enrol in, which in year 1 is a shopping list of ~10. The prototype's `Course Plan`
 sheet already contains the CS/MBB half of this, including the honours-track rules.
+
+**r8 settles who writes them: drafted against real course structures, then reviewed and
+corrected, then committed** (§4.7 explains why that satisfies play-invariance). Two
+scheduling notes that follow. Milestone 2 needs only **two** syllabi to prove the format
+and produce a workload collision, and the four ported from the prototype cover freshman
+fall — so the full ~10 is a milestone 8 problem, not a blocker on anything earlier. And
+the review pass is where the hours actually go: drafting a syllabus is fast, reading one
+closely enough to catch that week 4's problem set needs week 6's material is not.
+
+### 4.10 Probation: what failing actually does
+
+**r8.** Until now the academic system had no downside beyond a closed track, which
+quietly undercut the whole design — if hours can only ever buy you *more*, allocating
+them is arithmetic rather than fear.
+
+**A term GPA below 2.0 puts you on academic probation.** Not a game over; freshman year
+always finishes. What probation does instead:
+
+- **A required advisor meeting**, as a Tier 3 milestone. Named, scripted, unavoidable,
+  and it goes in the Chronicle. This is the part that stings.
+- **A cap on extracurricular bands** for the following term — the engine refuses
+  allocations past the cap, and your standing commitments (§3.4) have to be cut to fit.
+  You choose which club to abandon, which is the most honest punishment available in a
+  game about time.
+- **Tracks close, with the reason stated** (§9.3), and honours eligibility can be lost
+  outright rather than merely deferred.
+- **It follows you.** Probation is on the record for the rest of the game, it is
+  referenced in the epilogue, and a second term of it escalates the meeting rather than
+  repeating it.
+
+Why no expulsion: the prototype's best moment was **recovery from a D**, not
+elimination. A 180-day game that can end on day 60 throws away authored content the
+player has been paying attention to, and it converts a tense system into a
+save-scumming one — which §3.3's derived draws exist specifically to prevent. Failure
+should cost you *options*, permanently and visibly, and options are the resource this
+game is actually made of.
+
+The one thing to hold to: **probation must be reachable.** If the balance bot cannot
+find a plausible playthrough that triggers it, the thresholds are wrong and the
+downside is decoration.
 
 ---
 
@@ -1008,6 +1076,46 @@ prose and touches no state.
 | Generate NPCs per playthrough | **Authored** | NPCs must be balanced and referenced by name in beat templates. |
 | Let the LLM summarize the term | **LLM, safely** | Lossy prose compression of the Chronicle. Touches no state. |
 | Free-text novel actions | **LLM, clamped** | §6.3. Real agency, bounded blast radius. |
+
+### 5.4 Tone
+
+**r8 confirms what I had only assumed: dry and observant.** Close third person, specific,
+unsentimental. The prose reports what happened and trusts the arithmetic to supply the
+feeling.
+
+```
+Lamont, 21:40. The wrap-around still breaks on 'z'. Amelia left at nine and took
+the good whiteboard marker with her, and you have not touched the Psych reading.
+```
+
+Not:
+
+```
+You felt a wave of despair wash over you as the crushing weight of your
+responsibilities threatened to overwhelm you completely.
+```
+
+Three reasons this is the right register, and none of them are taste:
+
+- **It is what the model is most reliably good at**, and reliability across ~180 days
+  matters more than peak quality on any one of them. Understatement degrades gracefully;
+  emotional intensity degrades into the same four sentences, which is precisely the
+  *"boring in its attempts"* failure the prototype hit (§1.1).
+- **It makes the earned moments land by contrast.** If Tuesday in October is reported
+  flatly, then a Tier 3 milestone that allows itself one interior sentence hits hard.
+  Spend the emotional register like a resource, because that is what it is.
+- **The engine already supplies the emotion.** The player knows what the six hours cost
+  them; they do not need to be told they feel tired. Naming a feeling the mechanics have
+  already produced actually weakens it.
+
+Two standing prompt rules follow, both eval cases: **no summarising the player's
+emotional state**, and **no adjective the syllabus or the state model cannot support.**
+"Difficult" is earned if the hour cost says so. "Devastating" never is.
+
+The exception, stated so it does not get argued about later: **the romance track (§7.5)
+and epilogues get more interior access.** They are ~3% of calls, they are the payoff the
+restraint everywhere else pays for, and the whole point of holding a register is having
+somewhere to go.
 
 ---
 
@@ -1429,6 +1537,52 @@ locks. And a small number of contagious traits are **mutually exclusive**
 (*works best alone* / *thrives in group settings*), where acquiring one displaces the
 other. That is the only place a trait leaves, and it is the interesting place.
 
+### 7.8 Character creation, and why it is not optional
+
+**r8.** Everything in §7.4 and §7.7 runs on **the player's own trait set** — Affinity is
+trait overlap weighted by rarity, and contagion adds to that set over time. Which means
+that if the player's starting traits are fixed, so is the entire social graph, in every
+playthrough, forever. The same people are reachable, the same bonds are cheap, the same
+romance is available on the same terms. That is a strange thing to build underneath a
+design that claims replay is a mastery curve (§4.7).
+
+So: **you build a character, and Pekka ships as a preset.**
+
+```
+background     Finland · international student · public school · military reserve
+languages      Finnish (native) · Swedish · English
+school type    public, non-US
+traits         works best alone · highly organized · endurance athlete
+program        degree                                    (§9.5)
+intended track Computer Science — MBB              (a target, not a commitment)
+```
+
+What creation sets, and nothing more: **hometown, school type, family background,
+language(s), and three or four starting traits**, plus `program` and an optional target
+track. Precisely the non-contagious dimensions from §7.7 — the ones the game will never
+change — plus a small contagious seed the game *will* change.
+
+Why this is cheap rather than a new system: the trait vocabulary already exists, rarity
+is already computed against the actual NPC pool at boot (§7.4), and the tracks already
+exist (§9.1). Creation is a screen over machinery that r6 and r7 already built. What it
+buys is large:
+
+- **A rare language is a different game.** Swedish is weighted heavily precisely because
+  almost nobody in the pool has it, so it makes two or three specific people
+  disproportionately reachable — which is exactly how the prototype's deepest bond
+  happened. Pick Mandarin instead and a different pair of people become your year.
+- **Replay gets a second axis.** You already learn the calendar on a second run (§4.7);
+  now you can also *deliberately* play a version of yourself who cannot study alone, or
+  who knows nobody.
+- **Pekka stays reproducible.** The preset means the prototype's playthrough remains
+  playable, the authored relationships attached to him still work, and there is a known
+  configuration to balance and test against.
+
+One rule to prevent the obvious failure: **creation must not be optimisable.** No trait
+is strictly better than another — every one opens some people and closes others, exactly
+as §7.7 requires — and the creation screen shows what a choice *reaches*, never what it
+scores. If the balance bot finds a dominant build, the trait weights are wrong.
+
 ---
 
 ## 8. State model
@@ -1495,6 +1649,14 @@ status (`none` → `comping` → `member` → `board`) and Standing.
 **Player traits** — the current trait set, each with its provenance: set at creation,
 or acquired from a named NPC on a named date (§7.7). The provenance is not
 bookkeeping; it is epilogue material.
+
+**Creation** (§7.8) — hometown, school type, family background, languages. Set once,
+never mutated, and referenced by Affinity every time a new NPC is met. Distinct from
+`Player traits` precisely because these are the dimensions the game will never change.
+
+**Standing** (§4.10) — probation history per term, the current extracurricular band cap
+if any, and whether honours eligibility has been lost. On the record permanently, and
+read by the epilogue.
 
 ---
 

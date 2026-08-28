@@ -1,6 +1,6 @@
 # Harvard RPG — Technical Architecture
 
-**Status:** proposal, revision 7. No code written yet.
+**Status:** proposal, revision 8. No code written yet.
 Companion to `GAME_DESIGN.md`.
 
 - **r2** — daily calendar loop instead of a weekly planner; narration tiers drive
@@ -31,12 +31,20 @@ Companion to `GAME_DESIGN.md`.
   (`studyPlan.ts`) — the last being the only genuinely new *algorithm* in the project
   (§3.4). Milestone order changes to put the study plan before the narrator (§11).
 - **r7** — **the client becomes a terminal UI** (Ink), which changes the stack row and
-  nothing behind the HTTP boundary (§1, §4.6). The band grid gains **half-bands**, so
+  nothing behind the HTTP boundary (§1, §4). The band grid gains **half-bands**, so
   `bands.ts` works in units of 0.5 and conflict detection is half-granular (§2, §4, §10).
   `meals.ts` is new — the meal gap clock, snacks, and eating out (§2, §4). The assessment
   view model gains `confidence`, which means the bracket is now *deliberately*
   player-facing while the draw stays secret — a narrower leak test, not a weaker one
   (§3.3, §10).
+- **r8** — the four gaps `GAME_DESIGN.md` r8 closes, and each one lands somewhere here.
+  **Character creation** means the save has an immutable creation block and the game
+  needs a `/new` route that validates a build against the trait vocabulary (§2 `creation.ts`,
+  §4). **Probation** is `standing.ts` — a term-boundary computation with a permanent
+  record, and it becomes a balance-bot assertion rather than just a feature (§2, §10).
+  **Tone** becomes a cached prompt block and two eval cases, not a preference (§5.3, §10).
+  And the syllabus-authoring answer changes the *process* around `content/`, not the code
+  (§3.1).
 
 ---
 
@@ -99,6 +107,7 @@ harvard-rpg/
 │   │   │   ├── beats.ts         # trigger evaluation, beat selection, tier assignment
 │   │   │   ├── cast.ts          # resolve who is present: enrollments, orgs,
 │   │   │   │                    #   dining halls, time of day. NEVER the LLM.
+│   │   │   ├── creation.ts      # validate a character build; rarity at boot (§7.8)
 │   │   │   ├── affinity.ts      # static trait-overlap multiplier (player × NPC)
 │   │   │   ├── traits.ts        # player trait set, contagion thresholds, exclusions
 │   │   │   ├── social.ts        # per-venue acquaintance cap + saturation curve
@@ -106,6 +115,7 @@ harvard-rpg/
 │   │   │   ├── levels.ts        # per-subject level for player and NPCs
 │   │   │   ├── studyGroup.ts    # gap → multiplier, bridgeability, group drag
 │   │   │   ├── grading.ts       # tally → bracket → hidden draw → score → forecast
+│   │   │   ├── standing.ts      # term GPA → probation, caps, permanent record (§4.10)
 │   │   │   ├── studyPlan.ts     # requirement graph: satisfied / outstanding /
 │   │   │   │                    #   feasible, with the reason a track closed
 │   │   │   ├── clamp.ts         # delta validation + magnitude caps (§7)
@@ -122,6 +132,7 @@ harvard-rpg/
 │   │   ├── staff/*.yaml         # faculty, proctors, advisors
 │   │   ├── orgs/*.yaml
 │   │   ├── traits.yaml          # vocabulary, rarity source, `contagious` flags
+│   │   ├── presets/*.yaml       # character presets, incl. Pekka (§7.8 of design)
 │   │   ├── venues/*.yaml        # buildings, with `size` and `known` rosters
 │   │   └── prompts/             # world bible + per-route system prompts
 │   ├── narrator/                # the ONLY package that talks to Anthropic
@@ -339,6 +350,10 @@ renders them.
 
 ```
 GET  /api/game/:id              → { view, ...viewModel }
+POST /api/game/new              → { preset? } | { hometown, schoolType, background,
+                                    languages[], traits[], program, targetTrack? }
+                                  → { gameId }   # validated against traits.yaml (§7.8)
+GET  /api/creation/options      → vocabulary + presets + what each choice *reaches*
 POST /api/game/:id/plan-day     → { date, bands: Allocation[] }
                                 #   Allocation = { band, startHalf?, length?, activity,
                                 #                  target?, withPeople? }
@@ -434,6 +449,19 @@ fields for one fact invites them to disagree.
 a band conflict, a crunch week of their own, or low Warmth — so the route returns
 `{ accepted: false, why }` rather than an error. A refusal is information the player
 wanted, not a failed request.
+
+**`/creation/options` returns reach, never scores.** For each language and trait it
+returns *how many people in the pool it connects you to* and nothing resembling a rating
+(`GAME_DESIGN.md` §7.8). That number is a pure content query, so it is honest by
+construction — and it is deliberately not comparable across dimensions, because a trait
+that reaches four people is not therefore worse than one that reaches nine. This is a
+route where a helpful-looking addition would break a design rule, so the omission is
+worth a comment in the code.
+
+**The creation block is immutable, and it is not an action.** It is written once at
+`POST /new` and becomes part of the replay seed material rather than a log entry — the
+event log describes a *character playing*, so there is nothing before the character. This
+also means it cannot be edited by any later action, which is what §7.8 requires.
 
 **`study-plan/target` and `declare` are different actions on purpose.** Targeting a
 track is free, reversible, and can be done in the first week; declaring is once,
@@ -588,6 +616,20 @@ Rules the implementation must hold:
   write premium buys nothing.
 - The system prefix is byte-identical across all players and sessions on a route,
   so it caches globally rather than per-save.
+- **r8: the creation block does not go in the system prompt either, and this is a new
+  trap.** Now that the player has a hometown, a first language and a background
+  (`GAME_DESIGN.md` §7.8), the natural instinct is to put *"the player is Finnish and
+  speaks Swedish"* into the frozen prefix, since it never changes **for this save**. It
+  changes between saves, which is enough to make the prefix per-save and forfeit the
+  global cache reuse the line above depends on. It belongs in `stateDigest`. Same class
+  of mistake as the date, one step less obvious.
+- **`STYLE_GUIDE` is where the tone rules live**, and after r8 that is a real block
+  rather than a placeholder — dry, close third person, no summarising the player's
+  emotional state, no adjective the state model cannot support, with the romance and
+  epilogue routes overriding the last two (`GAME_DESIGN.md` §5.4). It is frozen and
+  cached like everything else in the prefix, so tone costs nothing per call and changing
+  it invalidates the cache — which is a reason to settle it before milestone 5, not
+  during it.
 - Content files serialize with sorted keys, so the prefix is byte-stable across
   boots.
 
@@ -777,6 +819,21 @@ key — and with the tier system, most of the game doesn't call the API at all.
   beats two separate 1-band sessions on the same total time; `minDuration` refuses a
   lecture in a half; conflict detection catches a half-band overlap that band-granular
   logic would miss; and the day's halves always sum to 22.
+- **Creation tests** (r8). Every preset validates against `traits.yaml`; a build with a
+  mutually-exclusive trait pair (§7.7) is rejected at `/new` rather than at first use;
+  rarity weights are recomputed from the actual pool, so adding NPCs changes them; and
+  the creation block survives replay unchanged, since nothing may mutate it.
+- **Probation tests** (r8). The 2.0 threshold at the boundary; the extracurricular cap
+  actually refuses allocations rather than warning; probation persists across a term
+  boundary and into the epilogue payload; a second occurrence escalates instead of
+  repeating. Plus one **balance-bot assertion**: at least one of the bot's strategies
+  must reach probation. If none does, the downside is decoration and the thresholds are
+  wrong (`GAME_DESIGN.md` §4.10).
+- **Tone eval cases** (r8). Two, run against the mock and periodically against the real
+  model: generated prose must not name the player's emotional state, and must not use an
+  intensity adjective the state model cannot support. Both are grep-able heuristics over
+  a wordlist rather than judgement calls, which is the only reason they are worth
+  automating — the romance and epilogue routes are exempt by design.
 - **Meal tests** (r7). The gap clock after `move` vs. `convert`; a snack resets it for
   two bands and then stops; `out` consumes 1.5–2 bands and closes the roster, so a
   `/table` query at that band returns no new faces; `Condition` drift over a
@@ -837,13 +894,13 @@ key — and with the tier system, most of the game doesn't call the API at all.
 |---|---|---|
 | 1 | Engine skeleton | State schemas (built for four years, §9), calendar, seeded RNG, `applyAction`, replay, content loader + hash pinning. Tests green. No server, no LLM. |
 | 1.5 | **Port the prototype** | The files are read (see note below); this is now a data job. `xlsx → TSV → YAML` for the eight sheets: ~115 NPC records across both tiers, 30 staff, the four-year course plan, the four-year traditions calendar, the campus locations, the 11-band weekly grid, and the Fall term's per-date lecture topics and deadlines. Write it as a **one-shot script, kept in `tools/`, not a runtime importer** — the spreadsheet stops being the source of truth the moment the YAML exists. |
-| 2 | **Academic spine** | Syllabus schema, semantic validator (§3.2), syllabus queries, attendance→hour-cost multiplier, and **`grading.ts` with its full test block plus the leak test** (§10). Plus **two real syllabi** — ported or authored — to prove the format survives contact with actual content. |
+| 2 | **Academic spine** | Syllabus schema, semantic validator (§3.2), syllabus queries, attendance→hour-cost multiplier, **`grading.ts` with its full test block plus the leak test** (§10), and `standing.ts` probation (§4.10 of the design — cheap here, and it makes the balance bot able to assert a downside exists). Plus **two real syllabi** — ported or authored — to prove the format survives contact with actual content. |
 | 2.5 | **Calendar engine** | The event model, recurrence expansion with exceptions, conflict detection, density classification (§2 `calendar/`). Ahead of the day loop because the day loop is a consumer of it, and because a recurrence bug found later is found in every system at once. |
 | 3 | **Day loop, headless** | Band allocation **on halves** with spin-up cost, day resolution, `meals.ts` gap clock, standing commitments with planned-vs-actual, fast-forward. Driven by a test harness and the balance bot. **Go/no-go gate** — see below. |
 | 3.5 | **Study plan** | `studyPlan.ts` (§3.4), ~120 course stubs, 7 track graphs, college requirements, the feasibility query with reasons. Deliberately early: it is pure, testable, needs no prose, and it is the system most likely to change what content gets authored at milestone 8. |
-| 4 | Beats + people | Triggers, tier assignment, selection, `cast.ts`, `affinity.ts`, `social.ts` acquaintance curve, `levels.ts` + `studyGroup.ts`, `arrangements.ts`, `traits.ts` contagion, romance state machine and sacrifice log. Authored fallback prose only. Still no LLM. |
+| 4 | Beats + people | Triggers, tier assignment, selection, `cast.ts`, `affinity.ts`, `social.ts` acquaintance curve, `levels.ts` + `studyGroup.ts`, `arrangements.ts`, `traits.ts` contagion, `creation.ts` + the preset content, romance state machine and sacrifice log. Creation lands here because rarity weights are only meaningful once the NPC pool is loaded. Authored fallback prose only. Still no LLM. |
 | 5 | Narrator | `renderScene` + `renderOutcome` + `renderFlavor` against the real API, with syllabus grounding. Caching verified via `usage`. |
-| 6 | Server + **TUI** | Fastify, SQLite, and the Ink client: day planner, week grid, **calendar**, shopping week, **study plan**, assessment, scene, journal. SSE into a streaming prose pane. **First actually playable build.** |
+| 6 | Server + **TUI** | Fastify, SQLite, and the Ink client: character creation, day planner, week grid, **calendar**, shopping week, **study plan**, assessment, scene, journal. SSE into a streaming prose pane. **First actually playable build.** |
 | 7 | Free-text valve | `interpretFreeText`, clamping, injection tests. |
 | 8 | Freshman year content | ~8-10 full syllabi, ~60 beats, **~60 background + ~55 foreground NPCs** (most of them ported at 1.5, not written here), 5 orgs, full calendar, epilogue. The largest single chunk of work. |
 
@@ -942,3 +999,16 @@ than at milestone 8.
   rather than weakening it (§4, §10).
 - **`floor` is dropped from the assessment view model.** Revision 7. A range with a
   named worst case already is the floor; two fields for one fact eventually disagree.
+- **The creation block is seed material, not an action.** Revision 8. The event log
+  describes a character playing, so there is nothing in it before the character —
+  which also makes "creation is immutable" free rather than enforced (§4).
+- **Probation lands at milestone 2, with `grading.ts`.** Revision 8. It is thirty lines
+  next to the code it depends on, and having it early is what lets the balance bot
+  assert that a downside is *reachable* — which is the actual point of it (§10, §11).
+- **Tone lives in the cached `STYLE_GUIDE` block, so it is free per call but expensive
+  to change.** Revision 8. Editing it invalidates the shared prefix for every route, so
+  it wants to be settled before milestone 5 rather than tuned during it (§5.4).
+- **The no-generated-content rule is about runtime, not authorship.** Revision 8. A
+  reviewed, committed, hash-pinned syllabus is play-invariant regardless of who typed
+  the first draft; the review step is the part that matters, not the typing
+  (`GAME_DESIGN.md` §4.7).
