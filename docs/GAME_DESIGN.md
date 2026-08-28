@@ -1,6 +1,6 @@
 # Harvard RPG — Game Design Document
 
-**Status:** proposal, revision 10. No code written yet.
+**Status:** proposal, revision 11. No code written yet.
 **Working title:** *Veritas* (placeholder)
 
 Revision history:
@@ -76,6 +76,29 @@ Revision history:
   **Affinity gains a second tier** (§7.4): traits carry **kind tags**, so two people who speak
   different non-English languages bond over *being multilingual* — which repairs a real
   sparsity flaw, since exact matching alone left most of a 115-person cast at zero.
+- **r11** — **courses gain a level, and prices gain a schedule.** r10 gave the player a
+  level per subject tag but left courses holding a single `difficulty` number, so a
+  handicap was a flat tax that never escalated. §4.1 adds `demands: {tag: level}` and §4.5
+  adds the **demand gap** — a *convex* hours multiplier, because the further into a subject
+  you go the less you can survive not knowing what a fraction is. Two things fall out for
+  free: prerequisites become mechanical rather than a permission check, and shopping week
+  finally has a real number to print. §4.5 is also renamed, because there are now **two
+  gaps and they must not be confused** — the demand gap says how big the hill is, the
+  partner gap (r6's competence band) says how fast you climb it. Reach stops being an
+  authoring problem: a trait needs one primary tag and at most one secondary, because
+  CS 50 demanding `math: 1` is what carries `bad with numbers` into a course that never
+  mentions it — **reach is emergent from how courses are tagged**. §7.8 gains the player's
+  own **cost schedule**, corrected on one point: their refund side paid *more* points per
+  level of damage the deeper you went, which is a points farm, so refunds are concave and
+  capped at +2. Costs are `schedule(shape) × weight(tag)`, and the weight is **derived** —
+  subject tags by requirement coverage, kind tags by rarity against the live pool — which
+  reuses the r10 invariant's own join, so the query that proves a hindrance bites is the
+  query that prices it. `international student` becomes a **parent trait with a mandatory
+  child** (`Nordic`, `East Asian`, …), feeding both Affinity tiers from one structure.
+  And the player's *"social tags but NPC only"* resolves into a **third namespace**:
+  symmetric facts are kind tags, behaviours (`mentor type`, `guarded at first`) are
+  **dispositions** and never bond, because a player holding `mentor type` would gain
+  Affinity with every mentor in the cast.
 
 ---
 
@@ -534,6 +557,9 @@ id: cs50
 title: Introduction to Computer Science
 difficulty: 7
 workload_hint: "~12h/week"          # visible at shopping week
+demands:                             # r11 — what the course asks of you, per tag
+  code: 2
+  math: 1
 meetings:                            # bands, per §3.1 — not "morning"
   - { type: lecture, days: [Mon, Wed], band: "13:30" , size: 340 }
   - { type: section, days: [Thu],      band: "13:30" , size: 18, sections: true }
@@ -579,6 +605,18 @@ overrides the hour thresholds per item — the prototype's one authored difficul
 dial, and the right one.
 
 `size` on a meeting is not cosmetic; see §7.2.
+
+**r11: `demands` is the field that makes a handicap escalate.** A course names the
+**subject tags** it asks for and the **level** it asks at, so CS 50 wants `code` at 2 and
+`math` at 1, while Math 21b wants `math` at 3 and nothing else. It is a profile rather than a
+single difficulty number because multi-tag courses are the interesting ones: CS 50 is where a
+`math` handicap ambushes someone who thought they were only signing up to program.
+
+The tag set is **closed at seven** — `math` · `stats` · `code` · `writing` · `reading` ·
+`lab` · `discussion` — and closed on purpose. Every course stub carries them, so adding an
+eighth means revisiting all ~120 stubs; whereas the other two tag namespaces (§7.4) can grow
+freely. `difficulty` survives alongside `demands` and keeps its old job: overall workload
+weight, which is what shopping week compares. `demands` is about *whose* workload it is.
 
 **Milestone reset.** The prototype allowed one genuinely interesting move: after a
 bad conference, the player *changed an essay's subject* and the accumulated hours
@@ -792,17 +830,71 @@ of "everything affects everything" in the whole prototype.
   skipping lectures makes each assignment cost more hours, which starves the exam
   tally, which widens the bracket. One resource, three systems.
 
-### 4.5 Joint study: the competence band
+### 4.5 Levels, and the two gaps that use them
+
+**r11 renamed this section**, because levels now price two different things and conflating
+them would be an easy and expensive mistake:
+
+| | Gap between | Prices |
+|---|---|---|
+| **Demand gap** | you and the **course** (§4.1 `demands`) | how many hours the work costs you |
+| **Partner gap** | you and a **study partner** | how much each of those hours is worth |
+
+They compose in the obvious order: the demand gap says an assignment is 9 hours for you
+rather than 6, and the partner gap says the hours you spend on it run at ×1.6. One says how
+big the hill is, the other says how fast you climb.
+
+#### The demand gap: why a handicap gets worse as you go up
+
+For each tag a course demands, compare its level to yours. The cost multiplier on that
+course's baseline hours is **convex** — each additional level of gap hurts more than the last:
+
+| Demand gap (course − you) | Hours multiplier | What it feels like |
+|---|---|---|
+| **−2 or better** | ×0.75 | You have seen this before. It is nearly free. |
+| **−1** | ×0.85 | Comfortable. |
+| **0** | ×1.0 | The course as written, for the student it was written for. |
+| **+1** | ×1.25 | You are working a bit harder than the people around you. |
+| **+2** | ×1.7 | Every problem set is an evening you did not plan for. |
+| **+3** | ×2.4 | You are behind from week one and the debt compounds. |
+| **+4** | ×3.5 | Survivable only by giving up something else entirely. |
+| **+5 or more** | **not survivable** | Shopping week says so outright (§4.6), and §9.3 treats it as closed. |
+
+Convexity is the whole point, and it is what makes a creation-time handicap escalate the way
+it does in life. Follow a player who took `bad with numbers` and is therefore at `math: −2`:
+
+| Course | Demands | Gap | Cost |
+|---|---|---|---|
+| a Gen Ed in aesthetics | no `math` at all | — | nothing. The handicap is invisible. |
+| Psych 15 | `math: 0`, `stats: 1` | +2 | ×1.7 — the statistics unit is an ambush |
+| CS 50 | `math: 1`, `code: 2` | +3 | ×2.4 — and they came for the programming |
+| Math 21b | `math: 3` | **+5** | **closed.** Not this year. |
+
+*The further into a subject you go, the less you can survive not knowing what a fraction is*
+— and that comes out of one curve rather than a special rule.
+
+Note that the bottom row says **not this year**, not *never*. Levels move with hours banked
+and courses passed (below), so a +5 is a statement about the player's current position, and
+the route through it is a lower-demand quant course first — which is what a real advisor
+would say. The player who built the handicap does not get locked out of the requirement;
+they get a longer path to it, and one fewer free elective to spend elsewhere.
+
+Two consequences fall out for free. **Prerequisites become mechanical** rather than
+administrative: taking the prereq raises your level, so skipping it shows up as a gap and a
+multiplier instead of a permission error. And **shopping week finally has a number worth
+showing** — not "this course is hard" but "this course wants `math` at 3 and you are at 1."
+
+#### The partner gap: joint study is a competence band
 
 r5 had a flat 1.5× for studying with anyone. That is too generous and, worse, it is
 not a decision — if any company beats no company, you always bring company. The real
 shape is a **band**: a study partner has to be close enough to your level to work with
 you, and far enough above it to be worth the trouble.
 
-Everyone has a per-subject **level** — for the player, **set at creation** (§7.8) and
-then moved by hours banked, prerequisite coverage (§4.3), and prior results in the
-subject; for an NPC, from their own enrollments and their `strengths` tags (§7.4). What
-matters is the **gap**, in levels, between you and them:
+Everyone has a level **per subject tag** — for the player, **derived at creation** from the
+trait build (§7.8) and then moved by hours banked, prerequisite coverage (§4.3), and prior
+results; for an NPC, from their own enrollments and their `strengths` tags (§7.4). What
+matters here is the **gap**, in levels, between you and them:
 
 | Gap (them − you) | Session | Why |
 |---|---|---|
@@ -861,6 +953,26 @@ The UI shows a stacked workload preview across candidate course sets: est_hours
 per week, with collision points highlighted. You can *see* that CS50 + Ec 10 +
 Chem 17 puts three problem sets and a midterm in the week of October 19, and then
 decide whether you can take it.
+
+**r11: the preview is now personal, and it names the reason.** Before `demands` (§4.1),
+every player saw the same `~12h/week` next to CS 50. Now the hours are run through your own
+demand gaps, and the screen says *why* — which turns a number the player has to trust into
+an argument they can check:
+
+```
+  CS 50  Introduction to Computer Science               ~15h/wk   (base ~12h)
+         wants  code 2   you 2   ·                      —
+                math 1   you −2  · gap +3               ×2.4 on the math half
+         ── the programming is fine. The problem sets are not. ──
+
+  MATH 21B  Linear Algebra                              not survivable
+         wants  math 3   you −2  · gap +5
+         ── take a lower-demand quant course first (§9.3 lists three) ──
+```
+
+Two rules this screen obeys, both inherited from §4.4. It shows **price, never outcome** —
+hours and gaps, no predicted grade. And a closed course is closed *with its reason and its
+route*, because §9.3's job is to report why rather than to refuse.
 
 This makes **workload collision an authored difficulty lever.** The content author
 places the crunch weeks deliberately. Difficulty comes from level design, not from
@@ -971,9 +1083,20 @@ minutes: each one wants a cost, tag effects, `requires`/`excludes`, a `contagiou
 Affinity weight, and a line of prose for the creation screen. Two mitigations, both real. The
 vocabulary is not invented — §7.4's table is lifted from the prototype's own `Students` sheet,
 so most of the personality and strengths traits already have names and are already in use on
-~115 NPCs. And **subject tags are the cheap part**: a handful of tags (`math`, `writing`,
-`code`, `lab`, `reading-heavy`, `discussion`) annotated onto subjects once, which the course
+~115 NPCs. And **subject tags are the cheap part**: seven tags (`math`, `stats`, `code`,
+`writing`, `reading`, `lab`, `discussion`) annotated onto subjects once, which the course
 stubs can carry from the start at almost no marginal cost.
+
+**r11 adds one field to that annotation and it is worth being honest about the cost.**
+`demands: {tag: level}` (§4.1) is not just a tag list — it is a tag list *with a number
+per tag*, on ~120 course stubs. In practice most stubs carry one or two demands and the
+numbers cluster hard (an introductory course wants 0–1, a 100-level course wants 2–3), so
+this is minutes per stub rather than a research task; and r11's own pricing gives it a
+second use, since the requirement-coverage weight in §7.8 reads the same field. But the
+number is the part reviewers must actually look at, because a stub tagged `math: 0` where
+it should say `math: 2` makes a handicap free in exactly the way §7.8's invariant is meant
+to prevent — and the invariant checks that a tag *appears*, not that it appears at a
+plausible level. That check stays human.
 
 The genuine risk here is balance surface, not typing. Costs on 50 interacting traits is the
 first thing in this design that cannot be reasoned about on paper, which is why §7.8's
@@ -1480,6 +1603,43 @@ letting a cheap hindrance contribute would make hindrances a way to buy social r
 may be authored `bonding` — two people drowning in the same Gen Ed genuinely is a
 friendship — but it is an opt-in per trait, never the default.
 
+#### r11: dispositions are a third namespace, and they are NPC-only
+
+Not every fact about a person is a similarity axis, and the test is simple: **does sharing it
+create a bond?** *Speaks Swedish* — yes. *Guarded at first* — no; two guarded people are
+conspicuously not bonding. So the prototype's `personality` column splits in two, and the
+half that describes **how a person relates to others** is not Affinity material at all. It is
+a set of modifiers on the relationship machinery:
+
+| Disposition | What it modifies |
+|---|---|
+| `mentor type` | accepts the ×1.05 teaching session willingly, instead of it costing Warmth (§4.5) |
+| `guarded at first, loyal once trusted` | slow Warmth ramp, then a markedly steeper one past a threshold |
+| `warm and inclusive, campus connector` | introduces you onward — accelerates the acquaintance curve for *their* contacts (§7.2) |
+| `restless creative, easily bored` | Warmth decays faster without new shared activity |
+
+Why this must not live in the kind-tag namespace: if `mentor type` were a kind tag, a player
+who had it would gain Affinity with every mentor in the cast, which is nonsense. Its actual
+effect is on the joint-study table and the network, so it belongs where that code reads it.
+
+**The player never has a disposition.** Not a restriction for its own sake — it falls out of
+what these things are. A disposition describes how someone behaves toward *you*, and the game
+does not need to model how you behave toward yourself; where a player-side equivalent is
+wanted, it already exists as a trait with a mechanical effect (`outgoing` accelerates your own
+acquaintance curve, §7.7).
+
+So: three namespaces, with deliberately different growth properties.
+
+| Namespace | Lives on | Read by | Player has it | Grows? |
+|---|---|---|---|---|
+| **Subject tags** — the closed seven (§4.1) | courses' `demands`; traits' `affects` | hour cost, levels, requirements, the §7.8 invariant | through effects only | **closed** |
+| **Kind tags** | traits' `tags` | Affinity, both tiers | yes, symmetric | open — new packs may add |
+| **Dispositions** | NPC records | Warmth ramp, teaching, introductions | **no** | small, closed-ish |
+
+The closed/open split is practical. An eighth subject tag means revisiting ~120 course stubs,
+so that set wants to be right now; a new kind tag costs nothing, because rarity is derived
+from the pool and a new tag simply starts rare.
+
 ### 7.5 The romance track
 
 An explicit state machine in the engine, not an emergent LLM phenomenon:
@@ -1652,7 +1812,7 @@ design that claims replay is a mastery curve (§4.7).
 So: **you build a character, and Pekka ships as a preset.**
 
 ```
-  PEKKA VIRTANEN — preset                          budget 9 · spent 9 · left 0
+  PEKKA VIRTANEN — preset                        budget 10 · spent 10 · left 0
   ─────────────────────────────────────────────────────────────────────────────
   hometown       Tampere, Finland
   school type    public, non-US
@@ -1660,38 +1820,65 @@ So: **you build a character, and Pekka ships as a preset.**
   intended track Computer Science — MBB               (a target, not a commitment)
 
   traits         international student                                  +3
+                 └─ Nordic  → Swedish                                  −3
                  long mathematics                                      −3
-                 speaks Swedish                                        −2
                  highly organized                                      −4
                  works best alone                                      −1
                  endurance athlete                                     −2
   ─────────────────────────────────────────────────────────────────────────────
-  resulting levels     math +2      writing −1      code 0      lab 0
+  resulting levels     math +2   stats +1   writing −1   discussion −1
+                       code 0    reading 0  lab 0
   ─────────────────────────────────────────────────────────────────────────────
   Costs are illustrative, not balanced. − spends, + refunds.
 ```
 
 **Nothing but traits is ever bought.** The levels on the bottom line are not a second
-spend — they are what the traits above them *did*. `long mathematics` is +2 to everything
-tagged `math`; `international student` is −1 to everything tagged `writing`, because
-writing sustained argument in a second language is genuinely harder. This is r9's argument
+spend — they are what the traits above them *did*. `long mathematics` costs 3 and therefore
+buys +2 `math` and +1 `stats` on r11's schedule below; `international student` is −1 to
+everything tagged `writing`, because writing sustained argument in a second language is
+genuinely harder; `works best alone` takes `discussion` down with it. This is r9's argument
 carried one step further: r9 removed points from four attributes and moved them onto
 subject levels, and r10 removes them from there too. You cannot put a point on a number
 anywhere in this game. You choose facts about a person, and the numbers follow.
 
-What creation sets, and nothing more: **hometown, school type, family background,
-language(s), a spend of points across starting subject levels, and three or four starting
-traits**, plus `program` and an optional target track. Precisely the non-contagious
+What creation sets, and nothing more: **hometown, school type, program, an optional target
+track, and a set of traits that spends the budget exactly.** That list got shorter in r10,
+which is the point — family background and languages used to be separate fields and are now
+*traits*, and the level spend is gone entirely because levels are derived. One payload, one
+validator, one place a build can be wrong. Everything here is precisely the non-contagious
 dimensions from §7.7 — the ones the game will never change — plus a small contagious seed
 the game *will* change.
+
+**The preset's arithmetic, worked, because it should be checkable:**
+
+```
+  spends   Nordic −3 · long mathematics −3 · highly organized −4
+           works best alone −1 · endurance athlete −2          = −13
+  refunds  international student                                = +3
+  net                                                           = −10   budget 10 ✓
+
+  levels   long mathematics      +2 math  +1 stats     (the −3 row of the schedule)
+           international student −1 writing
+           works best alone      −1 discussion
+```
+
+Two of those traits are deliberately *not* level purchases, and they are the honest cases
+the schedule's third rule covers. `highly organized` at −4 buys no level at all — it buys
+§3.1's spin-up behaviour and §3.4's commitment adherence, which is worth more than any two
+levels and is priced by judgement. And `works best alone` is a **mixed** trait: it nets to
+−1 because a solo-study benefit is offset by the `discussion` penalty it comes with. A trait
+is allowed to be both, and the tolerance in the schedule is what makes that sayable.
 
 #### The points buy asymmetry, not quality
 
 **r9.** There are no attributes to spend points on (§8 explains why all four were
 deleted). Points go into **starting per-subject levels**, and the budget is zero-sum:
-every subject you begin ahead in is one you begin behind in. *(r10 refines the mechanism —
-points buy traits and traits move the levels — but the argument below is what survived, so
-it is stated first.)*
+every subject you begin ahead in is one you begin behind in. *(r10 and r11 replaced this
+mechanism twice over — points buy traits, traits move levels, and the budget balances
+**costs against refunds** rather than levels against levels. The argument below is what
+survived both passes intact, which is why it is still stated in its original form: the
+conclusion is that a start must be a **shape**, and every later revision found a better way
+to produce one.)*
 
 That single constraint does a lot of work:
 
@@ -1728,10 +1915,24 @@ deciding what you are willing to be bad at.
 
   BAD WITH NUMBERS                                                        +2
   Arithmetic was always someone else's talent.
-    → −2 to every subject tagged `math`                                (§4.5)
-    → math-tagged requirements exist in every track — see below
+    → −2 math      formal manipulation, proofs, calculus       primary
+    → −1 stats     inference, study design, reading results     secondary
     → excludes  LONG MATHEMATICS · OLYMPIAD
 ```
+
+The `stats` secondary is doing real work, and it is r11's clearest illustration of why a
+hindrance spreads. Reading a results table where the control group measures differently is not
+calculus — people are routinely fine at one and hopeless at the other — so `stats` is its own
+tag and a *correlated* penalty rather than the same one. Which produces the trap: a player
+takes `bad with numbers` specifically to avoid CS, and then meets Psych 15's statistics unit,
+Government's methods requirement, and MBB's Stat 110. **You cannot escape numbers by studying
+people**, which is true of Harvard and is exactly the bet-with-a-due-date r10 needs.
+
+Note also what the trait does *not* need to enumerate. It never mentions CS 50 — but CS 50
+demands `math: 1` alongside `code: 2` (§4.1), so the −2 lands there anyway. **Reach is
+emergent from how courses are tagged, not authored per trait**, which is what keeps a
+fifty-trait vocabulary from becoming fifty little matrices. Hence the cap: **one primary at −2,
+at most one secondary at −1.**
 
 Four rules make this an economy rather than a shopping list:
 
@@ -1749,15 +1950,79 @@ Four rules make this an economy rather than a shopping list:
   > tag at all. They are different fields with different vocabularies, and a schema that lets
   > one string serve both will eventually let a trait grant Affinity for being bad at
   > calculus.
-- **Levels are priced non-linearly, refunds are priced flatly.** Stacking three
-  math-positive traits should cost more than the first one did, and stacking three
-  hindrances should pay less than the first one did. Without this, the dominant strategy is
-  always "one enormous spike, everything else dumped."
+- **Levels are priced convexly and refunds concavely.** Stacking three math-positive traits
+  should cost more than the first one did, and going a level deeper into a hindrance should
+  pay *less* than the level before it. Without both curves the dominant strategy is always
+  "one enormous spike, everything else dumped." *(r11 replaces this paragraph's original
+  "refunds are priced flatly" with a schedule; flat refunds were nearly the bug — see below,
+  where the first draft of that schedule paid **more** per level the deeper you went.)*
 - **Refunds are capped at about half the budget.** Not a cap on the *number* of hindrances,
   which is arbitrary and scales badly — a cap on total refund, which scales automatically
   with the budget and therefore with difficulty.
 - **The budget is one number in `content/`** (§4.9), which keeps r9's free difficulty lever
   intact: a smaller budget means fewer defining facts about you, in either direction.
+
+#### r11: the cost schedule, so prices are derived rather than guessed
+
+§4.9 named the real risk in r10 — fifty trait costs are fifty numbers guessed simultaneously
+against each other. **A fixed schedule removes the guessing:** you do not price a trait, you
+describe its shape and the price falls out.
+
+**Buying levels.** Convex in the primary axis, which is where spikes get built:
+
+| Cost | Primary tag | Secondary tag | Note |
+|---|---|---|---|
+| **−1** | +1 | — | |
+| **−2** | +1 | +1 | breadth |
+| **−3** | +2 | +1 | depth — note +2 primary costs 3, not 2 |
+| — | +3 | — | **not available at creation.** You are eighteen. |
+
+**Refunding levels.** Concave, and this is the correction that matters most:
+
+| Refund | Primary | Secondary | Total damage | Points per level of damage |
+|---|---|---|---|---|
+| **+1** | −1 | — | 1 | 1.00 |
+| **+2** | −2 | −1 | 3 | 0.67 |
+
+**No single trait refunds more than +2 in levels.** Together with concavity, that closes the
+farm: going catastrophically bad at one thing pays *worse* per level, so a large refund
+requires several hindrances across *different* tags — and breadth of damage is far harder to
+route around than depth, since the college picks some of your courses (§9.1). The pressure
+points the right way.
+
+**Grants are priced; exclusions are free.** An exclusion only costs you something if you
+wanted the excluded thing, and you didn't or you would not have taken the trait. Paying for
+`excludes: olympiad` would make the dominant hindrance whichever one excludes three traits
+nobody takes. Exclusions are the DAG being structurally honest, not a currency.
+
+**Then multiply by a derived weight, because shape is not value.** The schedule prices *shape*
+and would otherwise price `+1 math` and `+1 discussion` identically — which they are not, since
+the curriculum is not symmetric. So:
+
+```
+cost = round( schedule(shape) × weight(the specific tag) )
+```
+
+and both weights are content queries the project already runs, not hand-tuned numbers:
+
+- **Subject tags** — weighted by requirement coverage: how many requirements demand this tag,
+  and how avoidable they are. This is *the same join* as the invariant below, so the query that
+  proves a hindrance bites also says what it is worth. Add a math-heavy track and numeracy
+  quietly gets more expensive, correctly.
+- **Kind tags** — weighted by rarity against the live NPC pool (§7.4), already specified.
+
+Three rules keep the schedule honest rather than tyrannical:
+
+- **It validates with ±1 tolerance; it does not generate.** A schedule enforced exactly starts
+  driving content — you would invent a grant for `bad with numbers` purely to fill a column,
+  and filler traits are how a vocabulary rots.
+- **Round costs up, refunds down.** The player is the one hunting mispricings, so bias every
+  rounding against them and the residual errors come out boring instead of exploitable.
+- **Structural effects are outside the schedule, and that is admitted.** `international
+  student` refunds +3 while only −1 of it is a level; the rest is no US school network, breaks
+  as a logistics problem, and visa constraints. No table prices that. It is a judgement call,
+  which is exactly what the tolerance and the balance bot exist for — better to say so than to
+  pretend the schedule is total.
 
 #### Min-maxing is the feature; dominance is the bug
 
@@ -1824,6 +2089,44 @@ Two consequences worth having:
   Thanksgiving is a logistics problem, and `program` interacts with it (§9.5) — and it opens
   the rare-language traits that §7.4 weights most heavily. The orientation-week
   international check-ins already sit in the campus calendar waiting for it.
+
+  **r11 gives it a mandatory child**, which is the shape the whole trait tree should follow:
+  a broad fact, then a forced specialisation that makes it specific.
+
+  ```
+  INTERNATIONAL STUDENT                                                   +3
+    kind tag   international
+    affects    writing −1        arguing at length in a second language
+    excludes   US SCHOOL · HOMETOWN US
+    requires   exactly one of ↓
+
+      NORDIC          −3    a language from [Finnish · Swedish · Norwegian · Danish]
+      EAST ASIAN      −3    a language from [Mandarin · Korean · Japanese · Cantonese]
+      SOUTH ASIAN     −2    a language from [Hindi · Urdu · Tamil · Bengali]
+      ANGLOPHONE      +1    no language gained — the mildest, cheapest version
+  ```
+
+  Three things this gets right that one flat trait could not. **It feeds both Affinity tiers
+  from one structure** — the child supplies the rare *exact* match (Swedish × Swedish), the
+  parent supplies the common *kind* match (`international` × `international`), so a Finn and a
+  Korean have something real and small in common while a Finn and a Swede have something large.
+  **`Anglophone` refunding is correct and self-balancing**: a Canadian is genuinely
+  international — no US school network, breaks are still a problem — but gains no rare
+  language, so it is the pure-cost version and should pay. And **Pekka nets to zero**: +3 then
+  −3, no points spent, and what he bought was a rare language, a thinner starting network, and
+  a permanent `writing` penalty. §7.8's "asymmetry, not quality" demonstrated in arithmetic
+  rather than asserted.
+
+  The non-Anglophone children are also what actually deliver §9.1's `language: testable_out` —
+  two recovered course slots — so the parent refunds points and the child buys the slots back.
+
+- **Exclusion, not removal.** *"It removes the `local` tag"* was the natural way to describe
+  this, but `excludes` is the better mechanism and it is already in the schema. A removal is
+  imperative, so purchase order starts to matter or a resolution pass is needed; `excludes` is
+  declarative and the DAG validator checks it for free. Nothing needs to auto-grant `local` —
+  being local is itself purchasable (`US school`, `hometown US`), so international simply
+  excludes those and there is nothing to strip. If something ever does auto-grant tags, revisit
+  it then.
 - **Gating is how a build acquires a theme.** `environmentalist` is not a stat; it is a
   conviction that opens a cluster of extracurriculars and people and closes another cluster
   (you are not going to enjoy the finance club), and it pairs with Government — a
@@ -1976,17 +2279,24 @@ status (`none` → `comping` → `member` → `board`) and Standing.
 or acquired from a named NPC on a named date (§7.7). The provenance is not
 bookkeeping; it is epilogue material.
 
-**Creation** (§7.8) — hometown, school type, family background, languages, plus the
-**resolved build**: the trait set as purchased, each trait's cost, and the budget it was
-spent against. Set once, never mutated, and referenced by Affinity every time a new NPC is
-met. Distinct from `Player traits` precisely because these are the dimensions the game will
-never change.
+**Creation** (§7.8) — hometown, school type, `program`, plus the **resolved build**: the
+trait set as purchased, each trait's cost, and the budget it was spent against. Set once,
+never mutated, and referenced by Affinity every time a new NPC is met. Distinct from `Player
+traits` precisely because these are the dimensions the game will never change. Note that
+family background and languages are *not* separate fields any more — r10 made both traits, so
+they live in the build and nowhere else.
 
 The costs are kept even though nothing reads them in play, for two reasons: the epilogue can
 say what you chose to be bad at, and a save must remain re-validatable against the content it
 was created under. **Starting subject levels are not stored here** — r10 made them derived
 from traits (§7.8), so they are computed at boot from the build and the tag table, and only
 their *movement* through banked hours is state.
+
+**Levels** (r11) — seven numbers, one per subject tag (§4.1), each the derived start plus its
+accumulated movement. Seven is worth stating as a number because these levels are now read by
+two different systems that must agree: the demand gap against a course, and the partner gap
+against a person (§4.5). Nothing else in state is allowed to hold a per-subject competence
+number, or the two gaps will eventually disagree about how good you are at statistics.
 
 **Standing** (§4.10) — probation history per term, the current extracurricular band cap
 if any, and whether honours eligibility has been lost. On the record permanently, and
@@ -2129,6 +2439,20 @@ prerequisite, a course dropped after the deadline, a term on academic probation 
 consumes slots and can push a track from tight to closed. Which means §4.4's quiet
 grading system is what feeds the loudest long-term consequence in the game, exactly as
 it should: the grade is boring, what it forecloses is not.
+
+**r11: the solver gains a fourth output, and it is the useful one.** A demand gap of +5
+(§4.5) closes a *course*, not a track — so the honest answer is almost never "closed" but
+**"closed this year, and here is the cheapest way to open it."** The solver already walks
+the requirement graph, so it can walk it one step further: find the lower-demand courses
+that raise the blocking tag, and report them.
+
+- **Not yet — 3 routes.** *"Math 21b wants `math` 3, you are at −2. Passing Math 1a
+  (wants 0) and Stat 100 (wants 1) puts you at 2 by next fall. Cost: two elective slots,
+  and MBB honours goes from tight to closed."*
+
+This is the same reporter §7.8's creation screen borrows, doing the same job in a different
+place, and it is why the demand gap was worth adding as a *number* rather than a flag. A flag
+can only refuse. A number can be argued with, and told what it would take.
 
 ### 9.4 Declaration is a scene
 
