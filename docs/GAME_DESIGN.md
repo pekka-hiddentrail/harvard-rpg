@@ -55,6 +55,14 @@ Revision history:
   romance track and epilogues as the deliberate exception. Also a cleanup pass on §8:
   money is gone, `Health`/`Wellbeing`/`Condition` collapse into one axis, and the four
   attributes are flagged as unearned and due for deletion.
+- **r9** — **the four attributes are deleted**, and the game is better for it (§8).
+  `Intellect` becomes **starting per-subject levels**, point-bought at creation on a
+  zero-sum budget, so a background produces an academic *shape* rather than a bonus
+  (§7.8). `Discipline` and `Charisma` were already implemented as traits in §7.7's own
+  text. And `Resilience` becomes **Condition driving Stress recovery** — which makes the
+  daily wakeup run your stress buffer, and turns the prototype's most routine habit into
+  a real allocation decision. Nothing was invented: four stats were removed and one
+  existing habit was given a consequence.
 
 ---
 
@@ -314,6 +322,13 @@ Commitments are also how a club becomes a burden rather than a menu item: the
 prototype's running club (Wed/Fri official, Tue optional, Sunday long run) is four
 recurring band occupations, and the player *missed them under pressure* and logged
 it. Joining a thing means the thing takes bands whether you want it to or not.
+
+**r9: one standing commitment is not like the others.** The daily wakeup run and the
+Saturday gym feed `Condition`, and Condition sets how fast Stress falls (§8). So cutting
+the run is the one deficit that makes *every other* deficit harder to absorb — it is a
+loan against the rest of the term, taken out in the week you can least afford it. The
+prototype's grid has a wakeup run on all seven days and never questions it; r9 is what
+makes that habit a decision instead of a formality.
 
 ### 3.5 Meals: where the good study sessions get bought
 
@@ -771,10 +786,10 @@ not a decision — if any company beats no company, you always bring company. Th
 shape is a **band**: a study partner has to be close enough to your level to work with
 you, and far enough above it to be worth the trouble.
 
-Everyone has a per-subject **level** — for the player, derived from hours banked,
-prerequisite coverage (§4.3), and prior results in the subject; for an NPC, from their
-own enrollments and their `strengths` tags (§7.4). What matters is the **gap**, in
-levels, between you and them:
+Everyone has a per-subject **level** — for the player, **set at creation** (§7.8) and
+then moved by hours banked, prerequisite coverage (§4.3), and prior results in the
+subject; for an NPC, from their own enrollments and their `strengths` tags (§7.4). What
+matters is the **gap**, in levels, between you and them:
 
 | Gap (them − you) | Session | Why |
 |---|---|---|
@@ -1552,15 +1567,43 @@ So: **you build a character, and Pekka ships as a preset.**
 background     Finland · international student · public school · military reserve
 languages      Finnish (native) · Swedish · English
 school type    public, non-US
+subject levels Math +2   CS 0   Psych 0   Expos −1        ← the points
 traits         works best alone · highly organized · endurance athlete
 program        degree                                    (§9.5)
 intended track Computer Science — MBB              (a target, not a commitment)
 ```
 
 What creation sets, and nothing more: **hometown, school type, family background,
-language(s), and three or four starting traits**, plus `program` and an optional target
-track. Precisely the non-contagious dimensions from §7.7 — the ones the game will never
-change — plus a small contagious seed the game *will* change.
+language(s), a spend of points across starting subject levels, and three or four starting
+traits**, plus `program` and an optional target track. Precisely the non-contagious
+dimensions from §7.7 — the ones the game will never change — plus a small contagious seed
+the game *will* change.
+
+#### The points buy asymmetry, not quality
+
+**r9.** There are no attributes to spend points on (§8 explains why all four were
+deleted). Points go into **starting per-subject levels**, and the budget is zero-sum:
+every subject you begin ahead in is one you begin behind in.
+
+That single constraint does a lot of work:
+
+- **It cannot be optimised**, which is what this section requires. There is no build that
+  is simply stronger; there are builds that are strong in different weeks of the term.
+- **It feeds §4.5 instead of fighting it.** The joint-study mechanic runs on the *gap*
+  between you and a partner. A global intellect stat would lift you above everyone in
+  everything and quietly delete the ×1.6 band; asymmetric levels create the gaps that
+  make specific people useful to you in specific subjects.
+- **It makes `school type` and `background` load-bearing.** A Finnish public school start
+  is plausibly strong in Math and weak in Expos — writing sustained argument in a second
+  language is genuinely harder. A US prep school is the reverse. So the background choice
+  produces an academic *shape*, not a bonus, and the shape is diegetic: you took the
+  calculus, you never touched CS.
+- **The budget size is a difficulty setting.** A smaller budget means a flatter start and
+  fewer subjects where you have any edge — a real difficulty lever that costs no content.
+
+And it is more distinct than a stat block, not less. *"Strong in Math, hopeless at writing
+English, works best alone, runs every morning, speaks Swedish"* is a person.
+`Int 62 / Dis 71 / Cha 44 / Res 55` is a character sheet.
 
 Why this is cheap rather than a new system: the trait vocabulary already exists, rarity
 is already computed against the actual NPC pool at boot (§7.4), and the tracks already
@@ -1596,19 +1639,37 @@ Stress (>80 risks a burnout milestone) · Condition (§3.5 — slow; runs and gy
 snack diet down) · Reputation, tracked separately for academic / social /
 extracurricular
 
-**Attributes** (0-100, shaped over the year)
-Intellect · Discipline · Charisma · Resilience
+**There are no attributes.** r9 deleted all four, and this is the single largest
+simplification in the document's history. What replaced each one:
 
-> ⚠ **This block is r2-era and needs a prune pass before milestone 3.** Three
-> problems, all created by the design getting sharper around it. **Money is gone** —
-> §1.1 establishes it as a non-issue, so listing it as a resource was dead weight.
-> **Health, Wellbeing and Condition were three names for one axis**; `Condition` wins
-> because §3.5 gives it actual inputs and the other two never had any. And the four
-> remaining **attributes are the weakest part of this document**: `Intellect` was
-> supposed to modify study output, but §4.5's per-subject levels do that job better and
-> per-subject, and `Discipline` / `Resilience` have no rule attached anywhere. Either
-> each attribute earns a formula at milestone 3 or it gets deleted. Do not author
-> content against them until that is settled.
+| Deleted | Its job now belongs to | Why that is better |
+|---|---|---|
+| **Intellect** | starting **per-subject levels** (§4.5, set at creation §7.8) | Asymmetric by construction, and a global stat actively damaged the joint-study gap |
+| **Discipline** | the traits `highly organized`, `works best alone` (§7.7) | Already specified there, with effects. A scalar beside a trait doing the same job is duplication |
+| **Charisma** | traits (`outgoing` accelerates the acquaintance curve, §7.7) | Same. Affinity is trait overlap; a global charm multiplier flattens it |
+| **Resilience** | **Condition drives Stress recovery** (below) | Turns a number you were dealt into something you maintain 180 times |
+
+The reasoning that decided it: **points and traits obey opposite logics.** A trait opens
+some doors and closes others, which is what §7.8 requires of everything on the creation
+screen. A point on a 0–100 scalar just makes you better — Intellect 70 beats Intellect 40
+at studying, always. Put both on one screen and the traits become decoration while the
+points become the real build.
+
+**Condition is now the stress-recovery rate**, and this is the piece that earns its keep.
+Stress accrues from deadlines, conflict, broken promises and Night-band borrowing. How
+fast it falls, and how high your burnout ceiling sits, is set by Condition — which §3.5
+already feeds from the daily wakeup run, the Saturday gym, and whether you have been
+eating or snacking.
+
+Which makes the morning run **your Stress buffer** rather than a line on a grid. The
+player who cuts it for three weeks to buy study bands is spending resilience they will
+want in November, and the prototype's own schedule already contains the input: a wakeup
+run every single day and one gym session on Saturday. Nothing was invented here; a stat
+was deleted and an existing habit was given a consequence.
+
+What still *grows* over the year, since the attribute block was the notional home for
+character growth: per-subject levels (hours), the trait set (contagion, §7.7), Condition,
+and the network (§7.2). Four growth vectors, all specified, all visible to the player.
 
 **Academic** — per enrolled course: attendance record per session; **the study-hour
 tally toward that course's next assessment** (§4.4); a **per-subject level** feeding

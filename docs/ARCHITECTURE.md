@@ -1,6 +1,6 @@
 # Harvard RPG — Technical Architecture
 
-**Status:** proposal, revision 8. No code written yet.
+**Status:** proposal, revision 9. No code written yet.
 Companion to `GAME_DESIGN.md`.
 
 - **r2** — daily calendar loop instead of a weekly planner; narration tiers drive
@@ -45,6 +45,14 @@ Companion to `GAME_DESIGN.md`.
   **Tone** becomes a cached prompt block and two eval cases, not a preference (§5.3, §10).
   And the syllabus-authoring answer changes the *process* around `content/`, not the code
   (§3.1).
+- **r9** — a **net deletion**, which is the best kind of revision. `GAME_DESIGN.md` §8
+  removes all four attributes, so there is no attribute code to write, no attribute
+  content to author, and four fewer numbers in every view model. What arrives instead is
+  small and pointed: `creation.ts` validates a **zero-sum level budget** (§4), `levels.ts`
+  seeds from creation rather than from zero, and `stress.ts` is new — Stress accrual with
+  a **Condition-driven recovery rate** (§2). One new balance-bot assertion falls out, and
+  it is the interesting one: cutting exercise to buy study bands must be a *losing*
+  strategy over a term (§10).
 
 ---
 
@@ -112,7 +120,8 @@ harvard-rpg/
 │   │   │   ├── traits.ts        # player trait set, contagion thresholds, exclusions
 │   │   │   ├── social.ts        # per-venue acquaintance cap + saturation curve
 │   │   │   ├── relationships.ts # NPC axes, romance state machine, sacrifice log
-│   │   │   ├── levels.ts        # per-subject level for player and NPCs
+│   │   │   ├── levels.ts        # per-subject level: seeded at creation, then earned
+│   │   │   ├── stress.ts        # Stress accrual; recovery rate driven by Condition
 │   │   │   ├── studyGroup.ts    # gap → multiplier, bridgeability, group drag
 │   │   │   ├── grading.ts       # tally → bracket → hidden draw → score → forecast
 │   │   │   ├── standing.ts      # term GPA → probation, caps, permanent record (§4.10)
@@ -351,9 +360,12 @@ renders them.
 ```
 GET  /api/game/:id              → { view, ...viewModel }
 POST /api/game/new              → { preset? } | { hometown, schoolType, background,
-                                    languages[], traits[], program, targetTrack? }
+                                    languages[], levels{}, traits[], program,
+                                    targetTrack? }
                                   → { gameId }   # validated against traits.yaml (§7.8)
-GET  /api/creation/options      → vocabulary + presets + what each choice *reaches*
+                                  #   levels{} must sum to zero — see below
+GET  /api/creation/options      → vocabulary + presets + level budget + what each
+                                  choice *reaches*
 POST /api/game/:id/plan-day     → { date, bands: Allocation[] }
                                 #   Allocation = { band, startHalf?, length?, activity,
                                 #                  target?, withPeople? }
@@ -457,6 +469,16 @@ construction — and it is deliberately not comparable across dimensions, becaus
 that reaches four people is not therefore worse than one that reaches nine. This is a
 route where a helpful-looking addition would break a design rule, so the omission is
 worth a comment in the code.
+
+**`levels{}` must sum to zero, and the server enforces it.** r9 replaced the four
+attributes with a zero-sum spend across starting subject levels
+(`GAME_DESIGN.md` §7.8), which means the interesting validation is not a range check
+but a **sum** check, plus a per-subject clamp so nobody starts at +5 in one thing and
+−5 across four others. Reject at `/new` with the arithmetic in the error, since this
+is a screen the player is actively editing.
+
+The budget size is a difficulty setting, so it belongs in `content/` rather than in
+code — one number in a `rules.yaml`, covered by the content hash like everything else.
 
 **The creation block is immutable, and it is not an action.** It is written once at
 `POST /new` and becomes part of the replay seed material rather than a log entry — the
@@ -819,6 +841,19 @@ key — and with the tier system, most of the game doesn't call the API at all.
   beats two separate 1-band sessions on the same total time; `minDuration` refuses a
   lecture in a half; conflict detection catches a half-band overlap that band-granular
   logic would miss; and the day's halves always sum to 22.
+- **Stress and Condition tests** (r9). Recovery rate scales with Condition; the burnout
+  threshold is reachable; Condition responds to run/gym attendance and to a snack diet
+  (§3.5 of the design) on the right timescale — weeks, not days. Plus **one balance-bot
+  assertion that is really a design claim**: a strategy that cuts exercise to buy study
+  bands must *lose* over a full term. If it wins, Condition is decoration and the r9
+  deletion of `Resilience` took something real with it.
+- **Level-budget tests** (r9). A build whose `levels{}` does not sum to zero is rejected;
+  the per-subject clamp holds; and no legal build strictly dominates another on the
+  balance bot — which is the machine-checkable form of §7.8's "creation must not be
+  optimisable."
+- **A grep test for attributes** (r9). Assert that `Intellect`, `Discipline`, `Charisma`
+  and `Resilience` appear nowhere in `packages/` or `content/`. Trivial, and worth having
+  because deleted concepts come back through well-meaning additions.
 - **Creation tests** (r8). Every preset validates against `traits.yaml`; a build with a
   mutually-exclusive trait pair (§7.7) is rejected at `/new` rather than at first use;
   rarity weights are recomputed from the actual pool, so adding NPCs changes them; and
@@ -1012,3 +1047,9 @@ than at milestone 8.
   reviewed, committed, hash-pinned syllabus is play-invariant regardless of who typed
   the first draft; the review step is the part that matters, not the typing
   (`GAME_DESIGN.md` §4.7).
+- **No attributes at all, and the creation budget is zero-sum.** Revision 9. Points and
+  traits obey opposite logics — a trait opens and closes doors, a point on a scalar just
+  makes you better — so the two cannot share a screen without the traits becoming
+  decoration. The sum check replaces four systems (`GAME_DESIGN.md` §8, §7.8).
+- **The level budget lives in `content/`, not in code.** Revision 9. It is a difficulty
+  lever, so it should be tunable by editing data and pinned by the content hash (§4).
