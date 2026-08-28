@@ -23,7 +23,7 @@ import { describe, it } from 'node:test'
 const here = dirname(fileURLToPath(import.meta.url))
 const repo = join(here, '..', '..', '..')
 
-const sources = (dir: string): string[] => {
+const filesUnder = (dir: string, match: RegExp): string[] => {
   const out: string[] = []
   const walk = (d: string) => {
     let entries: import('node:fs').Dirent[]
@@ -34,13 +34,18 @@ const sources = (dir: string): string[] => {
     }
     for (const e of entries) {
       const p = join(d, e.name)
-      if (e.isDirectory()) walk(p)
-      else if (/\.(ts|tsx)$/.test(e.name)) out.push(p)
+      if (e.isDirectory()) {
+        if (e.name === 'node_modules') continue
+        walk(p)
+      } else if (match.test(e.name)) out.push(p)
     }
   }
   walk(dir)
   return out
 }
+
+const sources = (dir: string) => filesUnder(dir, /\.(ts|tsx)$/)
+const contentFiles = (dir: string) => filesUnder(dir, /\.(ya?ml|json)$/)
 
 const scan = (dir: string, patterns: [RegExp, string][]) => {
   const offences: string[] = []
@@ -90,6 +95,33 @@ describe('client boundaries', () => {
       [/from\s+['"](better-sqlite3|node:fs)['"]/, 'the client must not touch the save'],
       [/\bANTHROPIC_API_KEY\b/, 'the key is read server-side at boot and never leaves it'],
     ])
+    assert.deepEqual(offences, [], `\n${offences.join('\n')}\n`)
+  })
+})
+
+describe('the deleted attributes stay deleted', () => {
+  it('names none of the four anywhere in packages/ or content/', () => {
+    // r9 deleted Intellect, Discipline, Charisma and Resilience outright. The argument was
+    // that points and traits obey opposite logics: a trait opens some doors and closes
+    // others, a point on a scalar just makes you better. Put both on one screen and the
+    // traits become decoration. This test exists because the four are easy to reintroduce
+    // by accident — they are the obvious names for things.
+    const banned = /\b(intellect|discipline|charisma|resilience)\b/i
+    const offences: string[] = []
+    for (const dir of ['packages', 'content']) {
+      const files = [
+        ...sources(join(repo, dir)),
+        ...contentFiles(join(repo, dir)),
+      ]
+      for (const file of files) {
+        if (file === fileURLToPath(import.meta.url)) continue
+        readFileSync(file, 'utf8')
+          .split('\n')
+          .forEach((line, i) => {
+            if (banned.test(line)) offences.push(`${relative(repo, file)}:${i + 1} ${line.trim()}`)
+          })
+      }
+    }
     assert.deepEqual(offences, [], `\n${offences.join('\n')}\n`)
   })
 })
