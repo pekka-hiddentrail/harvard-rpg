@@ -1,6 +1,6 @@
 # Harvard RPG — Technical Architecture
 
-**Status:** proposal, revision 7. No code written yet.
+**Status:** proposal, revision 11. No code written yet.
 Companion to `GAME_DESIGN.md`.
 
 - **r2** — daily calendar loop instead of a weekly planner; narration tiers drive
@@ -31,12 +31,58 @@ Companion to `GAME_DESIGN.md`.
   (`studyPlan.ts`) — the last being the only genuinely new *algorithm* in the project
   (§3.4). Milestone order changes to put the study plan before the narrator (§11).
 - **r7** — **the client becomes a terminal UI** (Ink), which changes the stack row and
-  nothing behind the HTTP boundary (§1, §4.6). The band grid gains **half-bands**, so
+  nothing behind the HTTP boundary (§1, §4). The band grid gains **half-bands**, so
   `bands.ts` works in units of 0.5 and conflict detection is half-granular (§2, §4, §10).
   `meals.ts` is new — the meal gap clock, snacks, and eating out (§2, §4). The assessment
   view model gains `confidence`, which means the bracket is now *deliberately*
   player-facing while the draw stays secret — a narrower leak test, not a weaker one
   (§3.3, §10).
+- **r8** — the four gaps `GAME_DESIGN.md` r8 closes, and each one lands somewhere here.
+  **Character creation** means the save has an immutable creation block and the game
+  needs a `/new` route that validates a build against the trait vocabulary (§2 `creation.ts`,
+  §4). **Probation** is `standing.ts` — a term-boundary computation with a permanent
+  record, and it becomes a balance-bot assertion rather than just a feature (§2, §10).
+  **Tone** becomes a cached prompt block and two eval cases, not a preference (§5.3, §10).
+  And the syllabus-authoring answer changes the *process* around `content/`, not the code
+  (§3.1).
+- **r9** — a **net deletion**, which is the best kind of revision. `GAME_DESIGN.md` §8
+  removes all four attributes, so there is no attribute code to write, no attribute
+  content to author, and four fewer numbers in every view model. What arrives instead is
+  small and pointed: `creation.ts` validates a **zero-sum level budget** (§4), `levels.ts`
+  seeds from creation rather than from zero, and `stress.ts` is new — Stress accrual with
+  a **Condition-driven recovery rate** (§2). One new balance-bot assertion falls out, and
+  it is the interesting one: cutting exercise to buy study bands must be a *losing*
+  strategy over a term (§10).
+- **r10** — the priced trait economy (`GAME_DESIGN.md` §7.8). This is mostly **content
+  schema plus one validator**, which is the shape to want: traits become **packs** that grow
+  incrementally (`core.yaml` first), and each record grows `cost`,
+  `affects` (subject tags), `tags` (kind tags), `requires`, `excludes`, `bonding`; subjects
+  grow a tag list; `creation.ts` becomes a budget checker over a prerequisite DAG and gains a
+  `resolveLevels` step, so `levels.ts` seeds from *derived* levels rather than from a
+  submitted `levels{}` map — the route gets simpler, not harder. `affinity.ts` gains the
+  kind-tag tier with diminishing returns. The two tests that matter are both **content
+  invariants** rather than code tests, and both would otherwise rot silently: every
+  hindrance-targetable subject tag must appear in an unavoidable requirement, and the total
+  of all kind-tag matches must stay under one rare exact match (§10). Packs must be in the
+  content hash from commit one, since adding one shifts rarity and therefore every Affinity
+  weight in an unpinned save (§4).
+- **r11** — course `demands`, the demand-gap curve, and a **derived** price schedule
+  (`GAME_DESIGN.md` §4.1, §4.5, §7.8). Again mostly content schema, but with one structural
+  consequence worth naming: **the cost of a trait is now computed, not authored.**
+  `creation.ts` gains a `priceTrait()` that multiplies the shape schedule by a weight
+  derived from requirement coverage (subject tags) and pool rarity (kind tags), and the
+  authored `cost` field becomes a **checked assertion with ±1 tolerance** rather than the
+  source of truth — so pack authors get told when a price has drifted instead of quietly
+  shipping a free hindrance. Everything else is additive: `syllabus.ts` grows
+  `demandGap(course, levels)` and the convex multiplier that turns it into hours, which is
+  the one number `estimateHours()` was missing; `studyPlan.ts` uses the same call to make
+  prerequisites *mechanical* (a missing prereq is a +3 gap, not a permission error) and to
+  give the shopping-week preview a real readout; `relationships.ts` grows dispositions, a
+  **third tag namespace that is NPC-only** and must never reach `affinity.ts`. The new tests
+  are cheap and catch the two mistakes actually made while designing this: the gap curve
+  must be strictly convex, and the refund schedule must be strictly *concave* in
+  points-per-level — the first draft was convex, which paid the player for going deeper into
+  a hindrance (§10).
 
 ---
 
@@ -83,6 +129,8 @@ harvard-rpg/
 │   │   │   ├── calendar.ts      # real dates, terms, day-of-week
 │   │   │   ├── syllabus.ts      # syllabus queries: what's due, what's covered,
 │   │   │   │                    #   effective hour cost given attendance
+│   │   │   ├── demands.ts       # demandGap(course, levels) → per-tag gap; the
+│   │   │   │                    #   convex hours multiplier (r11, §4.5)
 │   │   │   ├── day.ts           # band allocation + day resolution (bands, not slots)
 │   │   │   ├── bands.ts         # the 11-band grid in units of 0.5; spin-up cost,
 │   │   │   │                    #   minDuration per activity, half-band remainders
@@ -99,29 +147,48 @@ harvard-rpg/
 │   │   │   ├── beats.ts         # trigger evaluation, beat selection, tier assignment
 │   │   │   ├── cast.ts          # resolve who is present: enrollments, orgs,
 │   │   │   │                    #   dining halls, time of day. NEVER the LLM.
-│   │   │   ├── affinity.ts      # static trait-overlap multiplier (player × NPC)
+│   │   │   ├── creation.ts      # budget check over the trait DAG; resolveLevels();
+│   │   │   │                    #   rarity at boot; priceTrait() = schedule(shape)
+│   │   │   │                    #   × derived weight, authored cost checked ±1 (r11)
+│   │   │   ├── affinity.ts      # two-tier overlap: exact trait + kind tag (§7.4).
+│   │   │   │                    #   NEVER reads dispositions (r11 namespace 3)
 │   │   │   ├── traits.ts        # player trait set, contagion thresholds, exclusions
+│   │   │   │                    #   (contagion pool = positive-cost traits only)
 │   │   │   ├── social.ts        # per-venue acquaintance cap + saturation curve
-│   │   │   ├── relationships.ts # NPC axes, romance state machine, sacrifice log
-│   │   │   ├── levels.ts        # per-subject level for player and NPCs
+│   │   │   ├── relationships.ts # NPC axes, romance state machine, sacrifice log,
+│   │   │   │                    #   NPC dispositions: ramp shape, decay, referral
+│   │   │   ├── levels.ts        # per-subject level: derived from the build via
+│   │   │   │                    #   subject tags, then moved by hours (r10)
+│   │   │   ├── stress.ts        # Stress accrual; recovery rate driven by Condition
 │   │   │   ├── studyGroup.ts    # gap → multiplier, bridgeability, group drag
 │   │   │   ├── grading.ts       # tally → bracket → hidden draw → score → forecast
+│   │   │   ├── standing.ts      # term GPA → probation, caps, permanent record (§4.10)
 │   │   │   ├── studyPlan.ts     # requirement graph: satisfied / outstanding /
-│   │   │   │                    #   feasible, with the reason a track closed
+│   │   │   │                    #   feasible, with the reason a track closed.
+│   │   │   │                    #   Prereqs are demand gaps, not permission checks
 │   │   │   ├── clamp.ts         # delta validation + magnitude caps (§7)
 │   │   │   └── rng.ts           # seeded PRNG + derive()
 │   │   └── test/                # the bulk of the test suite
 │   ├── content/                 # authored data, Zod-validated at boot
-│   │   ├── courses/*.yaml       # SYLLABI — the largest authoring job (§3.1)
+│   │   ├── courses/*.yaml       # SYLLABI — the largest authoring job (§3.1).
+│   │   │                        #   Each grows demands: {tag: level} (r11, §4.1)
 │   │   ├── beats/*.yaml
 │   │   ├── calendar/*.yaml      # term dates, fixed institutional events
-│   │   ├── course-stubs/*.yaml  # id/field/prereqs/buckets only, ~120 (§4.9 of design)
+│   │   ├── course-stubs/*.yaml  # id/field/prereqs/buckets/demands, ~120 (§4.9)
 │   │   ├── tracks/*.yaml        # requirement graphs, 7 of them
 │   │   ├── requirements.yaml    # college-wide: Expos, Gen Ed, distribution, language
-│   │   ├── npcs/*.yaml          # ~60 background + ~55 foreground (§11)
+│   │   ├── npcs/*.yaml          # ~60 background + ~55 foreground (§11).
+│   │   │                        #   dispositions[] — NPC-only, never bonding (r11)
 │   │   ├── staff/*.yaml         # faculty, proctors, advisors
 │   │   ├── orgs/*.yaml
-│   │   ├── traits.yaml          # vocabulary, rarity source, `contagious` flags
+│   │   ├── traits/*.yaml        # TRAIT PACKS: core.yaml ships first, packs added
+│   │   │                        #   later. Per trait: cost, affects[] (subject tags),
+│   │   │                        #   tags[] (kind tags), requires/excludes,
+│   │   │                        #   contagious, bonding  (§7.8, §7.4)
+│   │   ├── rules.yaml           # creation budget, refund cap, the r11 cost schedule
+│   │   │                        #   (shape → levels), the demand-gap multiplier
+│   │   │                        #   table, and the seven closed subject tags
+│   │   ├── presets/*.yaml       # character presets, incl. Pekka (§7.8 of design)
 │   │   ├── venues/*.yaml        # buildings, with `size` and `known` rosters
 │   │   └── prompts/             # world bible + per-route system prompts
 │   ├── narrator/                # the ONLY package that talks to Anthropic
@@ -339,6 +406,18 @@ renders them.
 
 ```
 GET  /api/game/:id              → { view, ...viewModel }
+POST /api/game/new              → { preset? } | { hometown, schoolType, background,
+                                    traits[], program, targetTrack? }
+                                  → { gameId }   # validated against the trait packs
+                                  #   r10: no levels{} and no languages[] — both are
+                                  #   traits now. Σ cost must equal the budget, the DAG
+                                  #   must be satisfied, refunds must be under the cap.
+GET  /api/creation/options      → packs + presets + budget + refund cap, and per trait
+                                  its cost, what it *unlocks*, and who it *reaches*
+                                  #   r11: also the cost schedule itself, plus each
+                                  #   trait's primary/secondary tag split and its
+                                  #   mandatory children — the screen has to render
+                                  #   "requires exactly one of ↓" (§7.8)
 POST /api/game/:id/plan-day     → { date, bands: Allocation[] }
                                 #   Allocation = { band, startHalf?, length?, activity,
                                 #                  target?, withPeople? }
@@ -371,7 +450,10 @@ POST /api/game/:id/arrangement/:aid    → { action: 'cancel' | 'reschedule', �
 GET  /api/game/:id/syllabus/:courseId  → the full readable syllabus
 POST /api/game/:id/workload-preview    → { candidateCourseIds[] }
                                        → per-week est_hours, collision points,
-                                         free-band count per weekday, venue sizes
+                                         free-band count per weekday, venue sizes,
+                                         and per course its demand gaps + the
+                                         resulting hours multiplier (r11) — plus
+                                         `survivable: false` at +5 (§4.6)
 POST /api/game/:id/enroll              → { courseIds[] }
 
 # grading — note what is NOT here
@@ -435,6 +517,85 @@ a band conflict, a crunch week of their own, or low Warmth — so the route retu
 `{ accepted: false, why }` rather than an error. A refusal is information the player
 wanted, not a failed request.
 
+**`/creation/options` returns reach, never scores.** For each language and trait it
+returns *how many people in the pool it connects you to* and nothing resembling a rating
+(`GAME_DESIGN.md` §7.8). That number is a pure content query, so it is honest by
+construction — and it is deliberately not comparable across dimensions, because a trait
+that reaches four people is not therefore worse than one that reaches nine. This is a
+route where a helpful-looking addition would break a design rule, so the omission is
+worth a comment in the code.
+
+**The build validator is the only real logic on this route, and r10 made it smaller.**
+r9 asked the client to submit a `levels{}` map summing to zero; r10 removed the field
+entirely, because levels are now *derived* from the trait build via subject tags
+(`GAME_DESIGN.md` §7.8). The client submits traits and nothing numeric, which means the
+whole class of "client sent an inconsistent level map" bugs is gone by construction — the
+usual benefit of taking a derived value out of a payload.
+
+What remains is four checks, and all four should reject with the arithmetic or the missing
+prerequisite named, since this is a screen the player is actively editing:
+
+```
+Σ cost === budget          # not ≤. No banking points, so "left 0" is always the goal
+Σ refunds ≤ refundCap      # the r10 cap on hindrance stacking
+requires / excludes        # a DAG walk; report why, per GAME_DESIGN §9.3's reporter
+mandatory children chosen  # r11: `international student` requires exactly one of ↓
+trait ids exist            # in the packs this save is pinned to
+```
+
+Then `resolveLevels(build)` folds `affects` across the trait set to produce the starting
+levels, and `levels.ts` seeds from that. Derivation lives in the engine, not the route.
+
+The budget, the refund cap, and the level pricing curve are difficulty settings, so they
+belong in `content/rules.yaml` rather than in code — covered by the content hash like
+everything else.
+
+**r11: prices are derived at boot, and the authored number is only an assertion.**
+`GAME_DESIGN.md` §7.8 prices a trait as `schedule(shape) × weight(tag)`, where the weight
+comes from requirement coverage for subject tags and pool rarity for kind tags — both of
+which are queries over content the engine already loads. So `priceTrait()` lives beside
+`resolveLevels()` in `creation.ts` and runs once at boot, and the `cost:` field in the
+YAML is validated against it **with ±1 tolerance** rather than trusted.
+
+Two things about that tolerance are deliberate. It **validates, it does not generate** —
+a fully generated price would let an author ship a trait with no editorial judgement in it
+at all, and the honest failure mode of that is filler content. And ±1 rather than exact,
+because a structural effect is genuinely outside the schedule: `international student`
+refunds +3 while only −1 of that is a level, the rest being an exclusion set and an
+Affinity tier. A hard equality check would force a fake level onto it to make the
+arithmetic close, which is the tail wagging the dog.
+
+Note what this buys operationally: because the subject-tag weight is *the same join* as
+the r10 content invariant (a hindrance tag must appear in an unavoidable requirement), the
+query that proves a hindrance bites is the query that prices it. If a requirement is later
+softened, the invariant fails and the price moves, in one place.
+
+**Trait packs, and the one thing that makes them safe.** Traits ship as packs — `core.yaml`
+first, more added during development — so the ~50-record authoring job in `GAME_DESIGN.md`
+§4.9 becomes incremental instead of a prerequisite. Three rules keep that from breaking
+saves, and they are cheap now and expensive later:
+
+- **Packs are enumerated in the content hash**, so a save records which packs at which
+  version it was created under and keeps playing under them. This is the existing pinning
+  mechanism (§3.1); packs just have to be *in* it from the first commit.
+- **Trait content is append-only** — ids are never renamed or removed, only deprecated with
+  a flag that hides them from new builds. Presets and every existing save reference ids.
+- **Adding a pack shifts rarity, therefore Affinity.** Rarity is computed against the pool
+  at boot (§7.4), which is the right design, but it means an unpinned save would silently
+  get different Affinity after a content update. The pin is what prevents that, and it is
+  the reason packs cannot be a late addition to the schema.
+
+The minimum viable `core.yaml` is small: roughly twelve to sixteen traits is enough to
+exercise every mechanic — two languages and one `international` for both Affinity tiers, one
+athletic trait plus one gated child for the DAG, two subject-positive, two hindrances for the
+refund path, three contagious personality traits, and one conviction. Everything after that
+is content, not engineering.
+
+**The creation block is immutable, and it is not an action.** It is written once at
+`POST /new` and becomes part of the replay seed material rather than a log entry — the
+event log describes a *character playing*, so there is nothing before the character. This
+also means it cannot be edited by any later action, which is what §7.8 requires.
+
 **`study-plan/target` and `declare` are different actions on purpose.** Targeting a
 track is free, reversible, and can be done in the first week; declaring is once,
 sophomore fall, and is a Tier 3 beat. Conflating them would throw away the year of
@@ -455,6 +616,13 @@ history.
 engine query over content**, with no LLM and no state mutation. The most
 informationally dense screen in the game — the one that makes shopping week a real
 decision — costs nothing to compute and nothing to run.
+
+r11 makes that screen materially better for one line of code, which is the tell that the
+`demands` field was the missing piece rather than an addition. Before it, the preview could
+only say *"CS 50: ~12h/week"* — the same sentence for every player. With per-tag demands it
+says *"CS 50 wants `math` at 2, you are at 1 → ×1.25, so ~15h for you"*, which is the
+difference between a workload number and a **personal** workload number. The route shape
+does not change: still pure, still cached, still one join.
 
 The client cannot compute a stat change, cannot see an unrevealed outcome, and
 cannot know a risk roll before it happens. r6 noted that swapping React for a TUI
@@ -588,6 +756,20 @@ Rules the implementation must hold:
   write premium buys nothing.
 - The system prefix is byte-identical across all players and sessions on a route,
   so it caches globally rather than per-save.
+- **r8: the creation block does not go in the system prompt either, and this is a new
+  trap.** Now that the player has a hometown, a first language and a background
+  (`GAME_DESIGN.md` §7.8), the natural instinct is to put *"the player is Finnish and
+  speaks Swedish"* into the frozen prefix, since it never changes **for this save**. It
+  changes between saves, which is enough to make the prefix per-save and forfeit the
+  global cache reuse the line above depends on. It belongs in `stateDigest`. Same class
+  of mistake as the date, one step less obvious.
+- **`STYLE_GUIDE` is where the tone rules live**, and after r8 that is a real block
+  rather than a placeholder — dry, close third person, no summarising the player's
+  emotional state, no adjective the state model cannot support, with the romance and
+  epilogue routes overriding the last two (`GAME_DESIGN.md` §5.4). It is frozen and
+  cached like everything else in the prefix, so tone costs nothing per call and changing
+  it invalidates the cache — which is a reason to settle it before milestone 5, not
+  during it.
 - Content files serialize with sorted keys, so the prefix is byte-stable across
   boots.
 
@@ -777,6 +959,71 @@ key — and with the tier system, most of the game doesn't call the API at all.
   beats two separate 1-band sessions on the same total time; `minDuration` refuses a
   lecture in a half; conflict detection catches a half-band overlap that band-granular
   logic would miss; and the day's halves always sum to 22.
+- **Stress and Condition tests** (r9). Recovery rate scales with Condition; the burnout
+  threshold is reachable; Condition responds to run/gym attendance and to a snack diet
+  (§3.5 of the design) on the right timescale — weeks, not days. Plus **one balance-bot
+  assertion that is really a design claim**: a strategy that cuts exercise to buy study
+  bands must *lose* over a full term. If it wins, Condition is decoration and the r9
+  deletion of `Resilience` took something real with it.
+- **Build-budget tests** (r9, rewritten r10). A build whose costs do not sum to the budget
+  is rejected; refunds over the cap are rejected; the `requires`/`excludes` DAG is acyclic
+  and its violation messages name the missing prerequisite; `resolveLevels` is a pure
+  function of the build and the tag table. And the balance-bot assertion, restated for r10:
+  no legal build **strictly dominates** another — a build that is worse overall is fine and
+  expected, since that is the hard mode §7.8 deliberately allows.
+- **Two content invariants** (r10), and these are the ones worth writing carefully, because
+  both fail silently and both rot as content is added rather than breaking on the commit
+  that causes them:
+  - **Every subject tag targetable by a hindrance appears in at least one requirement no
+    student can avoid** (`GAME_DESIGN.md` §7.8). This is what guarantees a hindrance bites
+    and a min-max is a bet rather than an exploit. It is a join over `traits/*.yaml`,
+    subject tags, and `requirements.yaml`.
+  - **The sum of every possible kind-tag Affinity match is strictly less than one rare exact
+    match** (§7.4). Computed against the actual NPC pool, so it is re-checked whenever the
+    cast or a trait pack changes — which is exactly when it would otherwise break.
+- **Trait pack tests** (r10). Ids are append-only: a test compares the current pack ids
+  against a committed manifest and fails on any rename or removal. Every preset resolves
+  against the packs it pins. A save created under one pack set replays identically after a
+  new pack is added — the pin holds, so rarity and therefore Affinity do not move.
+- **Namespace separation** (r10, extended r11). No string appears in both a trait's
+  `affects` (subject tags) and any trait's `tags` (kind tags). Cheap, and it prevents the
+  failure §7.8 warns about: a trait granting Affinity for being bad at calculus. r11 adds
+  the third namespace: **no disposition id appears in any trait's `tags`, and no player
+  build may carry one** — a player holding `mentor type` would gain Affinity with every
+  mentor in the cast (§7.4). The stronger form of the same test is that `affinity.ts` must
+  not reference the disposition table at all, which is an import check.
+- **Curve-shape tests** (r11). Both of these encode a mistake made while designing, which
+  is the only kind of curve test worth writing:
+  - **The demand-gap multiplier is strictly convex** — each step up in gap costs more than
+    the step before it (§4.5). A linear table would make a handicap a flat tax that never
+    escalates, which is the thing r11 exists to fix.
+  - **The refund schedule is strictly concave in points-per-level-of-damage** — refunding
+    a deeper hindrance must pay *less* per level, never more. The first draft paid 0.50 →
+    0.67 → 0.75, a points farm: a player could fund a whole build by going maximally bad at
+    one thing. Also assert the hard cap, that no single trait refunds more than +2 in
+    levels, and the authoring cap of one primary and at most one secondary.
+- **Schedule conformance** (r11). Every authored `cost` is within ±1 of
+  `priceTrait()` — a warning-level failure at boot in development and a hard failure in CI,
+  since a drifted price is how a hindrance quietly becomes free. Plus: costs round up and
+  refunds round down, so rounding never makes a build cheaper.
+- **A grep test for attributes** (r9). Assert that `Intellect`, `Discipline`, `Charisma`
+  and `Resilience` appear nowhere in `packages/` or `content/`. Trivial, and worth having
+  because deleted concepts come back through well-meaning additions.
+- **Creation tests** (r8). Every preset validates against the trait packs; a build with a
+  mutually-exclusive trait pair (§7.7) is rejected at `/new` rather than at first use;
+  rarity weights are recomputed from the actual pool, so adding NPCs changes them; and
+  the creation block survives replay unchanged, since nothing may mutate it.
+- **Probation tests** (r8). The 2.0 threshold at the boundary; the extracurricular cap
+  actually refuses allocations rather than warning; probation persists across a term
+  boundary and into the epilogue payload; a second occurrence escalates instead of
+  repeating. Plus one **balance-bot assertion**: at least one of the bot's strategies
+  must reach probation. If none does, the downside is decoration and the thresholds are
+  wrong (`GAME_DESIGN.md` §4.10).
+- **Tone eval cases** (r8). Two, run against the mock and periodically against the real
+  model: generated prose must not name the player's emotional state, and must not use an
+  intensity adjective the state model cannot support. Both are grep-able heuristics over
+  a wordlist rather than judgement calls, which is the only reason they are worth
+  automating — the romance and epilogue routes are exempt by design.
 - **Meal tests** (r7). The gap clock after `move` vs. `convert`; a snack resets it for
   two bands and then stops; `out` consumes 1.5–2 bands and closes the roster, so a
   `/table` query at that band returns no new faces; `Condition` drift over a
@@ -837,13 +1084,13 @@ key — and with the tier system, most of the game doesn't call the API at all.
 |---|---|---|
 | 1 | Engine skeleton | State schemas (built for four years, §9), calendar, seeded RNG, `applyAction`, replay, content loader + hash pinning. Tests green. No server, no LLM. |
 | 1.5 | **Port the prototype** | The files are read (see note below); this is now a data job. `xlsx → TSV → YAML` for the eight sheets: ~115 NPC records across both tiers, 30 staff, the four-year course plan, the four-year traditions calendar, the campus locations, the 11-band weekly grid, and the Fall term's per-date lecture topics and deadlines. Write it as a **one-shot script, kept in `tools/`, not a runtime importer** — the spreadsheet stops being the source of truth the moment the YAML exists. |
-| 2 | **Academic spine** | Syllabus schema, semantic validator (§3.2), syllabus queries, attendance→hour-cost multiplier, and **`grading.ts` with its full test block plus the leak test** (§10). Plus **two real syllabi** — ported or authored — to prove the format survives contact with actual content. |
+| 2 | **Academic spine** | Syllabus schema, semantic validator (§3.2), syllabus queries, attendance→hour-cost multiplier, **`demands.ts` + the demand-gap curve** (r11), **`grading.ts` with its full test block plus the leak test** (§10), and `standing.ts` probation (§4.10 of the design — cheap here, and it makes the balance bot able to assert a downside exists). Plus **two real syllabi** — ported or authored — to prove the format survives contact with actual content. |
 | 2.5 | **Calendar engine** | The event model, recurrence expansion with exceptions, conflict detection, density classification (§2 `calendar/`). Ahead of the day loop because the day loop is a consumer of it, and because a recurrence bug found later is found in every system at once. |
 | 3 | **Day loop, headless** | Band allocation **on halves** with spin-up cost, day resolution, `meals.ts` gap clock, standing commitments with planned-vs-actual, fast-forward. Driven by a test harness and the balance bot. **Go/no-go gate** — see below. |
-| 3.5 | **Study plan** | `studyPlan.ts` (§3.4), ~120 course stubs, 7 track graphs, college requirements, the feasibility query with reasons. Deliberately early: it is pure, testable, needs no prose, and it is the system most likely to change what content gets authored at milestone 8. |
-| 4 | Beats + people | Triggers, tier assignment, selection, `cast.ts`, `affinity.ts`, `social.ts` acquaintance curve, `levels.ts` + `studyGroup.ts`, `arrangements.ts`, `traits.ts` contagion, romance state machine and sacrifice log. Authored fallback prose only. Still no LLM. |
+| 3.5 | **Study plan** | `studyPlan.ts` (§3.4), ~120 course stubs **with `demands` profiles**, 7 track graphs, college requirements (incl. r10's `quant` row), the feasibility query with reasons and r11's **"not yet, here are the routes"** output. Deliberately early: it is pure, testable, needs no prose, and it is the system most likely to change what content gets authored at milestone 8. |
+| 4 | Beats + people | Triggers, tier assignment, selection, `cast.ts`, `affinity.ts`, `social.ts` acquaintance curve, `levels.ts` + `studyGroup.ts`, `arrangements.ts`, `traits.ts` contagion, `creation.ts` + the preset content, romance state machine and sacrifice log. Creation lands here because rarity weights are only meaningful once the NPC pool is loaded, and r10 sharpens that: the two-tier Affinity and the `core.yaml` trait pack both need the real cast to mean anything. Ship `core.yaml` here (~12-16 traits) and treat later packs as milestone 8 content. r11 adds `priceTrait()` and its ±1 conformance check here for the same reason — the kind-tag weight is rarity against the loaded cast — plus NPC dispositions on `relationships.ts`. Authored fallback prose only. Still no LLM. |
 | 5 | Narrator | `renderScene` + `renderOutcome` + `renderFlavor` against the real API, with syllabus grounding. Caching verified via `usage`. |
-| 6 | Server + **TUI** | Fastify, SQLite, and the Ink client: day planner, week grid, **calendar**, shopping week, **study plan**, assessment, scene, journal. SSE into a streaming prose pane. **First actually playable build.** |
+| 6 | Server + **TUI** | Fastify, SQLite, and the Ink client: character creation, day planner, week grid, **calendar**, shopping week, **study plan**, assessment, scene, journal. SSE into a streaming prose pane. **First actually playable build.** |
 | 7 | Free-text valve | `interpretFreeText`, clamping, injection tests. |
 | 8 | Freshman year content | ~8-10 full syllabi, ~60 beats, **~60 background + ~55 foreground NPCs** (most of them ported at 1.5, not written here), 5 orgs, full calendar, epilogue. The largest single chunk of work. |
 
@@ -878,6 +1125,19 @@ while doing it:
   "name-collision watch" comments scattered through the Students sheet are a record
   of a bug the boot validator now catches (§3.2). Port the names, then let the
   validator find what the human missed.
+
+**r11 splits across milestones 2 and 4, and the order matters.** `demands.ts` and the
+demand-gap curve belong at **milestone 2**, with the syllabi and the hour-cost multiplier
+they modify — they are pure content queries with no dependency on the NPC pool, and the
+alternative is that milestone 3's go/no-go gate runs against generic workload numbers and
+therefore tests the wrong game. The **cost schedule** stays at **milestone 4** with
+`creation.ts`, because the kind-tag half of its weight is rarity against the loaded cast.
+So the demand gap is validated before the decision it exists to make is ever tested, and the
+price schedule arrives with the screen that prints it.
+
+One consequence for milestone 2's two syllabi: they need `demands` profiles that **differ**,
+or the gate at milestone 3 cannot see the mechanic. CS 50 and Expos 20 are the right pair —
+`code`/`math` against `writing`/`reading`, no overlap at all.
 
 Milestone 2 moves ahead of the day loop because the day loop needs real
 assignments to allocate time against — building it on placeholder coursework would
@@ -942,3 +1202,60 @@ than at milestone 8.
   rather than weakening it (§4, §10).
 - **`floor` is dropped from the assessment view model.** Revision 7. A range with a
   named worst case already is the floor; two fields for one fact eventually disagree.
+- **The creation block is seed material, not an action.** Revision 8. The event log
+  describes a character playing, so there is nothing in it before the character —
+  which also makes "creation is immutable" free rather than enforced (§4).
+- **Probation lands at milestone 2, with `grading.ts`.** Revision 8. It is thirty lines
+  next to the code it depends on, and having it early is what lets the balance bot
+  assert that a downside is *reachable* — which is the actual point of it (§10, §11).
+- **Tone lives in the cached `STYLE_GUIDE` block, so it is free per call but expensive
+  to change.** Revision 8. Editing it invalidates the shared prefix for every route, so
+  it wants to be settled before milestone 5 rather than tuned during it (§5.4).
+- **The no-generated-content rule is about runtime, not authorship.** Revision 8. A
+  reviewed, committed, hash-pinned syllabus is play-invariant regardless of who typed
+  the first draft; the review step is the part that matters, not the typing
+  (`GAME_DESIGN.md` §4.7).
+- **No attributes at all, and the creation budget is zero-sum.** Revision 9. Points and
+  traits obey opposite logics — a trait opens and closes doors, a point on a scalar just
+  makes you better — so the two cannot share a screen without the traits becoming
+  decoration. The sum check replaces four systems (`GAME_DESIGN.md` §8, §7.8).
+- **The level budget lives in `content/`, not in code.** Revision 9. It is a difficulty
+  lever, so it should be tunable by editing data and pinned by the content hash (§4).
+- **Points buy traits and nothing else; levels are derived.** Revision 10. `levels{}` leaves
+  the `/new` payload entirely, because a derived value in a request is a class of bug rather
+  than a feature. `resolveLevels(build)` folds subject tags in the engine
+  (`GAME_DESIGN.md` §7.8).
+- **Min-maxing is allowed, dominance is not.** Revision 10. The balance-bot assertion is
+  *no build strictly dominates another*, not *no build is weaker* — a deliberately
+  handicapped build is the design's hard mode, so a test that forbade it would forbid a
+  feature (§10).
+- **What stops a hindrance being free is content, not tuning.** Revision 10. Every
+  hindrance-targetable subject tag must appear in an unavoidable college requirement, checked
+  in CI. Tuning would drift as courses are added; the invariant will not (§10).
+- **Two tag namespaces, never merged.** Revision 10. `affects` are subject tags, `tags` are
+  kind tags, and a test asserts the two vocabularies are disjoint. Merging them would let a
+  trait grant Affinity for being bad at calculus (`GAME_DESIGN.md` §7.8).
+- **Traits ship as packs, pinned by the content hash from commit one.** Revision 10. Packs
+  make a ~50-record authoring job incremental, and pinning is what keeps a later pack from
+  silently moving Affinity in existing saves, since rarity is computed against the live pool.
+  Append-only ids, enforced against a committed manifest (§4, §10).
+- **Courses carry a level, not just a difficulty.** Revision 11. `demands: {tag: level}`
+  plus a convex multiplier is what makes a handicap *escalate* instead of taxing flat, and it
+  pays for itself twice over: prerequisites stop being a permission check and become a gap
+  with a price, and `workload-preview` gets a personal number instead of a generic one
+  (`GAME_DESIGN.md` §4.1, §4.5).
+- **Trait prices are derived and the authored number is an assertion, ±1.** Revision 11.
+  `schedule(shape) × weight(tag)`, where the subject-tag weight is the same join as the r10
+  hindrance invariant — so the query that proves a hindrance bites is the query that prices
+  it. Not generated, because a fully generated price permits content with no editorial
+  judgement in it; not exact, because structural effects like `international student`'s
+  exclusion set genuinely sit outside the schedule (§4).
+- **Dispositions are a third namespace and NPC-only.** Revision 11. The test is *does
+  sharing it create a bond?* — symmetric facts are kind tags, behaviours are dispositions.
+  `mentor type` on a player would grant Affinity with every mentor in the cast, so
+  `affinity.ts` must not import the disposition table at all (§10).
+- **Exclusion, not removal.** Revision 11. A trait that *excludes* others is declarative and
+  order-independent; a trait that *strips* a tag makes purchase order matter and turns the
+  creation screen into a sequence puzzle. Exclusions are DAG structure, and they are free —
+  paying for one would make the best hindrance the one that excludes three traits nobody
+  takes (`GAME_DESIGN.md` §7.8).
