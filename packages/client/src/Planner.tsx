@@ -111,6 +111,64 @@ const bandGlyph = (halves: number, per: number): string => {
   return whole === 0 ? (half || '0') : `${whole}${half}`
 }
 
+/** Placing over something replaces it, rather than reporting a conflict the player caused. */
+export const clearOverlaps = (prev: Placement[], from: number, halves: number): Placement[] =>
+  prev.filter((p) => p.start + p.halves <= from || p.start >= from + halves)
+
+export const placeAtCursor = (
+  prev: Placement[],
+  cursor: number,
+  activity: ActivityView,
+  subjectTags: string[],
+): Placement[] => {
+  const next: Placement = {
+    start: cursor,
+    halves: activity.minHalves,
+    activity: activity.id,
+    withPeople: [],
+    ...(activity.targets === 'subject' ? { target: subjectTags[0] ?? 'math' } : {}),
+  }
+  return [...clearOverlaps(prev, cursor, next.halves), next].sort((x, y) => x.start - y.start)
+}
+
+export const resizeAtCursor = (
+  plan: Placement[],
+  cursor: number,
+  dir: number,
+  halfCount: number,
+  byId: Map<string, ActivityView>,
+): Placement[] => {
+  const i = plan.findIndex((p) => cursor >= p.start && cursor < p.start + p.halves)
+  if (i < 0) return plan
+
+  return plan.flatMap((p, j) => {
+    if (j !== i) return [p]
+    const a = byId.get(p.activity)
+    if (!a || a.fixed) return [p]
+    const halves = Math.min(a.maxHalves, Math.max(a.minHalves, p.halves + dir))
+    if (halves + p.start > halfCount) return [p]
+    return [{ ...p, halves }]
+  })
+}
+
+export const retargetAtCursor = (
+  plan: Placement[],
+  cursor: number,
+  subjectTags: string[],
+  byId: Map<string, ActivityView>,
+): Placement[] => {
+  const i = plan.findIndex((p) => cursor >= p.start && cursor < p.start + p.halves)
+  if (i < 0) return plan
+
+  return plan.map((p, j) => {
+    if (j !== i) return p
+    const a = byId.get(p.activity)
+    if (!a || a.targets !== 'subject') return p
+    const at = Math.max(0, subjectTags.indexOf(p.target ?? ''))
+    return { ...p, target: subjectTags[(at + 1) % subjectTags.length] ?? subjectTags[0]! }
+  })
+}
+
 export function Planner({
   gameId,
   catalogue,
@@ -157,49 +215,15 @@ export function Planner({
     setRefused(null)
     // Default to the shortest legal length. Growing is one keystroke and is the interesting
     // move; guessing long would silently eat the band after this one.
-    const halves = a.minHalves
-    const next: Placement = {
-      start: cursor,
-      halves,
-      activity: a.id,
-      withPeople: [],
-      ...(a.targets === 'subject' ? { target: catalogue.subjectTags[0] ?? 'math' } : {}),
-    }
-    setPlan((prev) => [...clear(prev, cursor, halves), next].sort((x, y) => x.start - y.start))
+    setPlan((prev) => placeAtCursor(prev, cursor, a, catalogue.subjectTags))
   }
 
-  /** Placing over something replaces it, rather than reporting a conflict the player caused. */
-  const clear = (prev: Placement[], from: number, halves: number): Placement[] =>
-    prev.filter((p) => p.start + p.halves <= from || p.start >= from + halves)
-
   const resize = (dir: number) => {
-    const i = atCursor()
-    if (i < 0) return
-    setPlan((prev) =>
-      prev.flatMap((p, j) => {
-        if (j !== i) return [p]
-        const a = byId.get(p.activity)
-        if (!a || a.fixed) return [p]
-        const halves = Math.min(a.maxHalves, Math.max(a.minHalves, p.halves + dir))
-        if (halves + p.start > catalogue.halfCount) return [p]
-        return [{ ...p, halves }]
-      }),
-    )
+    setPlan((prev) => resizeAtCursor(prev, cursor, dir, catalogue.halfCount, byId))
   }
 
   const retarget = () => {
-    const i = atCursor()
-    if (i < 0) return
-    setPlan((prev) =>
-      prev.map((p, j) => {
-        if (j !== i) return p
-        const a = byId.get(p.activity)
-        if (!a || a.targets !== 'subject') return p
-        const tags = catalogue.subjectTags
-        const at = Math.max(0, tags.indexOf(p.target ?? ''))
-        return { ...p, target: tags[(at + 1) % tags.length] ?? tags[0]! }
-      }),
-    )
+    setPlan((prev) => retargetAtCursor(prev, cursor, catalogue.subjectTags, byId))
   }
 
   const commit = async () => {

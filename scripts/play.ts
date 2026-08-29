@@ -1,4 +1,4 @@
-import { openWindow } from '../packages/client/src/window.ts'
+import { openWindow } from './window.ts'
 
 /**
  * Opens the game in its own window, sized to the canvas.
@@ -39,4 +39,17 @@ if (target === 'packages/client/src/main.tsx' && !(await serverIsUp())) {
   process.exit(1)
 }
 
-openWindow(target, args)
+try {
+  openWindow(target, args)
+} catch (err) {
+  const message = err instanceof Error ? err.message : String(err)
+  console.error(`${message}\n`)
+  if (mode === 'screen') {
+    console.error('Try running in place instead:\n\n  npm run screen:here\n')
+  } else if (mode === 'calendar') {
+    console.error('Try running in place instead:\n\n  tsx scripts/calendar.tsx\n')
+  } else {
+    console.error('Try running in place instead:\n\n  npm run play:here\n')
+  }
+  process.exit(1)
+}

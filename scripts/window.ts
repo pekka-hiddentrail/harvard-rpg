@@ -2,9 +2,9 @@ import { spawn, spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { CANVAS } from './layout.ts'
+import { CANVAS } from '../packages/client/src/layout.ts'
 
-const repo = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..')
+const repo = join(dirname(fileURLToPath(import.meta.url)), '..')
 
 const tsx = (() => {
   const local = join(repo, 'node_modules', 'tsx', 'dist', 'cli.mjs')
@@ -20,6 +20,9 @@ const detach = (command: string, args: string[]) => {
   spawn(command, args, { cwd: repo, detached: true, stdio: 'ignore' }).unref()
 }
 
+const quoteCmd = (s: string): string => `"${s.replace(/"/g, '""')}"`
+const quotePosix = (s: string): string => `'${s.replace(/'/g, `'"'"'`)}'`
+
 export function openWindow(scriptRelativePath: string, args: string[] = []): void {
   const script = join(repo, scriptRelativePath)
 
@@ -27,17 +30,20 @@ export function openWindow(scriptRelativePath: string, args: string[] = []): voi
     if (has('wt.exe')) {
       detach('wt.exe', ['--size', `${CANVAS.cols},${CANVAS.rows}`, '--title', 'Harvard', ...tsx, script, ...args])
     } else {
-      const inner = `mode con: cols=${CANVAS.cols} lines=${CANVAS.rows} && ${[...tsx, script, ...args].map(quote).join(' ')} || pause`
+      const inner =
+        `mode con: cols=${CANVAS.cols} lines=${CANVAS.rows} && ` +
+        [...tsx, script, ...args].map(quoteCmd).join(' ') +
+        ' || pause'
       detach('cmd.exe', ['/c', 'start', '"Harvard"', '/D', repo, 'cmd.exe', '/c', inner])
     }
     return
   }
 
   if (process.platform === 'darwin') {
-    const command = [...tsx, script, ...args].map(quote).join(' ')
-    const shell = `cd ${repo} && printf '\\e[8;${CANVAS.rows};${CANVAS.cols}t' && ${command}`
+    const command = [...tsx, script, ...args].map(quotePosix).join(' ')
+    const shell = `cd ${quotePosix(repo)} && printf '\\e[8;${CANVAS.rows};${CANVAS.cols}t' && ${command}`
     const scriptText = `tell application "Terminal"
-    do script ${quote(shell)}
+    do script ${quotePosix(shell)}
     activate
   end tell`
     detach('osascript', ['-e', scriptText])
@@ -52,8 +58,4 @@ export function openWindow(scriptRelativePath: string, args: string[] = []): voi
   } else {
     throw new Error(`No terminal emulator found for ${scriptRelativePath}`)
   }
-}
-
-function quote(s: string): string {
-  return s.includes(' ') ? `"${s}"` : s
 }

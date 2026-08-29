@@ -3,7 +3,7 @@ import { Box, Text, render, useApp, useInput } from 'ink'
 import { Canvas, claimScreen } from './Canvas.tsx'
 import { COLUMNS, FRAME, PANES, pad, rule, sign } from './layout.ts'
 import { Planner, type Catalogue } from './Planner.tsx'
-import { openWindow } from './window.ts'
+import { openWindow } from '../../../scripts/window.ts'
 import { Row, fill, type Line } from './ui.tsx'
 
 /**
@@ -211,7 +211,6 @@ function App() {
     return () => {
       stale = true
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [options, picks, hometown, schoolType, programIdx, targetTrack])
 
   const toggle = (t: TraitOpt) => {

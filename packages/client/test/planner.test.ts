@@ -5,12 +5,17 @@ import {
   LEFT,
   TRACE_HEADER,
   bandLine,
+  clearOverlaps,
   halfCell,
   optionLine,
+  placeAtCursor,
+  resizeAtCursor,
+  retargetAtCursor,
   statusLine,
   traceCell,
   type ActivityView,
   type BandView,
+  type Placement,
   type DayView,
 } from '../src/Planner.tsx'
 
@@ -336,5 +341,83 @@ describe('statusLine', () => {
     // As many subjects as fit, and a count of the rest. `discussion 12.0` alone is fifteen
     // columns; two of those would cost the tail.
     assert.match(line.text, /\+6\)/)
+  })
+})
+
+describe('planner mutations', () => {
+  const activity = (over: Partial<ActivityView>): ActivityView => ({
+    id: 'x',
+    name: 'Thing',
+    blurb: '',
+    kind: 'other',
+    targets: 'none',
+    minHalves: 1,
+    maxHalves: 4,
+    fixed: false,
+    allowedBands: [],
+    food: 'none',
+    sleep: false,
+    prices: [{ halves: 1, label: '1 band', hours: null }],
+    ...over,
+  })
+
+  it('clearOverlaps removes only intersecting placements', () => {
+    const prev: Placement[] = [
+      { start: 0, halves: 2, activity: 'a', withPeople: [] },
+      { start: 4, halves: 2, activity: 'b', withPeople: [] },
+      { start: 8, halves: 2, activity: 'c', withPeople: [] },
+    ]
+    const kept = clearOverlaps(prev, 3, 4)
+    assert.deepEqual(kept.map((p) => p.activity), ['a', 'c'])
+  })
+
+  it('placeAtCursor clears overlap, sorts by start, and seeds default target', () => {
+    const prev: Placement[] = [
+      { start: 6, halves: 2, activity: 'keep', withPeople: [] },
+      { start: 2, halves: 4, activity: 'overlap', withPeople: [] },
+    ]
+    const placed = placeAtCursor(prev, 4, activity({ id: 'study', targets: 'subject', minHalves: 2 }), [
+      'math',
+      'code',
+    ])
+    assert.deepEqual(placed.map((p) => p.start), [4, 6])
+    assert.equal(placed[0]?.activity, 'study')
+    assert.equal(placed[0]?.target, 'math')
+  })
+
+  it('resizeAtCursor respects min, max, and day bounds', () => {
+    const byId = new Map<string, ActivityView>([
+      ['study', activity({ id: 'study', minHalves: 1, maxHalves: 3 })],
+    ])
+    const base: Placement[] = [{ start: 1, halves: 2, activity: 'study', withPeople: [] }]
+
+    const up = resizeAtCursor(base, 2, +1, 10, byId)
+    assert.equal(up[0]?.halves, 3)
+    const capped = resizeAtCursor(up, 2, +1, 10, byId)
+    assert.equal(capped[0]?.halves, 3)
+    const down = resizeAtCursor(base, 2, -5, 10, byId)
+    assert.equal(down[0]?.halves, 1)
+
+    const edge: Placement[] = [{ start: 9, halves: 1, activity: 'study', withPeople: [] }]
+    const blocked = resizeAtCursor(edge, 9, +1, 10, byId)
+    assert.equal(blocked[0]?.halves, 1)
+  })
+
+  it('retargetAtCursor cycles subject tags for targettable activities', () => {
+    const byId = new Map<string, ActivityView>([
+      ['study', activity({ id: 'study', targets: 'subject' })],
+      ['meal', activity({ id: 'meal', targets: 'none' })],
+    ])
+    const tags = ['math', 'code', 'writing']
+
+    const plan: Placement[] = [{ start: 4, halves: 2, activity: 'study', target: 'code', withPeople: [] }]
+    const next = retargetAtCursor(plan, 4, tags, byId)
+    assert.equal(next[0]?.target, 'writing')
+
+    const wrap = retargetAtCursor([{ ...plan[0]!, target: 'writing' }], 4, tags, byId)
+    assert.equal(wrap[0]?.target, 'math')
+
+    const untouched = retargetAtCursor([{ start: 8, halves: 2, activity: 'meal', withPeople: [] }], 8, tags, byId)
+    assert.equal(untouched[0]?.target, undefined)
   })
 })

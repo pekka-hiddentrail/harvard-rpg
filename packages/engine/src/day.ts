@@ -1,4 +1,4 @@
-import { BAND_COUNT, HALF_COUNT, HALVES_PER_BAND, NIGHT_BAND, bandOf, halfLabel } from './bands.ts'
+import { HALF_COUNT, HALVES_PER_BAND, NIGHT_BAND, bandOf, halfLabel } from './bands.ts'
 import { formatShort, parseDate } from './dates.ts'
 import { SUBJECT_TAGS, type Activity, type DayRules, type Placement, type SubjectTag } from './schema.ts'
 

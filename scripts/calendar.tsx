@@ -62,17 +62,20 @@ async function loadSheet(gameId?: string): Promise<Sheet> {
   const { app } = buildApp({ content, dbFile: ':memory:' })
   await app.ready()
 
-  const preset = content.presets.find((p) => p.id === 'pekka')
-  if (!preset) throw new Error('content/presets/pekka.yaml is missing')
-  const { id: _id, name: _name, ...build } = preset
+  try {
+    const preset = content.presets.find((p) => p.id === 'pekka')
+    if (!preset) throw new Error('content/presets/pekka.yaml is missing')
+    const { id: _id, name: _name, ...build } = preset
 
-  const created = await app.inject({ method: 'POST', url: '/api/game/new', payload: build })
-  if (created.statusCode !== 201) throw new Error('could not create a demo calendar save')
+    const created = await app.inject({ method: 'POST', url: '/api/game/new', payload: build })
+    if (created.statusCode !== 201) throw new Error('could not create a demo calendar save')
 
-  const { gameId: id } = created.json() as { gameId: string }
-  const res = await app.inject({ method: 'GET', url: `/api/game/${id}` })
-  await app.close()
-  return res.json() as Sheet
+    const { gameId: id } = created.json() as { gameId: string }
+    const res = await app.inject({ method: 'GET', url: `/api/game/${id}` })
+    return res.json() as Sheet
+  } finally {
+    await app.close()
+  }
 }
 
 claimScreen()

@@ -41,7 +41,6 @@ function App({ gameId }: { gameId?: string }) {
     return () => {
       stale = true
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameId])
 
   useEffect(() => {
