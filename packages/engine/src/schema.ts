@@ -81,6 +81,63 @@ const ShapeRow = z
   })
   .strict()
 
+/**
+ * The day's numbers (r7, Tier 1). Every one of these is a **TIER 1 PLACEHOLDER** in the
+ * same sense as `tagWeights`: they are authored guesses whose job is to be falsified by
+ * the balance bot (ARCHITECTURE §11), not settled truths.
+ */
+const HungerRow = z
+  .object({
+    /** Bands elapsed since food, at or past which this row applies. */
+    after: z.number().positive(),
+    yieldMult: z.number().positive(),
+    /** Energy drained per band while this hungry. */
+    energy: z.number(),
+  })
+  .strict()
+
+const FatigueRow = z
+  .object({ atOrBelow: z.number(), yieldMult: z.number().positive() })
+  .strict()
+
+export const DayRules = z
+  .object({
+    /** Tier 1 plays one authored day. Tier 2's calendar replaces this field. */
+    firstDay: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    startEnergy: z.number(),
+    startStress: z.number(),
+    startCondition: z.number(),
+    /** You slept; you did not eat. The clock does not start at zero (§3.5). */
+    startBandsSinceFood: z.number().nonnegative(),
+    /** A snack buys you this many bands — and the *next* one buys half as many (§3.5). */
+    snackDefersBands: z.number().positive(),
+    /** Ascending by `after`. The gap clock is the only thing that prices a meal. */
+    hunger: z.array(HungerRow).min(1),
+    /** Ascending by `atOrBelow`. */
+    fatigue: z.array(FatigueRow).min(1),
+    /** Working the Night band is borrowing against tomorrow (§3.1). */
+    night: z
+      .object({ energyPerBand: z.number(), stressPerBand: z.number() })
+      .strict(),
+    sleepEnergyPerBand: z.number(),
+    /** Scaled by Condition — which is what makes the morning run a Stress buffer (§8). */
+    sleepStressPerBand: z.number(),
+    /**
+     * Condition decays on its own, every day, and gains taper as it rises. Without both,
+     * a daily run walks Condition to 100 in a month and the slow axis stops being one.
+     */
+    conditionDailyDrift: z.number().nonpositive(),
+  })
+  .strict()
+  .refine((d) => d.hunger.every((r, i) => i === 0 || r.after > (d.hunger[i - 1]?.after ?? 0)), {
+    message: 'rules.day.hunger must be sorted ascending by `after`',
+  })
+  .refine(
+    (d) => d.fatigue.every((r, i) => i === 0 || r.atOrBelow > (d.fatigue[i - 1]?.atOrBelow ?? 0)),
+    { message: 'rules.day.fatigue must be sorted ascending by `atOrBelow`' },
+  )
+export type DayRules = z.infer<typeof DayRules>
+
 export const Rules = z
   .object({
     creation: z
@@ -90,6 +147,7 @@ export const Rules = z
         priceTolerance: z.number().int().nonnegative(),
       })
       .strict(),
+    day: DayRules,
     subjectTags: z.array(SubjectTag),
     schedule: z
       .object({
@@ -152,10 +210,107 @@ export const CreationBlock = z
   .strict()
 export type CreationBlock = z.infer<typeof CreationBlock>
 
+// ── activities: what you can put in a band (§3.1) ────────────────────────────────────
+
 /**
- * The save. Tier 0 writes `actions: []` and never replays anything — but the shape is
- * complete from the first commit, because the alternative is retrofitting event sourcing
- * through three layers at Tier 2 (ARCHITECTURE §11.1).
+ * What an activity is *aimed at*. Tier 1 aims study at a subject tag because there are no
+ * courses yet; Tier 2 replaces `'subject'` with assessments and assignments, and the
+ * `target` field on a placement stops changing shape after that.
+ */
+export const ActivityTargets = z.enum(['none', 'subject'])
+export type ActivityTargets = z.infer<typeof ActivityTargets>
+
+export const Activity = z
+  .object({
+    id: z.string().min(1),
+    name: z.string().min(1),
+    blurb: z.string().default(''),
+    /** study · meal · snack · exercise · rest · errand · social · sleep. Open, like `kinds`. */
+    kind: z.string().min(1),
+    targets: ActivityTargets.default('none'),
+    /** Length in **half-bands**. `minHalves: 1` means it fits in a leftover half. */
+    minHalves: z.number().int().positive(),
+    maxHalves: z.number().int().positive(),
+    /** The world sets the length — a lecture, a section, the Sunday long run. */
+    fixed: z.boolean().default(false),
+    /** Bands this may occupy. Empty = anywhere. An anchor names its drift here (§3.5). */
+    allowedBands: z.array(z.number().int().nonnegative()).default([]),
+    /**
+     * Hours banked, by duration: `curve[halves - 1]`. Empty for activities that bank none.
+     *
+     * **The curve is the spin-up rule** (§3.1), not a separate mechanic. A study curve
+     * opens at `0.0`, so a half-band session buys nothing — the half is spent finding the
+     * seat and opening the notes. Its 1.5-band entry is ~1.7× its 1-band entry, because
+     * overrunning a session you are already spun up for is the cheapest hour in the game.
+     * A curve that keeps a full rate in its first half (reading notes already open) simply
+     * opens at half a band's worth instead. One authored array covers both cases.
+     */
+    curve: z.array(z.number().nonnegative()).default([]),
+    /** Applied per band occupied, whatever the yield. */
+    perBand: z
+      .object({
+        energy: z.number().default(0),
+        stress: z.number().default(0),
+        condition: z.number().default(0),
+      })
+      .strict()
+      .default({}),
+    /** A meal resets the gap clock; a snack defers it and costs Condition (§3.5). */
+    food: z.enum(['none', 'meal', 'snack']).default('none'),
+    /** Ends the day, and pays Stress back at a rate Condition sets (§8). */
+    sleep: z.boolean().default(false),
+  })
+  .strict()
+  .refine((a) => a.maxHalves >= a.minHalves, { message: 'maxHalves must be ≥ minHalves' })
+  .refine((a) => !a.fixed || a.minHalves === a.maxHalves, {
+    message: 'a fixed-length activity must have minHalves === maxHalves',
+  })
+  .refine((a) => a.curve.length === 0 || a.curve.length === a.maxHalves, {
+    message: 'curve must have exactly one entry per half-band up to maxHalves',
+  })
+export type Activity = z.infer<typeof Activity>
+
+export const ActivityPack = z
+  .object({ version: z.number().int(), activities: z.array(Activity).min(1) })
+  .strict()
+export type ActivityPack = z.infer<typeof ActivityPack>
+
+// ── the actions: what the player did (ARCHITECTURE §3) ───────────────────────────────
+
+/**
+ * One allocation. `start` is a **half-band index** (band × 2, +1 for the second half) and
+ * `halves` is its length, which is how r7's 1.5-band sessions exist without a second event
+ * model: a placement that starts on a band boundary and runs three halves takes the whole
+ * of one band and the first half of the next.
+ */
+export const Placement = z
+  .object({
+    start: z.number().int().min(0),
+    halves: z.number().int().positive(),
+    activity: z.string().min(1),
+    /** A subject tag at Tier 1 (see `ActivityTargets`). */
+    target: z.string().optional(),
+    withPeople: z.array(z.string()).default([]),
+  })
+  .strict()
+export type Placement = z.infer<typeof Placement>
+
+/** The Tier 1 action, and the first real entry in the log. */
+export const PlanDay = z
+  .object({
+    type: z.literal('plan_day'),
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    placements: z.array(Placement),
+  })
+  .strict()
+export type PlanDay = z.infer<typeof PlanDay>
+
+export const Action = z.discriminatedUnion('type', [PlanDay])
+export type Action = z.infer<typeof Action>
+
+/**
+ * The save. Tier 0 wrote `actions: []`; Tier 1 gives the array its union, which is the
+ * whole reason the field shipped empty rather than absent (ARCHITECTURE §11.1).
  */
 export const Save = z
   .object({
@@ -163,7 +318,7 @@ export const Save = z
     seed: z.string(),
     contentHash: z.string(),
     creation: CreationBlock,
-    actions: z.array(z.unknown()),
+    actions: z.array(Action),
   })
   .strict()
 export type Save = z.infer<typeof Save>

@@ -3,10 +3,15 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { parse } from 'yaml'
 import {
+  ActivityPack,
+  BAND_COUNT,
   Preset,
   Rules,
   TraitPack,
+  indexActivities,
   indexTraits,
+  type Activity,
+  type ActivityIndex,
   type Trait,
   type TraitIndex,
 } from '@harvard/engine'
@@ -27,6 +32,8 @@ export type Content = {
   packs: TraitPack[]
   traits: Trait[]
   index: TraitIndex
+  activities: Activity[]
+  activityIndex: ActivityIndex
   presets: Preset[]
   /** sha256 over every content file, sorted by path. Pinned into each save. */
   hash: string
@@ -78,6 +85,14 @@ export function loadContent(root: string): Content {
   assertReferencesResolve(traits, index)
   assertNamespacesDisjoint(traits)
 
+  const activityPack = ActivityPack.safeParse(parse(take(join(root, 'activities.yaml'))))
+  if (!activityPack.success) {
+    throw new Error(`activities.yaml is not a valid activity pack:\n${describe(activityPack.error)}`)
+  }
+  const activities = activityPack.data.activities
+  assertActivitiesUsable(activities)
+  const activityIndex = indexActivities(activities)
+
   const presets = listYaml(join(root, 'presets')).map((p) => {
     const parsed = Preset.safeParse(parse(take(p)))
     if (!parsed.success) {
@@ -95,7 +110,48 @@ export function loadContent(root: string): Content {
     h.update('\0')
   }
 
-  return { rules, packs, traits, index, presets, hash: h.digest('hex').slice(0, 16) }
+  return {
+    rules,
+    packs,
+    traits,
+    index,
+    activities,
+    activityIndex,
+    presets,
+    hash: h.digest('hex').slice(0, 16),
+  }
+}
+
+/**
+ * Semantic checks on the activity pack. Zod has already checked the shape; these are the
+ * ones that would otherwise surface as a day that cannot be planned (ARCHITECTURE §3.2).
+ */
+function assertActivitiesUsable(activities: readonly Activity[]): void {
+  const seen = new Set<string>()
+  for (const a of activities) {
+    if (seen.has(a.id)) throw new Error(`duplicate activity id \`${a.id}\``)
+    seen.add(a.id)
+
+    for (const b of a.allowedBands) {
+      if (b >= BAND_COUNT) {
+        throw new Error(`activity \`${a.id}\` allows band ${b}; there are only ${BAND_COUNT}`)
+      }
+    }
+    if (a.allowedBands.length > 0 && a.allowedBands.length * 2 < a.minHalves) {
+      throw new Error(`activity \`${a.id}\` cannot fit its own minimum in the bands it allows`)
+    }
+    // A curve that dips means a longer session banks less than a shorter one, which would
+    // make "stop early" a strategy for reasons no rule intends.
+    for (const [i, v] of a.curve.entries()) {
+      if (i > 0 && v < (a.curve[i - 1] ?? 0)) {
+        throw new Error(`activity \`${a.id}\` has a curve that falls at ${i + 1} halves`)
+      }
+    }
+  }
+
+  if (!activities.some((a) => a.food === 'meal')) throw new Error('no activity feeds you')
+  if (!activities.some((a) => a.sleep)) throw new Error('no activity ends the day')
+  if (!activities.some((a) => a.curve.length > 0)) throw new Error('no activity banks hours')
 }
 
 const describe = (e: { issues: { path: (string | number)[]; message: string }[] }) =>

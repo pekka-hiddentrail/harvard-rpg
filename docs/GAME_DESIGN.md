@@ -1,6 +1,8 @@
 # Harvard RPG — Game Design Document
 
-**Status:** revision 13, approved. Tier 0 is built and played; see `ARCHITECTURE.md` §11.
+**Status:** revision 13, approved. Tiers 0 and 1 are built; see `ARCHITECTURE.md` §11 for the
+plan and §11.2 for what Tier 1 shipped — including the two claims below that the shipped
+numbers do **not** yet satisfy (skipping meals is still a net win; Stress has no source).
 **Working title:** *Veritas* (placeholder)
 
 Revision history:

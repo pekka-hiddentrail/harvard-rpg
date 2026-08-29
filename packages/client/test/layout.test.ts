@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { CANVAS, COLUMNS, FRAME, PANES, pad, rule, sign } from '../src/layout.ts'
+import { CANVAS, COLUMNS, DAY_COLUMNS, FRAME, PANES, pad, rule, sign } from '../src/layout.ts'
 
 /**
  * The canvas has to hold the screens that are coming, not just the one that exists. These
@@ -27,11 +27,46 @@ describe('the canvas', () => {
   })
 
   it('fits the Tier 1 day planner, which is why it is this size', () => {
-    // Eleven bands (GAME_DESIGN §3) plus a header row and a totals row, in the list pane.
-    assert.ok(PANES.list >= 11 + 2, `the eleven bands need ${13} rows, pane has ${PANES.list}`)
-    // And the planner's widest row: band label, activity, duration, effect hint, side pane.
-    const planner = 10 + 3 + 26 + 1 + 5 + 1 + 18
-    assert.ok(planner + COLUMNS.gap + 30 <= FRAME.cols, 'the day planner will not fit')
+    // The screen the canvas was sized for, counted row by row against `Planner.tsx`:
+    // header, rule, eleven bands, rule, the option prompt + its list, rule, problems, rule,
+    // the status line, rule, keys.
+    const used =
+      1 + 1 + PANES.bands + 1 + (1 + PANES.options) + 1 + PANES.problems + 1 + 1 + 1 + 1
+    assert.ok(used <= FRAME.rows, `the planner needs ${used} rows, frame has ${FRAME.rows}`)
+  })
+
+  it('keeps the eleven band rows, because they are the day', () => {
+    // Eleven fixed bands is the design (GAME_DESIGN §3.1), not a layout preference. If
+    // something new needs vertical room, `options` is what gives — never this.
+    assert.equal(PANES.bands, 11)
+  })
+
+  it('fits the band row across, with the half-band cell on the end', () => {
+    const row = Object.values(DAY_COLUMNS).reduce((s, w) => s + w, 0)
+    assert.ok(row <= FRAME.cols, `the band row needs ${row} columns, frame has ${FRAME.cols}`)
+    // The two-character occupancy cell plus its cursor brackets — `[▓▓]`.
+    assert.ok(DAY_COLUMNS.halves >= 4)
+    // Room for the longest activity label the shipped pack can produce, plus a subject:
+    // 'Reading · discussion' is 20.
+    assert.ok(DAY_COLUMNS.activity >= 24)
+  })
+
+  it('keeps the side pane the canvas was widened for', () => {
+    // `CANVAS` above justifies 100 columns by needing "a status pane beside them ... where the
+    // hunger clock and the banked hours live". This is that pane: the gap in bands, the yield
+    // multiplier it cost, and the energy left — `  4½  ×0.85  e  5.0`.
+    assert.ok(DAY_COLUMNS.trace >= 20, 'the trace pane cannot hold gap, multiplier and energy')
+    const left = Object.entries(DAY_COLUMNS)
+      .filter(([k]) => k !== 'trace')
+      .reduce((s, [, w]) => s + w, 0)
+    assert.ok(left + DAY_COLUMNS.trace <= FRAME.cols)
+  })
+
+  it('fits the widest option row: name, note, and the whole price ladder', () => {
+    // Study runs to six halves, so its ladder is six rungs of `1½=1.7` joined by spaces.
+    const ladder = 6 * 6 + 5
+    const option = 4 + 16 + 18 + ladder
+    assert.ok(option <= FRAME.cols, `an option row needs ${option} columns`)
   })
 
   it('leaves the list column room for its widest row', () => {

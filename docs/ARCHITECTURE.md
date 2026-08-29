@@ -1,6 +1,7 @@
 # Harvard RPG — Technical Architecture
 
-**Status:** revision 12. Tier 0 in progress; §11 is the plan of record.
+**Status:** revision 12. Tier 0 and Tier 1 built; §11 is the plan of record, and §11.2 records
+what Tier 1 actually shipped. Tier 2 is next, and it is the go/no-go gate.
 Companion to `GAME_DESIGN.md`.
 
 - **r2** — daily calendar loop instead of a weekly planner; narration tiers drive
@@ -1168,6 +1169,46 @@ in a plan that otherwise defers everything it can.
 - **Content hash pinning.** Trait packs shift rarity and therefore every Affinity weight, so
   a save has to record what it was created under before there is a second pack to prove it
   (§4, §7.8 of the design). It is one field and one hash function at Tier 0.
+
+### 11.2 What Tier 1 actually shipped, and the two things it got wrong on purpose
+
+Written after the fact, because three of the decisions below were made by building the thing
+rather than by planning it, and the next tier needs to know which numbers are load-bearing.
+
+- **Spin-up cost is not a mechanic; it is one authored array per activity.** `curve[halves-1]`
+  is the hours a session of that length banks, and the design's two constraints — a half-band
+  banks nothing, 1.5 bands is 1.7× one band — pin its first three entries. A linear
+  `max(0, d − spinUp) × rate` provably cannot satisfy both, which is why there is no `spinUp`
+  field anywhere in the content. The shipped study curve is
+  `[0.0, 1.0, 1.7, 2.3, 2.8, 3.2]`, and it is **concave past two bands**: per-band yield
+  peaks around a two-band session. That is a feature, not a rounding artefact — it is what
+  keeps "study every free band" the maximal play without making it the dominant one.
+- **`error` vs `note` severity.** Nothing in this game forbids you. A half-band of study is
+  legal and banks nothing; the planner says so and resolves anyway. Errors are reserved for
+  plans that are not plans — overlaps, a run at midnight, a session after bedtime.
+- **The day planner's side pane is the gap clock, per band.** §3.5's argument is that the cost
+  of a skipped meal lands on *the bands you were stealing*, and a single end-of-day number
+  cannot show that. So `DayResult.trace` carries the clock, energy, stress and the yield
+  multiplier for each of the twenty-two halves, and the planner prints them on the row they
+  happened on. This is what the 100-column canvas was widened for.
+- **`scripts/screen.ts` renders the planner to stdout** by driving the real server in-process
+  and calling the same pure line builders Ink renders. Looking at the hardest screen in the
+  game should not require resizing a terminal and clicking through creation first, and §11's
+  claim about owning the interface risk at Tier 1 is only honest if it is cheap to look.
+
+Two claims in `GAME_DESIGN.md` are **false in the shipped build**, are pinned as failing-if-fixed
+assertions in `packages/content/test/balance.test.ts`, and must be revisited at the tier named:
+
+1. **Skipping lunch is a net win.** The gap clock does work — the stolen band is paid at a
+   lower multiplier, and hours-per-band drops. But total hours still rise (155.7 vs 129 over
+   thirty days), and coursework is paid in total hours. The missing half of the pricing is
+   Tier 3's: hunger has no social or NPC consequence yet, and Condition's slow bleed has
+   nothing to cost you until a term exists. **When Tier 3 lands, that assertion must be
+   inverted, not deleted.**
+2. **Stress has no source.** Only the night-owl strategy ends above 50; the routine, the
+   continuous studier and the grinder all finish under 10. `sleepStressPerBand` is therefore
+   untuned, and tuning it now would fit it to an empty world. It waits for Tier 2's calendar,
+   where deadlines are what actually generate stress.
 
 ## 12. Decisions I made for you
 
