@@ -12,8 +12,10 @@
     "test": "node --import tsx --test \"packages/*/test/*.test.ts\"",
     "server": "tsx packages/server/src/index.ts",
     "balance": "tsx scripts/balance.ts",
-    "screen": "tsx scripts/screen.ts",
+    "screen": "tsx scripts/play.ts screen",
+    "screen:here": "tsx scripts/screen.tsx",
     "play": "tsx scripts/play.ts",
+    "calendar": "tsx scripts/play.ts calendar",
     "play:here": "tsx packages/client/src/main.tsx"
   },
   "devDependencies": {

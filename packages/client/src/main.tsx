@@ -3,6 +3,7 @@ import { Box, Text, render, useApp, useInput } from 'ink'
 import { Canvas, claimScreen } from './Canvas.tsx'
 import { COLUMNS, FRAME, PANES, pad, rule, sign } from './layout.ts'
 import { Planner, type Catalogue } from './Planner.tsx'
+import { openWindow } from './window.ts'
 import { Row, fill, type Line } from './ui.tsx'
 
 /**
@@ -100,6 +101,51 @@ const post = async (path: string, body: unknown) => {
     body: JSON.stringify(body),
   })
   return { status: res.status, json: (await res.json()) as any }
+}
+
+const center = (text: string, width: number): string => {
+  const trimmed = text.slice(0, width)
+  const left = Math.max(0, Math.floor((width - trimmed.length) / 2))
+  return ' '.repeat(left) + trimmed + ' '.repeat(Math.max(0, width - left - trimmed.length))
+}
+
+function CreationBanner() {
+  const shield = [
+    '████████████',
+    '███  ██  ███',
+    '███  ██  ███',
+    '███      ███',
+    ' ██  ██  ██ ',
+    '  ████████  ',
+    '            ',
+  ]
+  const blockTitle = [
+    '██   ██  █████  ██████  ██   ██  █████  ██████  ██████ ',
+    '██   ██ ██   ██ ██   ██ ██   ██ ██   ██ ██   ██ ██   ██',
+    '██   ██ ██   ██ ██   ██ ██   ██ ██   ██ ██   ██ ██   ██',
+    '███████ ███████ ██████  ██   ██ ███████ ██████  ██   ██',
+    '██   ██ ██   ██ ██   ██  ██ ██  ██   ██ ██   ██ ██   ██',
+    '██   ██ ██   ██ ██   ██   ███   ██   ██ ██   ██ ██████ ',
+    '                                                       ',
+  ]
+  const crestWidth = shield[0]!.length
+  const titleWidth = Math.max(0, FRAME.cols - crestWidth - crestWidth)
+
+  return (
+    <Box flexDirection="column">
+      <Text> </Text>
+      <Text> </Text>
+      {blockTitle.map((line, i) => (
+        <Text key={i}>
+          <Text color="red">{shield[i] ?? shield[0]}</Text>
+          <Text>{center(line, titleWidth)}</Text>
+          <Text color="red">{shield[i] ?? shield[0]}</Text>
+        </Text>
+      ))}
+      <Text> </Text>
+      <Text>{center('UNIVERSITY LIFE SIMULATOR', FRAME.cols)}</Text>
+    </Box>
+  )
 }
 
 function App() {
@@ -214,8 +260,11 @@ function App() {
     if (key.escape || (key.ctrl && input === 'c')) return exit()
     if (input === 'q' && pane !== 'identity') return exit()
     if (sheet) {
-      // The only move the sheet offers. Everything after this belongs to the planner, which
-      // installs its own handler; this one falls through to `q` and nothing else.
+      if (!planning && input === 'c') {
+        openWindow('scripts/calendar.tsx', [sheet.id])
+        return
+      }
+      // The sheet offers the planner. The calendar is a separate window.
       if (!planning && key.return && catalogue) setPlanning(true)
       return
     }
@@ -310,9 +359,10 @@ function App() {
 
   return (
     <Box flexDirection="column">
+      <CreationBanner />
       <Box>
         <Box width={38}>
-          <Text bold>HARVARD — character creation</Text>
+          <Text bold>character creation</Text>
         </Box>
         <Box width={FRAME.cols - 38} justifyContent="flex-end">
           <Text dimColor>
@@ -512,7 +562,7 @@ function CharacterSheet({ sheet, ready }: { sheet: Sheet; ready: boolean }) {
       <Text dimColor>{rule()}</Text>
       <Text dimColor>
         {sheet.actionCount} {sheet.actionCount === 1 ? 'day' : 'days'} logged ·{' '}
-        {ready ? 'enter PLAN THE DAY' : 'reading the day…'} · q quit
+        {ready ? 'enter PLAN THE DAY · c calendar window' : 'reading the day…'} · q quit
       </Text>
     </Box>
   )

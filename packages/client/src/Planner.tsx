@@ -250,22 +250,24 @@ export function Planner({
   })
 
   if (resolved) return <DayReport day={resolved} per={per} />
-  if (!view) return <Text dimColor>resolving the day…</Text>
+  if (!view) return <Text color="cyan">resolving the day...</Text>
 
   return (
     <Box flexDirection="column">
       <Box>
         <Box width={46}>
-          <Text bold>{view.dateLong}</Text>
+          <Text bold color="cyan">
+            {view.dateLong}
+          </Text>
         </Box>
         <Box width={FRAME.cols - 46} justifyContent="flex-end">
-          <Text dimColor>
+          <Text color={view.freeHalves > 0 ? 'yellow' : 'green'}>
             day {view.day} · {view.freeHalves} halves unspent · banked{' '}
             {view.hours.total.toFixed(1)} h
           </Text>
         </Box>
       </Box>
-      <Text dimColor>{ruleLabel(`${TRACE_HEADER} `, LEFT)}</Text>
+      <Text color="blue">{ruleLabel(`${TRACE_HEADER} `, LEFT)}</Text>
 
       <Box flexDirection="column" height={PANES.bands}>
         {catalogue.bands.map((b) => (
@@ -283,6 +285,7 @@ export function Planner({
               FRAME.cols - 22,
             ) + 'bands=hours banked',
             bold: true,
+            color: 'magenta',
           }}
         />
         {fill(
@@ -313,9 +316,9 @@ export function Planner({
       <Row line={statusLine(view)} />
       <Box flexGrow={1} />
       <Text dimColor>{rule()}</Text>
-      <Text dimColor>
+      <Text color={busy ? 'yellow' : view.ok ? 'green' : 'red'}>
         ↑↓ band · ←→ half · 1-9 place · +/- length · t subject · x clear · p routine ·{' '}
-        {busy ? 'resolving…' : view.ok ? 'r RESOLVE THE DAY' : 'r (blocked)'} · q quit
+        {busy ? 'resolving...' : view.ok ? 'r RESOLVE THE DAY' : 'r (blocked)'} · q quit
       </Text>
     </Box>
   )
@@ -409,8 +412,17 @@ export function bandLine(
     traceCell(view, b.index, per)
 
   const line: Line = { text }
+  if (b.index === cursorBand) {
+    line.color = 'cyan'
+    line.bold = true
+  }
   if (!head && !continues) line.dim = true
-  if (b.anchor === 'meal' && !head) line.color = 'yellow'
+  if (b.anchor === 'meal' && !head) {
+    line.color = 'yellow'
+    line.bold = true
+  }
+  if (head && head.mult < 0.9) line.color = 'red'
+  else if (head && head.mult < 0.99) line.color = 'yellow'
   return line
 }
 
@@ -441,7 +453,15 @@ export function optionLine(a: ActivityView, i: number, per: number): Line {
       : a.prices
           .map((x) => `${bandGlyph(x.halves, per)}=${(x.hours ?? 0).toFixed(1)}`)
           .join(' ')
-  return { text: `  ${i + 1}  ` + pad(a.name, 16) + pad(note, 18) + ladder }
+  const color =
+    a.food === 'meal' || a.food === 'snack'
+      ? 'yellow'
+      : a.sleep
+        ? 'blue'
+        : a.targets === 'subject'
+          ? 'cyan'
+          : undefined
+  return { text: `  ${i + 1}  ` + pad(a.name, 16) + pad(note, 18) + ladder, color }
 }
 
 /**
@@ -477,6 +497,7 @@ export function statusLine(view: DayView): Line {
     kept += 1
   }
   const rest = kept < ranked.length ? ` +${ranked.length - kept}` : ''
+  const color = view.body.stress >= 60 ? 'red' : view.body.stress >= 35 ? 'yellow' : 'green'
   return {
     text: pad(
       `  banked ${view.hours.total.toFixed(1)} h${shown ? ` (${shown}${rest})` : ''}` +
@@ -484,6 +505,7 @@ export function statusLine(view: DayView): Line {
         ` · stress ${view.body.stress.toFixed(0)} · condition ${view.body.condition.toFixed(0)}`,
       FRAME.cols,
     ),
+    color,
   }
 }
 
@@ -491,11 +513,13 @@ export function statusLine(view: DayView): Line {
 function DayReport({ day, per }: { day: DayView; per: number }) {
   return (
     <Box flexDirection="column">
-      <Text bold>{day.dateLong} — resolved</Text>
+      <Text bold color="green">
+        {day.dateLong} — resolved
+      </Text>
       <Text dimColor>{rule()}</Text>
       <Text> </Text>
       {day.placements.map((p) => (
-        <Text key={p.start}>
+        <Text key={p.start} color={p.mult < 0.9 ? 'red' : p.mult < 0.99 ? 'yellow' : undefined}>
           {'  '}
           {pad(`${Math.floor(p.start / per)}${p.start % per === 1 ? '½' : ' '}`, 4)}
           {pad(p.name + (p.target ? ` · ${p.target}` : ''), 30)}
@@ -506,10 +530,10 @@ function DayReport({ day, per }: { day: DayView; per: number }) {
       ))}
       <Text> </Text>
       <Text dimColor>{rule()}</Text>
-      <Text>{`  ${day.log}`}</Text>
+      <Text color="cyan">{`  ${day.log}`}</Text>
       <Box flexGrow={1} />
       <Text dimColor>{rule()}</Text>
-      <Text dimColor>enter back to the sheet, and on to tomorrow · q quit</Text>
+      <Text color="green">enter back to the sheet, and on to tomorrow · q quit</Text>
     </Box>
   )
 }
