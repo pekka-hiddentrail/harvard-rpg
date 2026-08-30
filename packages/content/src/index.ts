@@ -7,6 +7,7 @@ import {
   BAND_COUNT,
   Preset,
   Rules,
+  Syllabus,
   TraitPack,
   indexActivities,
   indexTraits,
@@ -35,6 +36,8 @@ export type Content = {
   activities: Activity[]
   activityIndex: ActivityIndex
   presets: Preset[]
+  /** Real, authored course syllabi (Tier 2, GAME_DESIGN §4.1). */
+  courses: Syllabus[]
   /** sha256 over every content file, sorted by path. Pinned into each save. */
   hash: string
 }
@@ -101,6 +104,14 @@ export function loadContent(root: string): Content {
     return parsed.data
   })
 
+  const courses = listYaml(join(root, 'courses')).map((p) => {
+    const parsed = Syllabus.safeParse(parse(take(p)))
+    if (!parsed.success) {
+      throw new Error(`${p} is not a valid course syllabus:\n${describe(parsed.error)}`)
+    }
+    return parsed.data
+  })
+
   // Sorted by path so the hash does not depend on directory-read order.
   const h = createHash('sha256')
   for (const f of [...files].sort((a, b) => a.path.localeCompare(b.path))) {
@@ -118,6 +129,7 @@ export function loadContent(root: string): Content {
     activities,
     activityIndex,
     presets,
+    courses,
     hash: h.digest('hex').slice(0, 16),
   }
 }

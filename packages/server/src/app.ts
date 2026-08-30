@@ -208,6 +208,13 @@ export function buildApp({ content, dbFile }: ServerOptions): {
     }
   })
 
+  /** The course catalogue (Tier 2). Full syllabi — sessions and assignments included —
+   * so a browse/shopping-week screen can render without a second round trip. */
+  app.get('/api/courses', () => ({
+    contentHash: content.hash,
+    courses: content.courses,
+  }))
+
   // ── the day (Tier 1) ───────────────────────────────────────────────────────────────
 
   /**
