@@ -9,6 +9,21 @@
 #
 # No prior file in this repo established these essay dates or an instructor named
 # Marlow — this is fresh content, not a continuation of something already committed.
+#
+# Real pool of Expos 20 section themes (each section picks one; this is the actual set
+# offered, not invented) -- kept here for reuse when other sections/NPCs need one:
+# Breaking the Norm; Coming of Age at the Margins; Does That Belong in a Museum?;
+# Fairness, Value, and Negotiation; Gender & Mental Health; Gothic Fiction; I Love That
+# Dirty Water: Place, Environment, and Justice; Laughing Matters; Make/Do: Why Craft
+# Matters; More Than a Game; Music and Lyrics; Personhood in U.S. Constitutional Law;
+# Poverty and its Alleviation; Problems of Meaning in Language, Literature, and Life;
+# Rationality and the Supernatural; Reading and Writing in a State of Distraction: What
+# Was the American Magazine?; Representing Royalty; Romantic Comedy; Taboo; The
+# "Science" of Science Fiction; The American Dream in Mass Media; The Art and Science of
+# Learning; The Art of the Con; The Ruling Class; Thinking with Conspiracies; To Thine
+# Own Self Be True? Persona in Literature and Film; Tongue-Tied.
+# "Invention and Its Discontents" (this section) is not on that real list -- authored,
+# same as any section head would author their own, per the no-fixed-topic policy.
 id: expos20
 title: "Expos 20: Invention and Its Discontents"
 difficulty: 6
@@ -61,6 +76,9 @@ assignments:
     due: 2026-10-01
     weight: 0.25
     dependsOnSessions: [1, 2, 3]
+    notes:
+      - "Sources: the primary text only. Skill tested: close reading -- extracting an
+         argument from a single source."
     stages:
       - { id: response, due: 2026-09-10 }
       - { id: draft, due: 2026-09-17 }
@@ -73,6 +91,9 @@ assignments:
     due: 2026-10-29
     weight: 0.30
     dependsOnSessions: [11]
+    notes:
+      - "Sources: the primary text plus one theoretical/critical lens. Skill tested:
+         applying a framework to a text, not just describing it."
     stages:
       - { id: response, due: 2026-10-08 }
       - { id: draft, due: 2026-10-15 }
@@ -85,6 +106,10 @@ assignments:
     due: 2026-12-09
     weight: 0.35
     dependsOnSessions: [19]
+    notes:
+      - "Sources: 1 primary + 4-6 secondary sources, at least 2 of them peer-reviewed.
+         Skill tested: independent research -- synthesizing multiple outside sources
+         into an original argument."
     stages:
       - { id: proposal, due: 2026-11-05 }
       - { id: outline, due: 2026-11-12 }

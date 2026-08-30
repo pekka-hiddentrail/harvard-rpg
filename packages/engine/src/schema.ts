@@ -324,6 +324,8 @@ export const Assignment = z
       })
       .strict()
       .optional(),
+    /** Player-facing guidance text — same job as `CourseHint.notes`. */
+    notes: z.array(z.string()).default([]),
   })
   .strict()
   .refine((a) => (a.kind === 'exam' || a.kind === 'final' ? !!a.date : !!a.due), {
