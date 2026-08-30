@@ -310,6 +310,9 @@ export type Meeting = z.infer<typeof Meeting>
  */
 export const CourseSlot = z
   .object({
+    /** Only needed when a course has more than one real slot for the same type/time —
+     * Expos 20's numbered sections use it; CS50's don't need to. */
+    id: z.string().min(1).optional(),
     course: z.string().min(1),
     type: z.enum(['lecture', 'section', 'lab', 'seminar']),
     pattern: MeetingPattern.optional(),
@@ -320,6 +323,13 @@ export const CourseSlot = z
     attendance: Attendance,
     /** Seats already taken. Seeded content, not derived — shopping week may move it. */
     occupied: z.number().int().nonnegative().default(0),
+    /**
+     * Present only for courses taught as many theme-varying sections (Expos 20). A
+     * player's actual section is drawn from the pool of slots that have these set.
+     */
+    theme: z.string().min(1).optional(),
+    blurb: z.string().min(1).optional(),
+    instructor: z.string().min(1).optional(),
   })
   .strict()
   .refine((s) => s.occupied <= s.size, { message: 'occupied cannot exceed size' })
@@ -420,26 +430,6 @@ export const Syllabus = z
     meetings: z.array(Meeting).min(1),
     sessions: z.array(Session).min(1),
     assignments: z.array(Assignment).default([]),
-    /**
-     * Some courses (Expos 20, notably) are taught as many parallel sections that share
-     * one structural skeleton — same units, same weights, same meeting pattern/range —
-     * but each section picks its own theme and instructor. When present, a player's
-     * actual section is drawn from this pool rather than always using `title`. Meeting
-     * time is deliberately absent here too, for the same reason a `Meeting` never pins
-     * one: it's a registration-time fact, not authored content.
-     */
-    sections: z
-      .array(
-        z
-          .object({
-            id: z.string().min(1),
-            theme: z.string().min(1),
-            blurb: z.string().min(1),
-            instructor: z.string().min(1),
-          })
-          .strict(),
-      )
-      .default([]),
   })
   .strict()
 export type Syllabus = z.infer<typeof Syllabus>

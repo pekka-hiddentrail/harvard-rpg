@@ -35,13 +35,6 @@ type Assignment = {
   stages: Stage[]
 }
 
-type CourseSection = {
-  id: string
-  theme: string
-  blurb: string
-  instructor: string
-}
-
 type Course = {
   id: string
   title: string
@@ -51,10 +44,10 @@ type Course = {
   meetings: Meeting[]
   sessions: Session[]
   assignments: Assignment[]
-  sections: CourseSection[]
 }
 
 type CourseSlot = {
+  id: string | null
   course: string
   type: string
   pattern: 'MWF' | 'TTh' | 'MW' | null
@@ -63,6 +56,9 @@ type CourseSlot = {
   size: number
   attendance: 'mandatory' | 'flexible'
   occupied: number
+  theme: string | null
+  blurb: string | null
+  instructor: string | null
 }
 
 type CoursesResponse = { contentHash: string; courses: Course[]; slots: CourseSlot[] }
@@ -95,11 +91,13 @@ const attendanceSummary = (course: Course, slots: CourseSlot[]): string => {
 }
 
 /** A deterministic section pick per playthrough — same seed, same section, every time.
- * Courses without a `sections` pool (Math 21b, CS50) just keep their one fixed offering. */
-const pickSection = (course: Course, seed: string): CourseSection | null => {
-  if (course.sections.length === 0) return null
+ * Only courses with theme-bearing slots (Expos 20) vary this way; a course whose slots
+ * have no `theme` (CS50's sections) just isn't offered a pick here. */
+const pickSection = (course: Course, slots: CourseSlot[], seed: string): CourseSlot | null => {
+  const pool = slots.filter((s) => s.course === course.id && s.theme)
+  if (pool.length === 0) return null
   const rng = createRng(`${seed}:${course.id}`)
-  return course.sections[pickIndex(rng, course.sections.length)]!
+  return pool[pickIndex(rng, pool.length)]!
 }
 
 type CourseRegistrationScreenProps = {
@@ -153,7 +151,7 @@ export function CourseRegistrationScreen({ identity, onBack }: CourseRegistratio
           <div className="course-catalogue">
             <ul className="course-list">
               {courses.map((c) => {
-                const section = pickSection(c, identity.seed)
+                const section = pickSection(c, slots, identity.seed)
                 return (
                   <li key={c.id}>
                     <button
@@ -162,7 +160,7 @@ export function CourseRegistrationScreen({ identity, onBack }: CourseRegistratio
                       onClick={() => setSelectedId(c.id)}
                     >
                       <span className="course-title">{section ? `${c.title.split(':')[0]}: ${section.theme}` : c.title}</span>
-                      {section && <span className="course-instructor">Section {section.id} · {section.instructor}</span>}
+                      {section && <span className="course-instructor">Section {section.id} · {section.instructor} · {section.days.join('/')} {section.time}</span>}
                       <span className="course-summary">
                         difficulty {c.difficulty} · {c.workloadHint}
                       </span>
@@ -180,11 +178,11 @@ export function CourseRegistrationScreen({ identity, onBack }: CourseRegistratio
             {selected && (
               <article className="course-detail" aria-label={selected.title}>
                 {(() => {
-                  const section = pickSection(selected, identity.seed)
+                  const section = pickSection(selected, slots, identity.seed)
                   return section ? (
                     <>
                       <h2>{selected.title.split(':')[0]}: {section.theme}</h2>
-                      <p className="course-instructor">Section {section.id} · {section.instructor}</p>
+                      <p className="course-instructor">Section {section.id} · {section.instructor} · {section.days.join('/')} {section.time}</p>
                       <p className="course-blurb">"{section.blurb}"</p>
                     </>
                   ) : (
