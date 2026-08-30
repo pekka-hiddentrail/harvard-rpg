@@ -9,7 +9,7 @@ const BASE = (import.meta.env.VITE_HARVARD_SERVER as string | undefined) ?? 'htt
 type Meeting = {
   type: string
   days: string[]
-  band: string
+  pattern: 'MWF' | 'TTh' | 'MW' | null
   size: number
   sections: boolean
 }
@@ -38,7 +38,6 @@ type CourseSection = {
   theme: string
   blurb: string
   instructor: string
-  meetings: Meeting[]
 }
 
 type Course = {
@@ -57,9 +56,18 @@ type CoursesResponse = { contentHash: string; courses: Course[] }
 
 const dueOf = (a: Assignment): string | null => a.date ?? a.due ?? null
 
+// Real Harvard block-schedule facts (ARCHITECTURE: the client holds zero game rules, but
+// this is fixed, public trivia, not a rule the engine computes -- same category as the
+// weekday names). The exact slot within a pattern is a registration-time choice (the
+// "Crimson Cart"), never authored, so it's never shown here either.
+const PATTERN_MINUTES: Record<string, number> = { MWF: 50, TTh: 75, MW: 75 }
+
 const meetingsLabel = (meetings: Meeting[]): string =>
   meetings
-    .map((m) => `${m.type} · ${m.days.join('/')} · ${m.band}${m.sections ? ' (section)' : ''}`)
+    .map((m) => {
+      const length = m.pattern ? ` (${PATTERN_MINUTES[m.pattern]} min)` : ''
+      return `${m.type} · ${m.days.join('/')}${length}${m.sections ? ' (section)' : ''}`
+    })
     .join(' · ')
 
 /** A deterministic section pick per playthrough — same seed, same section, every time.
@@ -128,7 +136,7 @@ export function CourseRegistrationScreen({ identity, onBack }: CourseRegistratio
                       onClick={() => setSelectedId(c.id)}
                     >
                       <span className="course-title">{section ? `${c.title.split(':')[0]}: ${section.theme}` : c.title}</span>
-                      {section && <span className="course-instructor">Section {section.id} · {section.instructor} · {meetingsLabel(section.meetings)}</span>}
+                      {section && <span className="course-instructor">Section {section.id} · {section.instructor}</span>}
                       <span className="course-summary">
                         difficulty {c.difficulty} · {c.workloadHint}
                       </span>
@@ -158,7 +166,7 @@ export function CourseRegistrationScreen({ identity, onBack }: CourseRegistratio
                   )
                 })()}
                 <p className="course-meetings">
-                  {meetingsLabel(pickSection(selected, identity.seed)?.meetings ?? selected.meetings)}
+                  {meetingsLabel(selected.meetings)} — exact slot chosen at registration
                 </p>
 
                 <h3>Assignments</h3>

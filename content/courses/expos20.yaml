@@ -22,10 +22,11 @@ demands:
   writing: 3
   reading: 2
 meetings:
-  # Real Expos 20 section size is capped small; 14 matches the number GAME_DESIGN.md
-  # already uses for this course ("Expos 20 has 14 people"). Band matches Section 204
-  # below, the pool's default entry.
-  - { type: seminar, days: [Tue, Thu], band: "09:00", size: 14 }
+  # TTh, 75 minutes -- real Expos 20 section size is capped small; 14 matches the
+  # number GAME_DESIGN.md already uses for this course ("Expos 20 has 14 people"). The
+  # specific slot (09:00/10:30/12:00/13:30/15:00/16:30, or an evening slot) is a
+  # registration-time fact for whichever section is picked below, not authored here.
+  - { type: seminar, days: [Tue, Thu], pattern: TTh, size: 14 }
 sessions:
   # "Individual conferences" (sessions 9, 17, 27) aren't a shared class meeting: each
   # student books a 15-minute slot sometime that week with their own section's instructor
@@ -111,41 +112,41 @@ assignments:
       - { id: draft, due: 2026-11-19 }
       - { id: workshop, due: 2026-11-24 }
       - { id: revision, due: 2026-12-09 }
-# Every real section of Expos 20 shares the skeleton above (units, weights) but picks
-# its own theme, instructor and full meeting slot (its own days/band/size, not just a
-# different time on one shared schedule). A player's actual section is drawn from this
-# pool (seeded, so it's deterministic per playthrough) rather than always landing on
-# "Invention and Its Discontents". Themes and one-line blurbs for all but the first entry
-# are the real, currently-offered pool; instructors, section numbers and meeting times
-# beyond the two given examples (204/Marlow, 229/Evans) are authored, same as any section
-# head's own identity would be. Days stay Tue/Thu and size stays 14 throughout -- both are
-# real, fixed Expos 20 policy, not something a section varies.
+# Every real section of Expos 20 shares the skeleton above (units, weights, meeting
+# pattern/range) but picks its own theme and instructor -- which exact slot within that
+# range a section lands on is a registration-time fact (the shopping cart, not built
+# yet), so it isn't named per section either. A player's actual section is drawn from
+# this pool (seeded, so it's deterministic per playthrough) rather than always landing
+# on "Invention and Its Discontents". Themes and one-line blurbs for all but the first
+# entry are the real, currently-offered pool; instructors and section numbers beyond the
+# two given examples (204/Marlow, 229/Evans) are authored, same as any section head's
+# own identity would be.
 sections:
-  - { id: "204", theme: "Invention and Its Discontents", blurb: "Exploring how important inventions reshape day-to-day life, and what gets lost along the way.", instructor: "Dr. Marlow", meetings: [{ type: seminar, days: [Tue, Thu], band: "09:00", size: 14 }] }
-  - { id: "229", theme: "More Than a Game", blurb: "Politics and activism in professional sports.", instructor: "Dr. Evans", meetings: [{ type: seminar, days: [Tue, Thu], band: "10:30", size: 14 }] }
-  - { id: "201", theme: "Breaking the Norm", blurb: "How social norms form, get enforced, and get broken.", instructor: "Dr. Okafor", meetings: [{ type: seminar, days: [Tue, Thu], band: "09:00", size: 14 }] }
-  - { id: "203", theme: "Coming of Age at the Margins", blurb: "Coming-of-age stories about protagonists historically pushed to the margins.", instructor: "Dr. Lindqvist", meetings: [{ type: seminar, days: [Tue, Thu], band: "10:00", size: 14 }] }
-  - { id: "206", theme: "Does That Belong in a Museum?", blurb: "Museum ownership, repatriation, provenance ethics.", instructor: "Dr. Reyes", meetings: [{ type: seminar, days: [Tue, Thu], band: "10:30", size: 14 }] }
-  - { id: "208", theme: "Fairness, Value, and Negotiation", blurb: "Negotiation theory, fairness, real case-method negotiations.", instructor: "Dr. Suzuki", meetings: [{ type: seminar, days: [Tue, Thu], band: "11:00", size: 14 }] }
-  - { id: "210", theme: "Gender & Mental Health", blurb: "Gender and clinical psychology, historical and contemporary.", instructor: "Dr. Castellano", meetings: [{ type: seminar, days: [Tue, Thu], band: "12:00", size: 14 }] }
-  - { id: "212", theme: "Gothic Fiction", blurb: "The Gothic genre from 18th-century fragments through Poe to \"the new Gothic\".", instructor: "Dr. Whitfield", meetings: [{ type: seminar, days: [Tue, Thu], band: "13:00", size: 14 }] }
-  - { id: "214", theme: "I Love That Dirty Water: Place, Environment, and Justice", blurb: "Environmental justice -- water rights, energy transitions, incarceration geography.", instructor: "Dr. Novak", meetings: [{ type: seminar, days: [Tue, Thu], band: "13:30", size: 14 }] }
-  - { id: "217", theme: "Laughing Matters", blurb: "The mechanics and social function of comedy.", instructor: "Dr. Iyer", meetings: [{ type: seminar, days: [Tue, Thu], band: "14:30", size: 14 }] }
-  - { id: "219", theme: "Make/Do: Why Craft Matters", blurb: "The value and meaning of handicraft in a digital world.", instructor: "Dr. Bergstrom", meetings: [{ type: seminar, days: [Tue, Thu], band: "09:00", size: 14 }] }
-  - { id: "221", theme: "Music and Lyrics", blurb: "How music and lyrics interact to create meaning.", instructor: "Dr. Ondiek", meetings: [{ type: seminar, days: [Tue, Thu], band: "10:00", size: 14 }] }
-  - { id: "223", theme: "Personhood in U.S. Constitutional Law", blurb: "Legal personhood through landmark Supreme Court cases.", instructor: "Dr. Park", meetings: [{ type: seminar, days: [Tue, Thu], band: "10:30", size: 14 }] }
-  - { id: "225", theme: "Poverty and its Alleviation", blurb: "Interdisciplinary look at poverty through literature and policy.", instructor: "Dr. Alvarez", meetings: [{ type: seminar, days: [Tue, Thu], band: "11:00", size: 14 }] }
-  - { id: "227", theme: "Problems of Meaning in Language, Literature, and Life", blurb: "Philosophy of meaning -- linguistic, literary, existential.", instructor: "Dr. Duarte", meetings: [{ type: seminar, days: [Tue, Thu], band: "12:00", size: 14 }] }
-  - { id: "230", theme: "Rationality and the Supernatural", blurb: "Cultural logics behind witches, demons, aliens, and the paranormal.", instructor: "Dr. Hollis", meetings: [{ type: seminar, days: [Tue, Thu], band: "13:00", size: 14 }] }
-  - { id: "232", theme: "Reading and Writing in a State of Distraction: What Was the American Magazine?", blurb: "American magazine history as literary production.", instructor: "Dr. Nakamura", meetings: [{ type: seminar, days: [Tue, Thu], band: "13:30", size: 14 }] }
-  - { id: "234", theme: "Representing Royalty", blurb: "Royalty as a representational/spectacle system, echoed in modern celebrity/politics.", instructor: "Dr. Petrov", meetings: [{ type: seminar, days: [Tue, Thu], band: "14:30", size: 14 }] }
-  - { id: "236", theme: "Romantic Comedy", blurb: "The rom-com genre from ancient Greece to Netflix.", instructor: "Dr. Fenwick", meetings: [{ type: seminar, days: [Tue, Thu], band: "09:00", size: 14 }] }
-  - { id: "238", theme: "Taboo", blurb: "Cross-cultural anthropology/psychology of taboo.", instructor: "Dr. Osei", meetings: [{ type: seminar, days: [Tue, Thu], band: "10:00", size: 14 }] }
-  - { id: "241", theme: "The \"Science\" of Science Fiction", blurb: "Where sci-fi's scientific plausibility bends for narrative impact.", instructor: "Dr. Larkin", meetings: [{ type: seminar, days: [Tue, Thu], band: "10:30", size: 14 }] }
-  - { id: "243", theme: "The American Dream in Mass Media", blurb: "The American Dream as sold through early-20th-century media.", instructor: "Dr. Choi", meetings: [{ type: seminar, days: [Tue, Thu], band: "11:00", size: 14 }] }
-  - { id: "246", theme: "The Art and Science of Learning", blurb: "Metacognition as a lens for academic writing.", instructor: "Dr. Abernathy", meetings: [{ type: seminar, days: [Tue, Thu], band: "12:00", size: 14 }] }
-  - { id: "248", theme: "The Art of the Con", blurb: "Real and fictional con artists, American ambition/opportunity myths.", instructor: "Dr. Vasquez", meetings: [{ type: seminar, days: [Tue, Thu], band: "13:00", size: 14 }] }
-  - { id: "251", theme: "The Ruling Class", blurb: "The politics and culture of the professional-managerial class.", instructor: "Dr. Ferreira", meetings: [{ type: seminar, days: [Tue, Thu], band: "13:30", size: 14 }] }
-  - { id: "254", theme: "Thinking with Conspiracies", blurb: "The history and internal logic of conspiracy theories.", instructor: "Dr. Doyle", meetings: [{ type: seminar, days: [Tue, Thu], band: "14:30", size: 14 }] }
-  - { id: "256", theme: "To Thine Own Self Be True? Persona in Literature and Film", blurb: "Persona construction across contexts (academic, professional, personal).", instructor: "Dr. Mbeki", meetings: [{ type: seminar, days: [Tue, Thu], band: "09:00", size: 14 }] }
-  - { id: "259", theme: "Tongue-Tied", blurb: "Language as both connection and silence -- identity and belonging.", instructor: "Dr. Sinclair", meetings: [{ type: seminar, days: [Tue, Thu], band: "10:00", size: 14 }] }
+  - { id: "204", theme: "Invention and Its Discontents", blurb: "Exploring how important inventions reshape day-to-day life, and what gets lost along the way.", instructor: "Dr. Marlow" }
+  - { id: "229", theme: "More Than a Game", blurb: "Politics and activism in professional sports.", instructor: "Dr. Evans" }
+  - { id: "201", theme: "Breaking the Norm", blurb: "How social norms form, get enforced, and get broken.", instructor: "Dr. Okafor" }
+  - { id: "203", theme: "Coming of Age at the Margins", blurb: "Coming-of-age stories about protagonists historically pushed to the margins.", instructor: "Dr. Lindqvist" }
+  - { id: "206", theme: "Does That Belong in a Museum?", blurb: "Museum ownership, repatriation, provenance ethics.", instructor: "Dr. Reyes" }
+  - { id: "208", theme: "Fairness, Value, and Negotiation", blurb: "Negotiation theory, fairness, real case-method negotiations.", instructor: "Dr. Suzuki" }
+  - { id: "210", theme: "Gender & Mental Health", blurb: "Gender and clinical psychology, historical and contemporary.", instructor: "Dr. Castellano" }
+  - { id: "212", theme: "Gothic Fiction", blurb: "The Gothic genre from 18th-century fragments through Poe to \"the new Gothic\".", instructor: "Dr. Whitfield" }
+  - { id: "214", theme: "I Love That Dirty Water: Place, Environment, and Justice", blurb: "Environmental justice -- water rights, energy transitions, incarceration geography.", instructor: "Dr. Novak" }
+  - { id: "217", theme: "Laughing Matters", blurb: "The mechanics and social function of comedy.", instructor: "Dr. Iyer" }
+  - { id: "219", theme: "Make/Do: Why Craft Matters", blurb: "The value and meaning of handicraft in a digital world.", instructor: "Dr. Bergstrom" }
+  - { id: "221", theme: "Music and Lyrics", blurb: "How music and lyrics interact to create meaning.", instructor: "Dr. Ondiek" }
+  - { id: "223", theme: "Personhood in U.S. Constitutional Law", blurb: "Legal personhood through landmark Supreme Court cases.", instructor: "Dr. Park" }
+  - { id: "225", theme: "Poverty and its Alleviation", blurb: "Interdisciplinary look at poverty through literature and policy.", instructor: "Dr. Alvarez" }
+  - { id: "227", theme: "Problems of Meaning in Language, Literature, and Life", blurb: "Philosophy of meaning -- linguistic, literary, existential.", instructor: "Dr. Duarte" }
+  - { id: "230", theme: "Rationality and the Supernatural", blurb: "Cultural logics behind witches, demons, aliens, and the paranormal.", instructor: "Dr. Hollis" }
+  - { id: "232", theme: "Reading and Writing in a State of Distraction: What Was the American Magazine?", blurb: "American magazine history as literary production.", instructor: "Dr. Nakamura" }
+  - { id: "234", theme: "Representing Royalty", blurb: "Royalty as a representational/spectacle system, echoed in modern celebrity/politics.", instructor: "Dr. Petrov" }
+  - { id: "236", theme: "Romantic Comedy", blurb: "The rom-com genre from ancient Greece to Netflix.", instructor: "Dr. Fenwick" }
+  - { id: "238", theme: "Taboo", blurb: "Cross-cultural anthropology/psychology of taboo.", instructor: "Dr. Osei" }
+  - { id: "241", theme: "The \"Science\" of Science Fiction", blurb: "Where sci-fi's scientific plausibility bends for narrative impact.", instructor: "Dr. Larkin" }
+  - { id: "243", theme: "The American Dream in Mass Media", blurb: "The American Dream as sold through early-20th-century media.", instructor: "Dr. Choi" }
+  - { id: "246", theme: "The Art and Science of Learning", blurb: "Metacognition as a lens for academic writing.", instructor: "Dr. Abernathy" }
+  - { id: "248", theme: "The Art of the Con", blurb: "Real and fictional con artists, American ambition/opportunity myths.", instructor: "Dr. Vasquez" }
+  - { id: "251", theme: "The Ruling Class", blurb: "The politics and culture of the professional-managerial class.", instructor: "Dr. Ferreira" }
+  - { id: "254", theme: "Thinking with Conspiracies", blurb: "The history and internal logic of conspiracy theories.", instructor: "Dr. Doyle" }
+  - { id: "256", theme: "To Thine Own Self Be True? Persona in Literature and Film", blurb: "Persona construction across contexts (academic, professional, personal).", instructor: "Dr. Mbeki" }
+  - { id: "259", theme: "Tongue-Tied", blurb: "Language as both connection and silence -- identity and belonging.", instructor: "Dr. Sinclair" }

@@ -14,10 +14,10 @@ workloadHint: "~10-12h/week"
 demands:
   math: 3
 meetings:
-  # The department sections by time slot (9:00, 10:30, 12:00, 1:30, 3:00); this is the
-  # 10:30 section. All five run the same syllabus, so only the band changes if the player
-  # enrolls in a different slot.
-  - { type: lecture, days: [Mon, Wed, Fri], band: "10:30", size: 90 }
+  # MWF, 50 minutes, one of the real block-schedule slots (09:00, 10:30, 12:00, 13:30,
+  # 15:00, 16:30) -- the specific slot a section lands on is a registration-time fact
+  # (the shopping cart, not built yet), so this names the pattern/range, not one time.
+  - { type: lecture, days: [Mon, Wed, Fri], pattern: MWF, size: 90 }
 sessions:
   # 36 MWF meetings across ~13 weeks: Sep 2 - Dec 4, 2026. Gaps for Labor Day (Mon Sep 7),
   # Columbus Day (Mon Oct 12), and Thanksgiving week (Mon Nov 23 - Fri Nov 27). Topic order

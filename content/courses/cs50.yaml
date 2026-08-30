@@ -18,8 +18,12 @@ demands:
   code: 2
   math: 1
 meetings:
-  - { type: lecture, days: [Mon, Wed], band: "13:30", size: 340 }
-  - { type: section, days: [Thu], band: "13:30", size: 18, sections: true }
+  # MW, 75 minutes -- one of the real block-schedule slots; the specific one is a
+  # registration-time fact (the shopping cart, not built yet), not authored content.
+  - { type: lecture, days: [Mon, Wed], pattern: MW, size: 340 }
+  # The Thursday section is TF-scheduled, not one of the three canonical block
+  # patterns, so it has no `pattern` -- its exact time is likewise not authored here.
+  - { type: section, days: [Thu], size: 18, sections: true }
 sessions:
   - { n: 1, date: 2026-09-02, topic: "Scratch: computational thinking, algorithms, pseudocode" }
   - { n: 2, date: 2026-09-09, topic: "Scratch: functions, variables, conditionals, loops, events" }

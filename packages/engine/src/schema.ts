@@ -255,12 +255,28 @@ export type TrackPack = z.infer<typeof TrackPack>
 export const Weekday = z.enum(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
 export type Weekday = z.infer<typeof Weekday>
 
+/** Harvard's three real class-meeting patterns. MWF meets three times a week at 50
+ * minutes each; TTh and MW meet twice a week at 75 minutes each. */
+export const MeetingPattern = z.enum(['MWF', 'TTh', 'MW'])
+export type MeetingPattern = z.infer<typeof MeetingPattern>
+
+/** Real, closed facts about the block schedule — not authored per course. */
+export const BLOCK_MINUTES: Record<MeetingPattern, number> = { MWF: 50, TTh: 75, MW: 75 }
+export const BLOCK_STARTS = ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30'] as const
+export const BLOCK_NIGHT_STARTS = ['18:00', '19:30'] as const
+
 export const Meeting = z
   .object({
     type: z.enum(['lecture', 'section', 'lab', 'seminar']),
     days: z.array(Weekday).min(1),
-    /** A band label per §3.1 — never a vague "morning". */
-    band: z.string().min(1),
+    /**
+     * One of the three real block patterns, when this meeting is a canonical class
+     * slot — absent for ad hoc arrangements (e.g. a TF-scheduled discussion section).
+     * Deliberately no specific start time: which of `BLOCK_STARTS`/`BLOCK_NIGHT_STARTS`
+     * a given section lands on is a registration-time fact (the shopping cart, not built
+     * yet), so content declares the pattern/range and never pins one slot.
+     */
+    pattern: MeetingPattern.optional(),
     size: z.number().int().positive(),
     /** True when this meeting is the small, section-sized half of the course. */
     sections: z.boolean().default(false),
@@ -347,10 +363,11 @@ export const Syllabus = z
     assignments: z.array(Assignment).default([]),
     /**
      * Some courses (Expos 20, notably) are taught as many parallel sections that share
-     * one structural skeleton — same units, same weights — but each section picks its
-     * own theme, instructor and meeting slot (its own days/band/size, not just a
-     * different time on the same schedule). When present, a player's actual section is
-     * drawn from this pool rather than always using the top-level `title`/`meetings`.
+     * one structural skeleton — same units, same weights, same meeting pattern/range —
+     * but each section picks its own theme and instructor. When present, a player's
+     * actual section is drawn from this pool rather than always using `title`. Meeting
+     * time is deliberately absent here too, for the same reason a `Meeting` never pins
+     * one: it's a registration-time fact, not authored content.
      */
     sections: z
       .array(
@@ -360,7 +377,6 @@ export const Syllabus = z
             theme: z.string().min(1),
             blurb: z.string().min(1),
             instructor: z.string().min(1),
-            meetings: z.array(Meeting).min(1),
           })
           .strict(),
       )
