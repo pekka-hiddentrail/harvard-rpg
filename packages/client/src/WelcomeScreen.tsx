@@ -22,7 +22,7 @@ const menu: MenuItem[] = [
   },
 ]
 
-export function WelcomeScreen() {
+export function WelcomeScreen({ onStartNewGame }: { onStartNewGame: () => void }) {
   return (
     <main className="welcome-shell">
       <section className="welcome" aria-labelledby="game-title">
@@ -51,7 +51,7 @@ export function WelcomeScreen() {
                 <h2>{item.title}</h2>
                 <p>{item.detail}</p>
               </div>
-              <button type="button" className="menu-action">
+              <button type="button" className="menu-action" onClick={item.primary ? onStartNewGame : undefined}>
                 {item.action}<span aria-hidden="true"> →</span>
               </button>
             </article>

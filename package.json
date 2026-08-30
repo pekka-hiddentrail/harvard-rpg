@@ -17,6 +17,7 @@
     "screen:here": "tsx scripts/screen.tsx",
     "welcome": "tsx scripts/play.ts welcome",
     "gui": "npm run dev --workspace=@harvard/client",
+    "gui:character": "npm run dev --workspace=@harvard/client -- --open /?screen=character",
     "gui:build": "npm run build --workspace=@harvard/client",
     "gui:test": "npm run test --workspace=@harvard/client",
     "play": "tsx scripts/play.ts",

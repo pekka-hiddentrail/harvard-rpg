@@ -4,7 +4,7 @@ import { WelcomeScreen } from '../src/WelcomeScreen.tsx'
 
 describe('welcome screen', () => {
   it('uses the supplied Harvard crest in the masthead', () => {
-    render(<WelcomeScreen />)
+    render(<WelcomeScreen onStartNewGame={() => {}} />)
 
     const crest = screen.getByRole('img', { name: 'Harvard University crest' })
     expect(crest).toHaveAttribute('src', '/harvard-logo.png')
@@ -12,7 +12,7 @@ describe('welcome screen', () => {
   })
 
   it('keeps only the two game paths as primary menu cards', () => {
-    render(<WelcomeScreen />)
+    render(<WelcomeScreen onStartNewGame={() => {}} />)
 
     const menu = screen.getByRole('navigation', { name: 'Game menu' })
     expect(within(menu).getAllByRole('article')).toHaveLength(2)
@@ -21,7 +21,7 @@ describe('welcome screen', () => {
   })
 
   it('places credits and settings in the secondary navigation', () => {
-    render(<WelcomeScreen />)
+    render(<WelcomeScreen onStartNewGame={() => {}} />)
 
     const secondaryMenu = screen.getByRole('navigation', { name: 'Additional options' })
     expect(within(secondaryMenu).getByRole('button', { name: /credits/i })).toBeVisible()

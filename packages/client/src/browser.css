@@ -246,6 +246,235 @@ h1 {
   color: #59635c;
 }
 
+.character-shell {
+  min-height: 100vh;
+  padding: 24px;
+  background: #d9e0d6;
+}
+
+.character {
+  width: min(100%, 1320px);
+  min-height: calc(100vh - 48px);
+  margin: 0 auto;
+  padding: clamp(28px, 5vw, 64px);
+  background: #f8f8f3;
+  border: 1px solid #a7b0a5;
+  box-shadow: 12px 12px 0 #8c1d31;
+}
+
+.character-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+}
+
+.back-button {
+  justify-self: start;
+  padding: 0;
+  color: #465048;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid currentcolor;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.character-crest {
+  justify-self: end;
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+}
+
+.character-heading {
+  max-width: 680px;
+  margin: clamp(42px, 7vh, 90px) 0 44px;
+}
+
+.character-heading h1 {
+  margin-bottom: 14px;
+  font-size: clamp(44px, 5vw, 76px);
+}
+
+.character-heading > p:last-child {
+  margin-bottom: 0;
+  color: #465048;
+  font-size: 18px;
+}
+
+.character-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.72fr);
+  gap: clamp(32px, 6vw, 100px);
+  align-items: start;
+}
+
+.identity-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 26px 20px;
+}
+
+.identity-form label,
+.identity-form fieldset,
+.identity-form .field {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.identity-form label > span,
+.identity-form legend {
+  display: block;
+  margin-bottom: 9px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.identity-form input {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  color: #18201d;
+  background: #fff;
+  border: 1px solid #7d897d;
+  border-radius: 0;
+  font: inherit;
+}
+
+.identity-form input:focus,
+.gender-choice button:focus-visible,
+.continue-button:focus-visible,
+.back-button:focus-visible {
+  outline: 3px solid #d3a72c;
+  outline-offset: 3px;
+}
+
+.identity-form small {
+  display: block;
+  margin-top: 7px;
+  color: #59635c;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.gender-choice {
+  display: flex;
+}
+
+.gender-choice button {
+  min-height: 48px;
+  padding: 0 22px;
+  color: #465048;
+  background: #fff;
+  border: 1px solid #7d897d;
+}
+
+.gender-choice button + button {
+  margin-left: -1px;
+}
+
+.gender-choice button.selected {
+  position: relative;
+  z-index: 1;
+  color: #fff;
+  background: #8c1d31;
+  border-color: #8c1d31;
+}
+
+.continue-button {
+  justify-self: start;
+  grid-column: 1 / -1;
+  margin-top: 4px;
+  padding: 15px 21px;
+  color: #fff;
+  background: #8c1d31;
+  border: 1px solid #8c1d31;
+  font-weight: 700;
+}
+
+.continue-button:hover {
+  color: #8c1d31;
+  background: transparent;
+}
+
+.portrait-panel {
+  position: relative;
+  margin: 0;
+  background: #18201d;
+  box-shadow: 8px 8px 0 #d3a72c;
+}
+
+.avatar-picker {
+  position: relative;
+}
+
+.avatar-picker img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  object-position: top;
+  background: #fff;
+}
+
+.avatar-picker button {
+  position: absolute;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  color: #18201d;
+  background: #f8f8f3;
+  border: 1px solid #18201d;
+  border-radius: 50%;
+  font-size: 22px;
+  line-height: 1;
+  transform: translateY(-50%);
+}
+
+.avatar-picker button:hover {
+  color: #fff;
+  background: #8c1d31;
+  border-color: #8c1d31;
+}
+
+.avatar-picker button:focus-visible {
+  outline: 3px solid #d3a72c;
+  outline-offset: 3px;
+}
+
+.avatar-picker button:first-child {
+  left: 12px;
+}
+
+.avatar-picker button:last-child {
+  right: 12px;
+}
+
+.portrait-caption {
+  display: grid;
+  gap: 5px;
+  padding: 18px;
+  color: #fff;
+}
+
+.portrait-caption span {
+  color: #d3a72c;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.portrait-caption strong {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 21px;
+  font-weight: 500;
+}
+
 @media (max-width: 720px) {
   .welcome-shell {
     padding: 12px;
@@ -289,5 +518,41 @@ h1 {
 
   .menu-item {
     min-height: 0;
+  }
+
+  .character-shell {
+    padding: 12px;
+  }
+
+  .character {
+    min-height: calc(100vh - 24px);
+    padding: 24px;
+    box-shadow: 6px 6px 0 #8c1d31;
+  }
+
+  .character-header {
+    grid-template-columns: 1fr auto;
+  }
+
+  .character-header .brand-name {
+    display: none;
+  }
+
+  .character-crest {
+    width: 56px;
+    height: 56px;
+  }
+
+  .character-heading {
+    margin: 52px 0 34px;
+  }
+
+  .character-layout,
+  .identity-form {
+    grid-template-columns: 1fr;
+  }
+
+  .portrait-panel {
+    grid-row: 1;
   }
 }
