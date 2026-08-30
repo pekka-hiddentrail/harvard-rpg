@@ -18,18 +18,26 @@ const identity: CharacterIdentity = {
   state: 'Massachusetts',
   school: 'Boston High School',
   avatarIndex: 0,
+  seed: 'test-seed',
 }
 
 const allFirstOption: Record<HousingAxis, 0 | 1> = { schedule: 0, tidiness: 0, social: 0, focus: 0 }
 const allSecondOption: Record<HousingAxis, 0 | 1> = { schedule: 1, tidiness: 1, social: 1, focus: 1 }
 
 describe('matchHousing', () => {
-  it('is deterministic: the same answers always match the same dorm and roommate', () => {
-    expect(matchHousing(allFirstOption)).toEqual(matchHousing(allFirstOption))
+  it('is deterministic: the same seed and answers always match the same dorm and roommate', () => {
+    expect(matchHousing(allFirstOption, 'seed-a')).toEqual(matchHousing(allFirstOption, 'seed-a'))
   })
 
   it('matches opposite answer sets to different dorms', () => {
-    expect(matchHousing(allFirstOption).dorm).not.toEqual(matchHousing(allSecondOption).dorm)
+    expect(matchHousing(allFirstOption, 'seed-a').dorm).not.toEqual(matchHousing(allSecondOption, 'seed-a').dorm)
+  })
+
+  it('can pick a different roommate for the same answers under a different seed', () => {
+    const roommates = new Set(
+      ['seed-a', 'seed-b', 'seed-c', 'seed-d', 'seed-e'].map((seed) => matchHousing(allFirstOption, seed).roommate),
+    )
+    expect(roommates.size).toBeGreaterThan(1)
   })
 })
 

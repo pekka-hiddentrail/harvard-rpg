@@ -19,6 +19,7 @@ const DEFAULT_IDENTITY: CharacterIdentity = {
   state: 'Massachusetts',
   school: 'Boston High School',
   avatarIndex: 0,
+  seed: 'harvard-dev-seed',
 }
 
 /** Dev scaffolding: `?screen=character`, `?screen=traits`, `?screen=calendar`,

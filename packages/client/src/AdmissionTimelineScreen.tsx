@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { CharacterIdentity } from './CharacterGenerationScreen.tsx'
+import { createRng, pickIndex } from './rng.ts'
 
 type TimelineEntry = {
   id: string
@@ -64,8 +65,8 @@ const ENTRIES: TimelineEntry[] = [
 
 // ── the housing questionnaire's tiny match algorithm ────────────────────────────────
 // Four questions, two options each. Each answer nudges one axis of a small profile
-// vector; the dorm with the nearest profile wins, and the roommate is picked
-// deterministically from that dorm's pool so the same answers always match the same way.
+// vector, and the dorm with the nearest profile wins. The roommate within that dorm's pool
+// is drawn from the player's seed, so the same seed always reproduces the same roommate.
 
 export type HousingAxis = 'schedule' | 'tidiness' | 'social' | 'focus'
 export type HousingProfile = Record<HousingAxis, number>
@@ -111,11 +112,14 @@ export function profileFromAnswers(answers: Record<HousingAxis, 0 | 1>): Housing
   }
 }
 
-export function matchHousing(answers: Record<HousingAxis, 0 | 1>): { dorm: string; roommate: string } {
+export function matchHousing(
+  answers: Record<HousingAxis, 0 | 1>,
+  seed: string,
+): { dorm: string; roommate: string } {
   const profile = profileFromAnswers(answers)
   const dorm = DORMS.reduce((best, d) => (distance(d.profile, profile) < distance(best.profile, profile) ? d : best))
-  const sum = HOUSING_QUESTIONS.reduce((n, q) => n + answers[q.id], 0)
-  return { dorm: dorm.name, roommate: dorm.roommates[sum % dorm.roommates.length]! }
+  const rng = createRng(`${seed}:${dorm.name}`)
+  return { dorm: dorm.name, roommate: dorm.roommates[pickIndex(rng, dorm.roommates.length)]! }
 }
 
 type AdmissionTimelineScreenProps = {
@@ -124,7 +128,7 @@ type AdmissionTimelineScreenProps = {
   onContinue: () => void
 }
 
-export function AdmissionTimelineScreen({ onBack, onContinue }: AdmissionTimelineScreenProps) {
+export function AdmissionTimelineScreen({ identity, onBack, onContinue }: AdmissionTimelineScreenProps) {
   const [step, setStep] = useState(0)
   const [expanded, setExpanded] = useState(false)
   const [housingOpen, setHousingOpen] = useState(false)
@@ -153,7 +157,7 @@ export function AdmissionTimelineScreen({ onBack, onContinue }: AdmissionTimelin
   }
 
   const submitHousing = () => {
-    setHousingResult(matchHousing(housingAnswers))
+    setHousingResult(matchHousing(housingAnswers, identity.seed))
   }
 
   const finishHousing = () => {
