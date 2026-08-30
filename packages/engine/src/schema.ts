@@ -345,6 +345,25 @@ export const Syllabus = z
     meetings: z.array(Meeting).min(1),
     sessions: z.array(Session).min(1),
     assignments: z.array(Assignment).default([]),
+    /**
+     * Some courses (Expos 20, notably) are taught as many parallel sections that share
+     * one structural skeleton — same units, same weights, same meeting pattern — but
+     * each section picks its own theme, instructor and time slot. When present, a
+     * player's actual section is drawn from this pool rather than always being `title`.
+     */
+    sections: z
+      .array(
+        z
+          .object({
+            id: z.string().min(1),
+            theme: z.string().min(1),
+            blurb: z.string().min(1),
+            instructor: z.string().min(1),
+            band: z.string().min(1),
+          })
+          .strict(),
+      )
+      .default([]),
   })
   .strict()
 export type Syllabus = z.infer<typeof Syllabus>

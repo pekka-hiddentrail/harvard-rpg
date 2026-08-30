@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import type { CharacterIdentity } from './CharacterGenerationScreen.tsx'
+import { createRng, pickIndex } from './rng.ts'
 
 // The trait pool pattern from TraitSelectionScreen.tsx applies here too: the server owns
 // the content, this screen only asks and renders (ARCHITECTURE §4).
@@ -31,6 +33,14 @@ type Assignment = {
   stages: Stage[]
 }
 
+type CourseSection = {
+  id: string
+  theme: string
+  blurb: string
+  instructor: string
+  band: string
+}
+
 type Course = {
   id: string
   title: string
@@ -40,20 +50,30 @@ type Course = {
   meetings: Meeting[]
   sessions: Session[]
   assignments: Assignment[]
+  sections: CourseSection[]
 }
 
 type CoursesResponse = { contentHash: string; courses: Course[] }
 
 const dueOf = (a: Assignment): string | null => a.date ?? a.due ?? null
 
+/** A deterministic section pick per playthrough — same seed, same section, every time.
+ * Courses without a `sections` pool (Math 21b, CS50) just keep their one fixed offering. */
+const pickSection = (course: Course, seed: string): CourseSection | null => {
+  if (course.sections.length === 0) return null
+  const rng = createRng(`${seed}:${course.id}`)
+  return course.sections[pickIndex(rng, course.sections.length)]!
+}
+
 type CourseRegistrationScreenProps = {
+  identity: CharacterIdentity
   onBack: () => void
 }
 
 // The course catalogue: a browse view over the real, authored syllabi in
 // `content/courses/*.yaml`. Registration itself — demand gaps, the requirement solver,
 // enrolling into a term — is still Tier 2 content that does not exist yet.
-export function CourseRegistrationScreen({ onBack }: CourseRegistrationScreenProps) {
+export function CourseRegistrationScreen({ identity, onBack }: CourseRegistrationScreenProps) {
   const [courses, setCourses] = useState<Course[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -93,30 +113,45 @@ export function CourseRegistrationScreen({ onBack }: CourseRegistrationScreenPro
         {courses && (
           <div className="course-catalogue">
             <ul className="course-list">
-              {courses.map((c) => (
-                <li key={c.id}>
-                  <button
-                    type="button"
-                    className={c.id === selectedId ? 'course-list-item selected' : 'course-list-item'}
-                    onClick={() => setSelectedId(c.id)}
-                  >
-                    <span className="course-title">{c.title}</span>
-                    <span className="course-summary">
-                      difficulty {c.difficulty} · {c.workloadHint}
-                    </span>
-                    <span className="course-demands">
-                      {Object.entries(c.demands).map(([tag, level]) => (
-                        <span key={tag} className="demand-chip">{tag} {level}</span>
-                      ))}
-                    </span>
-                  </button>
-                </li>
-              ))}
+              {courses.map((c) => {
+                const section = pickSection(c, identity.seed)
+                return (
+                  <li key={c.id}>
+                    <button
+                      type="button"
+                      className={c.id === selectedId ? 'course-list-item selected' : 'course-list-item'}
+                      onClick={() => setSelectedId(c.id)}
+                    >
+                      <span className="course-title">{section ? `${c.title.split(':')[0]}: ${section.theme}` : c.title}</span>
+                      {section && <span className="course-instructor">Section {section.id} · {section.instructor} · {c.meetings[0]?.days.join('/')} {section.band}</span>}
+                      <span className="course-summary">
+                        difficulty {c.difficulty} · {c.workloadHint}
+                      </span>
+                      <span className="course-demands">
+                        {Object.entries(c.demands).map(([tag, level]) => (
+                          <span key={tag} className="demand-chip">{tag} {level}</span>
+                        ))}
+                      </span>
+                    </button>
+                  </li>
+                )
+              })}
             </ul>
 
             {selected && (
               <article className="course-detail" aria-label={selected.title}>
-                <h2>{selected.title}</h2>
+                {(() => {
+                  const section = pickSection(selected, identity.seed)
+                  return section ? (
+                    <>
+                      <h2>{selected.title.split(':')[0]}: {section.theme}</h2>
+                      <p className="course-instructor">Section {section.id} · {section.instructor}</p>
+                      <p className="course-blurb">"{section.blurb}"</p>
+                    </>
+                  ) : (
+                    <h2>{selected.title}</h2>
+                  )
+                })()}
                 <p className="course-meetings">
                   {selected.meetings
                     .map((m) => `${m.type} · ${m.days.join('/')} · ${m.band}${m.sections ? ' (section)' : ''}`)

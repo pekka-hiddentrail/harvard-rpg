@@ -1146,6 +1146,16 @@ h1 {
   color: #465048;
 }
 
+.course-instructor {
+  font-size: 12px;
+  color: #8c1d31;
+}
+
+.course-blurb {
+  font-style: italic;
+  color: #465048;
+}
+
 .course-demands {
   display: flex;
   flex-wrap: wrap;

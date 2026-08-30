@@ -3,27 +3,17 @@
 # weighted roughly 25/30/35 across the three essays plus ~10% engagement) is real,
 # published Harvard Writing Program policy, not invented. Expos 20 explicitly has no
 # fixed syllabus or topic list across sections — each section picks its own theme and
-# texts — so the specific theme/instructor below (Dr. Marlow, "Invention and Its
-# Discontents") is authored for this section, the same way a real instructor would pick
-# one. It is NOT a claim about any real, historical Harvard section.
+# texts — so the specific theme/instructor below (Dr. Marlow, she/her, the professor of
+# the default section, "Invention and Its Discontents") is authored for this section,
+# the same way a real instructor would pick one. It is NOT a claim about any real,
+# historical Harvard section.
 #
 # No prior file in this repo established these essay dates or an instructor named
 # Marlow — this is fresh content, not a continuation of something already committed.
 #
-# Real pool of Expos 20 section themes (each section picks one; this is the actual set
-# offered, not invented) -- kept here for reuse when other sections/NPCs need one:
-# Breaking the Norm; Coming of Age at the Margins; Does That Belong in a Museum?;
-# Fairness, Value, and Negotiation; Gender & Mental Health; Gothic Fiction; I Love That
-# Dirty Water: Place, Environment, and Justice; Laughing Matters; Make/Do: Why Craft
-# Matters; More Than a Game; Music and Lyrics; Personhood in U.S. Constitutional Law;
-# Poverty and its Alleviation; Problems of Meaning in Language, Literature, and Life;
-# Rationality and the Supernatural; Reading and Writing in a State of Distraction: What
-# Was the American Magazine?; Representing Royalty; Romantic Comedy; Taboo; The
-# "Science" of Science Fiction; The American Dream in Mass Media; The Art and Science of
-# Learning; The Art of the Con; The Ruling Class; Thinking with Conspiracies; To Thine
-# Own Self Be True? Persona in Literature and Film; Tongue-Tied.
-# "Invention and Its Discontents" (this section) is not on that real list -- authored,
-# same as any section head would author their own, per the no-fixed-topic policy.
+# The real pool of currently-offered section themes (with real one-line blurbs) lives in
+# `sections:` at the bottom of this file, alongside "Invention and Its Discontents" —
+# which is NOT on that real list, authored the same way any section head picks their own.
 id: expos20
 title: "Expos 20: Invention and Its Discontents"
 difficulty: 6
@@ -33,9 +23,14 @@ demands:
   reading: 2
 meetings:
   # Real Expos 20 section size is capped small; 14 matches the number GAME_DESIGN.md
-  # already uses for this course ("Expos 20 has 14 people").
-  - { type: seminar, days: [Tue, Thu], band: "10:00", size: 14 }
+  # already uses for this course ("Expos 20 has 14 people"). Band matches Section 204
+  # below, the pool's default entry.
+  - { type: seminar, days: [Tue, Thu], band: "09:00", size: 14 }
 sessions:
+  # "Individual conferences" (sessions 9, 17, 27) aren't a shared class meeting: each
+  # student books a 15-minute slot sometime that week with their own section's instructor
+  # (Marlow for the default section, someone else for any other pick from `sections:`
+  # below) -- the date here marks the start of that week, not a single fixed meeting.
   - { n: 1, date: 2026-09-01, topic: "Prologue -- syllabus, Elements of Academic Argument" }
   - { n: 2, date: 2026-09-03, topic: "Unit I: introducing the primary text" }
   - { n: 3, date: 2026-09-08, topic: "Close reading strategies" }
@@ -44,7 +39,7 @@ sessions:
   - { n: 6, date: 2026-09-17, topic: "Draft due; discussion" }
   - { n: 7, date: 2026-09-22, topic: "Peer workshop, round 1" }
   - { n: 8, date: 2026-09-24, topic: "Peer workshop, round 2" }
-  - { n: 9, date: 2026-09-29, topic: "Marlow conferences (individual)" }
+  - { n: 9, date: 2026-09-29, topic: "Individual conferences this week (15-min slots)" }
   - { n: 10, date: 2026-10-01, topic: "Unit I Revision due" }
   - { n: 11, date: 2026-10-06, topic: "Unit II: a new theoretical lens" }
   - { n: 12, date: 2026-10-08, topic: "Response Paper due; discussion" }
@@ -52,7 +47,7 @@ sessions:
   - { n: 14, date: 2026-10-15, topic: "Draft due; discussion" }
   - { n: 15, date: 2026-10-20, topic: "Peer workshop, round 1" }
   - { n: 16, date: 2026-10-22, topic: "Peer workshop, round 2" }
-  - { n: 17, date: 2026-10-27, topic: "Marlow conferences (individual)" }
+  - { n: 17, date: 2026-10-27, topic: "Individual conferences this week (15-min slots)" }
   - { n: 18, date: 2026-10-29, topic: "Unit II Revision due" }
   - { n: 19, date: 2026-11-03, topic: "Unit III: research and sourcing guide" }
   - { n: 20, date: 2026-11-05, topic: "Response Paper (research proposal) due" }
@@ -63,7 +58,7 @@ sessions:
   - { n: 25, date: 2026-11-24, topic: "Peer workshop" }
   # Thanksgiving: Thu Nov 26 has no class, unlike the other units' Tue/Thu pairs.
   - { n: 26, date: 2026-12-01, topic: "Peer workshop, continued" }
-  - { n: 27, date: 2026-12-03, topic: "Marlow conferences (individual); course wrap-up" }
+  - { n: 27, date: 2026-12-03, topic: "Individual conferences this week (15-min slots); course wrap-up" }
 assignments:
   # Each unit modeled as one `essay` assignment: `weight` is the graded revision, and
   # `stages` carries the response paper / draft / workshop checkpoints along the way
@@ -116,3 +111,39 @@ assignments:
       - { id: draft, due: 2026-11-19 }
       - { id: workshop, due: 2026-11-24 }
       - { id: revision, due: 2026-12-09 }
+# Every real section of Expos 20 shares the skeleton above (units, weights, meeting
+# pattern) but picks its own theme, instructor and time slot. A player's actual section
+# is drawn from this pool (seeded, so it's deterministic per playthrough) rather than
+# always landing on "Invention and Its Discontents". Themes and one-line blurbs for all
+# but the first entry are the real, currently-offered pool; instructors, section numbers
+# and times beyond the two given examples (204/Marlow, 229/Evans) are authored, same as
+# any section head's own identity would be.
+sections:
+  - { id: "204", theme: "Invention and Its Discontents", blurb: "Exploring how important inventions reshape day-to-day life, and what gets lost along the way.", instructor: "Dr. Marlow", band: "09:00" }
+  - { id: "229", theme: "More Than a Game", blurb: "Politics and activism in professional sports.", instructor: "Dr. Evans", band: "10:30" }
+  - { id: "201", theme: "Breaking the Norm", blurb: "How social norms form, get enforced, and get broken.", instructor: "Dr. Okafor", band: "09:00" }
+  - { id: "203", theme: "Coming of Age at the Margins", blurb: "Coming-of-age stories about protagonists historically pushed to the margins.", instructor: "Dr. Lindqvist", band: "10:00" }
+  - { id: "206", theme: "Does That Belong in a Museum?", blurb: "Museum ownership, repatriation, provenance ethics.", instructor: "Dr. Reyes", band: "10:30" }
+  - { id: "208", theme: "Fairness, Value, and Negotiation", blurb: "Negotiation theory, fairness, real case-method negotiations.", instructor: "Dr. Suzuki", band: "11:00" }
+  - { id: "210", theme: "Gender & Mental Health", blurb: "Gender and clinical psychology, historical and contemporary.", instructor: "Dr. Castellano", band: "12:00" }
+  - { id: "212", theme: "Gothic Fiction", blurb: "The Gothic genre from 18th-century fragments through Poe to \"the new Gothic\".", instructor: "Dr. Whitfield", band: "13:00" }
+  - { id: "214", theme: "I Love That Dirty Water: Place, Environment, and Justice", blurb: "Environmental justice -- water rights, energy transitions, incarceration geography.", instructor: "Dr. Novak", band: "13:30" }
+  - { id: "217", theme: "Laughing Matters", blurb: "The mechanics and social function of comedy.", instructor: "Dr. Iyer", band: "14:30" }
+  - { id: "219", theme: "Make/Do: Why Craft Matters", blurb: "The value and meaning of handicraft in a digital world.", instructor: "Dr. Bergstrom", band: "09:00" }
+  - { id: "221", theme: "Music and Lyrics", blurb: "How music and lyrics interact to create meaning.", instructor: "Dr. Ondiek", band: "10:00" }
+  - { id: "223", theme: "Personhood in U.S. Constitutional Law", blurb: "Legal personhood through landmark Supreme Court cases.", instructor: "Dr. Park", band: "10:30" }
+  - { id: "225", theme: "Poverty and its Alleviation", blurb: "Interdisciplinary look at poverty through literature and policy.", instructor: "Dr. Alvarez", band: "11:00" }
+  - { id: "227", theme: "Problems of Meaning in Language, Literature, and Life", blurb: "Philosophy of meaning -- linguistic, literary, existential.", instructor: "Dr. Duarte", band: "12:00" }
+  - { id: "230", theme: "Rationality and the Supernatural", blurb: "Cultural logics behind witches, demons, aliens, and the paranormal.", instructor: "Dr. Hollis", band: "13:00" }
+  - { id: "232", theme: "Reading and Writing in a State of Distraction: What Was the American Magazine?", blurb: "American magazine history as literary production.", instructor: "Dr. Nakamura", band: "13:30" }
+  - { id: "234", theme: "Representing Royalty", blurb: "Royalty as a representational/spectacle system, echoed in modern celebrity/politics.", instructor: "Dr. Petrov", band: "14:30" }
+  - { id: "236", theme: "Romantic Comedy", blurb: "The rom-com genre from ancient Greece to Netflix.", instructor: "Dr. Fenwick", band: "09:00" }
+  - { id: "238", theme: "Taboo", blurb: "Cross-cultural anthropology/psychology of taboo.", instructor: "Dr. Osei", band: "10:00" }
+  - { id: "241", theme: "The \"Science\" of Science Fiction", blurb: "Where sci-fi's scientific plausibility bends for narrative impact.", instructor: "Dr. Larkin", band: "10:30" }
+  - { id: "243", theme: "The American Dream in Mass Media", blurb: "The American Dream as sold through early-20th-century media.", instructor: "Dr. Choi", band: "11:00" }
+  - { id: "246", theme: "The Art and Science of Learning", blurb: "Metacognition as a lens for academic writing.", instructor: "Dr. Abernathy", band: "12:00" }
+  - { id: "248", theme: "The Art of the Con", blurb: "Real and fictional con artists, American ambition/opportunity myths.", instructor: "Dr. Vasquez", band: "13:00" }
+  - { id: "251", theme: "The Ruling Class", blurb: "The politics and culture of the professional-managerial class.", instructor: "Dr. Ferreira", band: "13:30" }
+  - { id: "254", theme: "Thinking with Conspiracies", blurb: "The history and internal logic of conspiracy theories.", instructor: "Dr. Doyle", band: "14:30" }
+  - { id: "256", theme: "To Thine Own Self Be True? Persona in Literature and Film", blurb: "Persona construction across contexts (academic, professional, personal).", instructor: "Dr. Mbeki", band: "09:00" }
+  - { id: "259", theme: "Tongue-Tied", blurb: "Language as both connection and silence -- identity and belonging.", instructor: "Dr. Sinclair", band: "10:00" }
