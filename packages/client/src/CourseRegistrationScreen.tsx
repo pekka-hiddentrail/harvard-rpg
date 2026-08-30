@@ -56,6 +56,7 @@ type CourseSlot = {
   size: number
   attendance: 'mandatory' | 'flexible'
   occupied: number
+  room: string | null
   theme: string | null
   blurb: string | null
   instructor: string | null
@@ -234,7 +235,9 @@ export function CourseRegistrationScreen({ identity, onBack }: CourseRegistratio
                         .filter((s) => s.course === selected.id)
                         .map((s, i) => (
                           <li key={i}>
-                            <span className="slot-time">{s.days.join('/')} {s.time}</span>
+                            <span className="slot-time">
+                              {s.id ? `${s.id} · ` : ''}{s.days.join('/')} {s.time}{s.room ? ` · ${s.room}` : ''}
+                            </span>
                           </li>
                         ))}
                     </ul>

@@ -4,21 +4,43 @@
 # is one specific, capacity-tracked offering.
 #
 # CS50 sections are 2h45m (165 min) -- CS50's own extended lab/section format, not one of
-# the three canonical 50/75-min lecture blocks, hence no `pattern`. Four real sections.
-# Attendance mandatory: every discussion section/lab is, regardless of the lecture's own
-# attendance policy.
-- { course: cs50, type: section, time: "09:00-11:45", days: [Tue], size: 18, occupied: 0, attendance: mandatory }
-- { course: cs50, type: section, time: "15:45-18:30", days: [Tue], size: 18, occupied: 0, attendance: mandatory }
-- { course: cs50, type: section, time: "09:00-11:45", days: [Wed], size: 18, occupied: 0, attendance: mandatory }
-- { course: cs50, type: section, time: "18:00-20:45", days: [Wed], size: 18, occupied: 0, attendance: mandatory }
+# the three canonical 50/75-min lecture blocks, hence no `pattern`. Four real time
+# windows, each real -- but each window really does split into several same-time,
+# different-room parallel groups (real Harvard practice for a course this size); the
+# specific `room` labels and group letters below are authored, not a claim about any
+# real Fall 2026 room assignment. Attendance mandatory: every discussion section/lab is,
+# regardless of the lecture's own attendance policy.
+- { id: "01A", course: cs50, type: section, time: "09:00-11:45", days: [Tue], size: 18, occupied: 0, attendance: mandatory, room: "Lab A" }
+- { id: "01B", course: cs50, type: section, time: "09:00-11:45", days: [Tue], size: 18, occupied: 0, attendance: mandatory, room: "Lab B" }
+- { id: "01C", course: cs50, type: section, time: "09:00-11:45", days: [Tue], size: 18, occupied: 0, attendance: mandatory, room: "Lab C" }
+- { id: "01D", course: cs50, type: section, time: "09:00-11:45", days: [Tue], size: 18, occupied: 0, attendance: mandatory, room: "Lab D" }
+- { id: "01E", course: cs50, type: section, time: "09:00-11:45", days: [Tue], size: 18, occupied: 0, attendance: mandatory, room: "Lab E" }
+- { id: "01F", course: cs50, type: section, time: "09:00-11:45", days: [Tue], size: 18, occupied: 0, attendance: mandatory, room: "Lab F" }
+- { id: "02A", course: cs50, type: section, time: "15:45-18:30", days: [Tue], size: 18, occupied: 0, attendance: mandatory, room: "Lab A" }
+- { id: "02B", course: cs50, type: section, time: "15:45-18:30", days: [Tue], size: 18, occupied: 0, attendance: mandatory, room: "Lab B" }
+- { id: "02C", course: cs50, type: section, time: "15:45-18:30", days: [Tue], size: 18, occupied: 0, attendance: mandatory, room: "Lab C" }
+- { id: "02D", course: cs50, type: section, time: "15:45-18:30", days: [Tue], size: 18, occupied: 0, attendance: mandatory, room: "Lab D" }
+- { id: "02E", course: cs50, type: section, time: "15:45-18:30", days: [Tue], size: 18, occupied: 0, attendance: mandatory, room: "Lab E" }
+- { id: "02F", course: cs50, type: section, time: "15:45-18:30", days: [Tue], size: 18, occupied: 0, attendance: mandatory, room: "Lab F" }
+- { id: "03A", course: cs50, type: section, time: "09:00-11:45", days: [Wed], size: 18, occupied: 0, attendance: mandatory, room: "Lab A" }
+- { id: "03B", course: cs50, type: section, time: "09:00-11:45", days: [Wed], size: 18, occupied: 0, attendance: mandatory, room: "Lab B" }
+- { id: "03C", course: cs50, type: section, time: "09:00-11:45", days: [Wed], size: 18, occupied: 0, attendance: mandatory, room: "Lab C" }
+- { id: "03D", course: cs50, type: section, time: "09:00-11:45", days: [Wed], size: 18, occupied: 0, attendance: mandatory, room: "Lab D" }
+- { id: "03E", course: cs50, type: section, time: "09:00-11:45", days: [Wed], size: 18, occupied: 0, attendance: mandatory, room: "Lab E" }
+- { id: "03F", course: cs50, type: section, time: "09:00-11:45", days: [Wed], size: 18, occupied: 0, attendance: mandatory, room: "Lab F" }
+- { id: "04A", course: cs50, type: section, time: "18:00-20:45", days: [Wed], size: 18, occupied: 0, attendance: mandatory, room: "Lab A" }
+- { id: "04B", course: cs50, type: section, time: "18:00-20:45", days: [Wed], size: 18, occupied: 0, attendance: mandatory, room: "Lab B" }
+- { id: "04C", course: cs50, type: section, time: "18:00-20:45", days: [Wed], size: 18, occupied: 0, attendance: mandatory, room: "Lab C" }
+- { id: "04D", course: cs50, type: section, time: "18:00-20:45", days: [Wed], size: 18, occupied: 0, attendance: mandatory, room: "Lab D" }
+- { id: "04E", course: cs50, type: section, time: "18:00-20:45", days: [Wed], size: 18, occupied: 0, attendance: mandatory, room: "Lab E" }
+- { id: "04F", course: cs50, type: section, time: "18:00-20:45", days: [Wed], size: 18, occupied: 0, attendance: mandatory, room: "Lab F" }
 
 # Expos 20's real sections: every real section shares the same TTh/75-min/mandatory
 # pattern, spread as evenly as 28 sections go into 5 real daytime slots (~1/5th each,
 # 6/6/6/5/5). Times are the real block-schedule starts (09:00, 10:30, 12:00, 13:30,
 # 15:00); themes/blurbs are the real, currently-offered pool (see expos20.yaml's header
-# for what "Invention and Its Discontents" is). Instructors and section numbers beyond
-# the two given examples (204/Marlow, 209/Evans) are authored, same as any section
-# head's own identity would be.
+# for what "Invention and Its Discontents" is). Instructors and section numbers are 
+# authored, same as any section head's own identity would be.
 - { id: "204", course: expos20, type: seminar, pattern: TTh, time: "09:00-10:15", days: [Tue, Thu], size: 14, occupied: 0, attendance: mandatory, theme: "Invention and Its Discontents", blurb: "Exploring how important inventions reshape day-to-day life, and what gets lost along the way.", instructor: "Dr. Marlow" }
 - { id: "201", course: expos20, type: seminar, pattern: TTh, time: "10:30-11:45", days: [Tue, Thu], size: 14, occupied: 0, attendance: mandatory, theme: "Breaking the Norm", blurb: "How social norms form, get enforced, and get broken.", instructor: "Dr. Okafor" }
 - { id: "203", course: expos20, type: seminar, pattern: TTh, time: "12:00-13:15", days: [Tue, Thu], size: 14, occupied: 0, attendance: mandatory, theme: "Coming of Age at the Margins", blurb: "Coming-of-age stories about protagonists historically pushed to the margins.", instructor: "Dr. Lindqvist" }

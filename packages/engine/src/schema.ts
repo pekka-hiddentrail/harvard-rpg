@@ -311,7 +311,7 @@ export type Meeting = z.infer<typeof Meeting>
 export const CourseSlot = z
   .object({
     /** Only needed when a course has more than one real slot for the same type/time —
-     * Expos 20's numbered sections use it; CS50's don't need to. */
+     * Expos 20's numbered sections and CS50's parallel groups use it. */
     id: z.string().min(1).optional(),
     course: z.string().min(1),
     type: z.enum(['lecture', 'section', 'lab', 'seminar']),
@@ -323,6 +323,12 @@ export const CourseSlot = z
     attendance: Attendance,
     /** Seats already taken. Seeded content, not derived — shopping week may move it. */
     occupied: z.number().int().nonnegative().default(0),
+    /**
+     * Which of the several parallel groups meeting at the same day/time this is (e.g.
+     * a big course's Tuesday-9am window splits into a handful of same-time, different-
+     * room sections). Authored, not a claim about any real room assignment.
+     */
+    room: z.string().min(1).optional(),
     /**
      * Present only for courses taught as many theme-varying sections (Expos 20). A
      * player's actual section is drawn from the pool of slots that have these set.
