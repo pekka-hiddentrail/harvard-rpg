@@ -1,0 +1,93 @@
+# Expos 20 — Fall 2026. The universal skeleton here (TR meetings, ~14 weeks, three units
+# each following response paper -> draft -> workshop -> conference -> revision, grading
+# weighted roughly 25/30/35 across the three essays plus ~10% engagement) is real,
+# published Harvard Writing Program policy, not invented. Expos 20 explicitly has no
+# fixed syllabus or topic list across sections — each section picks its own theme and
+# texts — so the specific theme/instructor below (Dr. Marlow, "Invention and Its
+# Discontents") is authored for this section, the same way a real instructor would pick
+# one. It is NOT a claim about any real, historical Harvard section.
+#
+# No prior file in this repo established these essay dates or an instructor named
+# Marlow — this is fresh content, not a continuation of something already committed.
+id: expos20
+title: "Expos 20: Invention and Its Discontents"
+difficulty: 6
+workloadHint: "~8-10h/week, unevenly distributed around draft/revision weeks"
+demands:
+  writing: 3
+  reading: 2
+meetings:
+  # Real Expos 20 section size is capped small; 14 matches the number GAME_DESIGN.md
+  # already uses for this course ("Expos 20 has 14 people").
+  - { type: seminar, days: [Tue, Thu], band: "10:00", size: 14 }
+sessions:
+  - { n: 1, date: 2026-09-01, topic: "Prologue -- syllabus, Elements of Academic Argument" }
+  - { n: 2, date: 2026-09-03, topic: "Unit I: introducing the primary text" }
+  - { n: 3, date: 2026-09-08, topic: "Close reading strategies" }
+  - { n: 4, date: 2026-09-10, topic: "Response Paper due; discussion" }
+  - { n: 5, date: 2026-09-15, topic: "Building a thesis from close reading" }
+  - { n: 6, date: 2026-09-17, topic: "Draft due; discussion" }
+  - { n: 7, date: 2026-09-22, topic: "Peer workshop, round 1" }
+  - { n: 8, date: 2026-09-24, topic: "Peer workshop, round 2" }
+  - { n: 9, date: 2026-09-29, topic: "Marlow conferences (individual)" }
+  - { n: 10, date: 2026-10-01, topic: "Unit I Revision due" }
+  - { n: 11, date: 2026-10-06, topic: "Unit II: a new theoretical lens" }
+  - { n: 12, date: 2026-10-08, topic: "Response Paper due; discussion" }
+  - { n: 13, date: 2026-10-13, topic: "Working the lens against the text" }
+  - { n: 14, date: 2026-10-15, topic: "Draft due; discussion" }
+  - { n: 15, date: 2026-10-20, topic: "Peer workshop, round 1" }
+  - { n: 16, date: 2026-10-22, topic: "Peer workshop, round 2" }
+  - { n: 17, date: 2026-10-27, topic: "Marlow conferences (individual)" }
+  - { n: 18, date: 2026-10-29, topic: "Unit II Revision due" }
+  - { n: 19, date: 2026-11-03, topic: "Unit III: research and sourcing guide" }
+  - { n: 20, date: 2026-11-05, topic: "Response Paper (research proposal) due" }
+  - { n: 21, date: 2026-11-10, topic: "Locating and evaluating sources" }
+  - { n: 22, date: 2026-11-12, topic: "Annotated outline due" }
+  - { n: 23, date: 2026-11-17, topic: "Independent research, peer check-ins" }
+  - { n: 24, date: 2026-11-19, topic: "Draft due; discussion" }
+  - { n: 25, date: 2026-11-24, topic: "Peer workshop" }
+  # Thanksgiving: Thu Nov 26 has no class, unlike the other units' Tue/Thu pairs.
+  - { n: 26, date: 2026-12-01, topic: "Peer workshop, continued" }
+  - { n: 27, date: 2026-12-03, topic: "Marlow conferences (individual); course wrap-up" }
+assignments:
+  # Each unit modeled as one `essay` assignment: `weight` is the graded revision, and
+  # `stages` carries the response paper / draft / workshop checkpoints along the way
+  # (kind `essay` rolls 4 letters per stage per GAME_DESIGN §4.4). The ~10% engagement
+  # component isn't modeled here -- there's no discrete assignment for class participation.
+  - id: essay1
+    title: "Essay One -- close reading"
+    kind: essay
+    assigned: 2026-09-01
+    due: 2026-10-01
+    weight: 0.25
+    dependsOnSessions: [1, 2, 3]
+    stages:
+      - { id: response, due: 2026-09-10 }
+      - { id: draft, due: 2026-09-17 }
+      - { id: workshop, due: 2026-09-24 }
+      - { id: revision, due: 2026-10-01 }
+  - id: essay2
+    title: "Essay Two -- theoretical lens"
+    kind: essay
+    assigned: 2026-10-06
+    due: 2026-10-29
+    weight: 0.30
+    dependsOnSessions: [11]
+    stages:
+      - { id: response, due: 2026-10-08 }
+      - { id: draft, due: 2026-10-15 }
+      - { id: workshop, due: 2026-10-22 }
+      - { id: revision, due: 2026-10-29 }
+  - id: essay3
+    title: "Essay Three -- independent research"
+    kind: essay
+    assigned: 2026-11-03
+    due: 2026-12-09
+    weight: 0.35
+    dependsOnSessions: [19]
+    stages:
+      - { id: proposal, due: 2026-11-05 }
+      - { id: outline, due: 2026-11-12 }
+      - { id: draft, due: 2026-11-19 }
+      - { id: workshop, due: 2026-11-24 }
+      - { id: revision, due: 2026-12-09 }
