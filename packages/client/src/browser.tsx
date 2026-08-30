@@ -1,12 +1,14 @@
 import { StrictMode, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import './browser.css'
+import { AdmissionTimelineScreen } from './AdmissionTimelineScreen.tsx'
 import { CalendarScreen } from './CalendarScreen.tsx'
 import { CharacterGenerationScreen, type CharacterIdentity } from './CharacterGenerationScreen.tsx'
+import { CourseRegistrationScreen } from './CourseRegistrationScreen.tsx'
 import { TraitSelectionScreen } from './TraitSelectionScreen.tsx'
 import { WelcomeScreen } from './WelcomeScreen.tsx'
 
-type View = 'welcome' | 'character' | 'traits' | 'calendar'
+type View = 'welcome' | 'character' | 'traits' | 'calendar' | 'timeline' | 'courseRegistration'
 
 const DEFAULT_IDENTITY: CharacterIdentity = {
   name: 'Pekka',
@@ -19,12 +21,18 @@ const DEFAULT_IDENTITY: CharacterIdentity = {
   avatarIndex: 0,
 }
 
-/** Dev scaffolding: `?screen=character`, `?screen=traits` or `?screen=calendar` opens a
- *  screen directly with default data, so a screen under work doesn't require clicking
- *  through the ones before it. */
+/** Dev scaffolding: `?screen=character`, `?screen=traits`, `?screen=calendar`,
+ *  `?screen=timeline` or `?screen=courseRegistration` opens a screen directly with default
+ *  data, so a screen under work doesn't require clicking through the ones before it. */
 const requestedView = (): View => {
   const screen = new URLSearchParams(window.location.search).get('screen')
-  return screen === 'character' || screen === 'traits' || screen === 'calendar' ? screen : 'welcome'
+  return screen === 'character' ||
+    screen === 'traits' ||
+    screen === 'calendar' ||
+    screen === 'timeline' ||
+    screen === 'courseRegistration'
+    ? screen
+    : 'welcome'
 }
 
 function BrowserApp() {
@@ -48,13 +56,27 @@ function BrowserApp() {
   }
 
   if (view === 'calendar') {
-    return <CalendarScreen onBack={() => setView('traits')} />
+    return <CalendarScreen onBack={() => setView('timeline')} />
+  }
+
+  if (view === 'courseRegistration') {
+    return <CourseRegistrationScreen onBack={() => setView('timeline')} />
+  }
+
+  if (view === 'timeline') {
+    return (
+      <AdmissionTimelineScreen
+        identity={identity}
+        onBack={() => setView('traits')}
+        onContinue={() => setView('courseRegistration')}
+      />
+    )
   }
 
   return <TraitSelectionScreen
     identity={identity}
     onBack={() => setView('character')}
-    onSaveAndStart={() => setView('calendar')}
+    onSaveAndStart={() => setView('timeline')}
   />
 }
 
