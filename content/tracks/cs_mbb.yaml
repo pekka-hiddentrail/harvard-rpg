@@ -1,0 +1,150 @@
+version: 1
+id: cs_mbb
+name: "Computer Science — Mind, Brain & Behavior"
+field: cs
+honorsEligible: true
+thesisRequired: true
+declareBy:
+  year: 2
+  term: fall
+diploma: "Computer Science"
+
+requirements:
+  - id: math-prep
+    label: "Math prep"
+    kind: sequence
+    need: 1
+    sequence: [math1a, math1b]
+    min: 0
+    max: 2
+    notes:
+      - "Only if placement testing shows you need it."
+
+  - id: linear-algebra
+    label: "Linear algebra"
+    kind: set
+    need: 1
+    from:
+      - math21b
+      - math22a
+      - math23a
+      - math25a
+      - math55a
+      - am22a
+    notes:
+      - "21b/22a are the default routes."
+      - "23a/25a/55a are progressively more rigorous honors tracks."
+      - "Any advanced linear algebra course also counts."
+
+  - id: probability
+    label: "Probability"
+    kind: set
+    need: 1
+    from:
+      - stat110
+      - stat111
+      - stat210
+      - higher_probability_or_stats_course
+    notes:
+      - "Stat 110 is the standard default."
+      - "Any more advanced probability or statistics course qualifies."
+
+  - id: cs-core
+    label: "CS core"
+    kind: set
+    need: 8
+    from:
+      - cs50
+      - cs51
+      - cs61
+      - cs20
+      - cs1200
+      - cs1210
+      - cs1240
+      - cs91r
+      - advanced_cs_course
+    notes:
+      - "MBB uses only 8 CS courses, not the full 11-course honors track."
+
+  - id: mbb-core
+    label: "MBB core"
+    kind: set
+    need: 3
+    from:
+      - neuro80
+      - approved_mbb_elective
+      - approved_mbb_junior_tutorial
+    notes:
+      - "One neuroscience course, one MBB-related course outside CS, and one approved junior tutorial."
+
+  - id: thesis
+    label: "MBB thesis"
+    kind: course
+    need: 1
+    from: [cs91r]
+    notes:
+      - "Computationally oriented and MBB-related."
+
+courseHints:
+  - id: math21b
+    title: "Math 21b"
+    likelyTracks: [cs_mbb, cs_basic, cs_honors]
+    countsToward: [linear-algebra, cs-core]
+    leadsTo: [cs_mbb]
+    notes:
+      - "Default linear algebra route."
+      - "Strong fit for MBB and CS tracks."
+
+  - id: math22a
+    title: "Math 22a"
+    likelyTracks: [cs_mbb, cs_honors]
+    countsToward: [linear-algebra]
+    leadsTo: [cs_mbb]
+    notes:
+      - "More proof-based than 21b."
+      - "Normal alternative for mathematically inclined students."
+
+  - id: math23a
+    title: "Math 23a"
+    likelyTracks: [cs_mbb, cs_honors]
+    countsToward: [linear-algebra]
+    leadsTo: [cs_mbb]
+    notes:
+      - "Honors-level theory route."
+      - "Good fit for students aiming at deeper proof-heavy math."
+
+  - id: math55a
+    title: "Math 55a"
+    likelyTracks: [cs_mbb, theory_heavy_cs]
+    countsToward: [linear-algebra]
+    leadsTo: [cs_mbb]
+    notes:
+      - "Legendary intensity."
+      - "Signals a theory-heavy path."
+
+  - id: stat110
+    title: "Statistics 110"
+    likelyTracks: [cs_mbb, cs_honors, cs_basic]
+    countsToward: [probability]
+    leadsTo: [cs_mbb]
+    notes:
+      - "Default probability requirement."
+      - "Standard CS gateway."
+
+  - id: neuro80
+    title: "Neuroscience 80"
+    likelyTracks: [cs_mbb]
+    countsToward: [mbb-core]
+    leadsTo: [cs_mbb]
+    notes:
+      - "Core MBB requirement."
+      - "This is a major signpost for the track."
+
+  - id: cs91r
+    title: "CS 91r"
+    likelyTracks: [cs_mbb, cs_honors]
+    countsToward: [cs-core, thesis]
+    leadsTo: [cs_mbb]
+    notes:
+      - "May serve as a thesis anchor."
+      - "Especially relevant to MBB thesis work."

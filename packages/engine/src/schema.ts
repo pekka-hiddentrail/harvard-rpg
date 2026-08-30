@@ -187,6 +187,70 @@ export const Preset = BuildRequest.extend({
 }).strict()
 export type Preset = z.infer<typeof Preset>
 
+export const RequirementGroup = z
+  .object({
+    id: z.string().min(1),
+    label: z.string().min(1),
+    kind: z.enum(['course', 'set', 'sequence', 'tag']).default('course'),
+    need: z.number().int().min(1).default(1),
+    from: z.array(z.string()).default([]),
+    oneOf: z.array(z.string()).default([]),
+    anyOf: z.array(z.string()).default([]),
+    counts: z.array(z.string()).default([]),
+    subjectTag: z.string().optional(),
+    optional: z.boolean().default(false),
+    min: z.number().int().nonnegative().optional(),
+    max: z.number().int().nonnegative().optional(),
+    sequence: z.array(z.string()).default([]),
+  })
+  .strict()
+  .refine((r) => !(r.kind === 'sequence' && r.sequence.length === 0), {
+    message: 'sequence requirements must name at least one course in the order they should be taken',
+  })
+export type RequirementGroup = z.infer<typeof RequirementGroup>
+
+export const CourseHint = z
+  .object({
+    id: z.string().min(1),
+    title: z.string().min(1).optional(),
+    likelyTracks: z.array(z.string()).default([]),
+    countsToward: z.array(z.string()).default([]),
+    leadsTo: z.array(z.string()).default([]),
+    notes: z.array(z.string()).default([]),
+  })
+  .strict()
+export type CourseHint = z.infer<typeof CourseHint>
+
+export const Track = z
+  .object({
+    id: z.string().min(1),
+    name: z.string().min(1),
+    field: z.string().min(1),
+    honorsEligible: z.boolean().default(false),
+    thesisRequired: z.boolean().default(false),
+    declareBy: z
+      .object({
+        year: z.number().int().positive(),
+        term: z.enum(['fall', 'spring']),
+      })
+      .strict()
+      .optional(),
+    requirements: z.array(RequirementGroup).default([]),
+    courseHints: z.array(CourseHint).default([]),
+    diploma: z.string().optional(),
+  })
+  .strict()
+export type Track = z.infer<typeof Track>
+
+export const TrackPack = z
+  .object({
+    version: z.number().int(),
+    id: z.string().min(1),
+    tracks: z.array(Track).min(1),
+  })
+  .strict()
+export type TrackPack = z.infer<typeof TrackPack>
+
 /**
  * The immutable creation block. Seed material, not an action — the event log describes a
  * character *playing*, so there is nothing in it before the character (ARCHITECTURE §4).
