@@ -5,6 +5,7 @@ import { parse } from 'yaml'
 import {
   ActivityPack,
   BAND_COUNT,
+  CourseSlot,
   Preset,
   Rules,
   Syllabus,
@@ -38,6 +39,8 @@ export type Content = {
   presets: Preset[]
   /** Real, authored course syllabi (Tier 2, GAME_DESIGN §4.1). */
   courses: Syllabus[]
+  /** The real, concrete, capacity-tracked section-slot pool (the shopping cart). */
+  slots: CourseSlot[]
   /** sha256 over every content file, sorted by path. Pinned into each save. */
   hash: string
 }
@@ -112,6 +115,13 @@ export function loadContent(root: string): Content {
     return parsed.data
   })
 
+  const slotsPath = join(root, 'sections.yaml')
+  const slotsParsed = CourseSlot.array().safeParse(parse(take(slotsPath)))
+  if (!slotsParsed.success) {
+    throw new Error(`sections.yaml is not a valid section-slot list:\n${describe(slotsParsed.error)}`)
+  }
+  const slots = slotsParsed.data
+
   // Sorted by path so the hash does not depend on directory-read order.
   const h = createHash('sha256')
   for (const f of [...files].sort((a, b) => a.path.localeCompare(b.path))) {
@@ -130,6 +140,7 @@ export function loadContent(root: string): Content {
     activityIndex,
     presets,
     courses,
+    slots,
     hash: h.digest('hex').slice(0, 16),
   }
 }

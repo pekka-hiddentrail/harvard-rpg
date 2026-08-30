@@ -277,12 +277,41 @@ export const Meeting = z
      * yet), so content declares the pattern/range and never pins one slot.
      */
     pattern: MeetingPattern.optional(),
+    /**
+     * A concrete, always-published time (e.g. `"09:00-10:30"`), for the rare meeting
+     * that really does run at one fixed slot for everyone — a big shared lecture, not a
+     * small section. Distinct from `pattern`: a lecture like CS50's doesn't necessarily
+     * even fit one of the three canonical block durations.
+     */
+    time: z.string().min(1).optional(),
     size: z.number().int().positive(),
     /** True when this meeting is the small, section-sized half of the course. */
     sections: z.boolean().default(false),
   })
   .strict()
 export type Meeting = z.infer<typeof Meeting>
+
+/**
+ * A real, concrete, schedulable section instance — the "shopping cart" pool a student
+ * actually picks from. Distinct from `Meeting`: a `Meeting` on a `Syllabus` names the
+ * pattern/range shared by every section of a course; a `CourseSlot` is one specific,
+ * capacity-tracked offering of it (GAME_DESIGN's shopping week, §4).
+ */
+export const CourseSlot = z
+  .object({
+    course: z.string().min(1),
+    type: z.enum(['lecture', 'section', 'lab', 'seminar']),
+    pattern: MeetingPattern.optional(),
+    /** The one real time this instance runs, e.g. `"09:00-11:45"`. */
+    time: z.string().min(1),
+    days: z.array(Weekday).min(1),
+    size: z.number().int().positive(),
+    /** Seats already taken. Seeded content, not derived — shopping week may move it. */
+    occupied: z.number().int().nonnegative().default(0),
+  })
+  .strict()
+  .refine((s) => s.occupied <= s.size, { message: 'occupied cannot exceed size' })
+export type CourseSlot = z.infer<typeof CourseSlot>
 
 export const Session = z
   .object({

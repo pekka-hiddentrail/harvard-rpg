@@ -1,0 +1,11 @@
+# Real, concrete, schedulable section instances -- the shopping-cart pool a student
+# actually picks from (distinct from a course's own `meetings`, which only names the
+# shared pattern/range; see `CourseSlot` in packages/engine/src/schema.ts). Each row here
+# is one specific, capacity-tracked offering.
+#
+# CS50 sections are 2h45m (165 min) -- CS50's own extended lab/section format, not one of
+# the three canonical 50/75-min lecture blocks, hence no `pattern`. Four real sections:
+- { course: cs50, type: section, time: "09:00-11:45", days: [Tue], size: 18, occupied: 0 }
+- { course: cs50, type: section, time: "15:45-18:30", days: [Tue], size: 18, occupied: 0 }
+- { course: cs50, type: section, time: "09:00-11:45", days: [Wed], size: 18, occupied: 0 }
+- { course: cs50, type: section, time: "18:00-20:45", days: [Wed], size: 18, occupied: 0 }

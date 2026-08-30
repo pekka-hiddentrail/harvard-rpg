@@ -10,6 +10,7 @@ type Meeting = {
   type: string
   days: string[]
   pattern: 'MWF' | 'TTh' | 'MW' | null
+  time: string | null
   size: number
   sections: boolean
 }
@@ -52,7 +53,17 @@ type Course = {
   sections: CourseSection[]
 }
 
-type CoursesResponse = { contentHash: string; courses: Course[] }
+type CourseSlot = {
+  course: string
+  type: string
+  pattern: 'MWF' | 'TTh' | 'MW' | null
+  time: string
+  days: string[]
+  size: number
+  occupied: number
+}
+
+type CoursesResponse = { contentHash: string; courses: Course[]; slots: CourseSlot[] }
 
 const dueOf = (a: Assignment): string | null => a.date ?? a.due ?? null
 
@@ -65,7 +76,7 @@ const PATTERN_MINUTES: Record<string, number> = { MWF: 50, TTh: 75, MW: 75 }
 const meetingsLabel = (meetings: Meeting[]): string =>
   meetings
     .map((m) => {
-      const length = m.pattern ? ` (${PATTERN_MINUTES[m.pattern]} min)` : ''
+      const length = m.time ? ` ${m.time}` : m.pattern ? ` (${PATTERN_MINUTES[m.pattern]} min)` : ''
       return `${m.type} · ${m.days.join('/')}${length}${m.sections ? ' (section)' : ''}`
     })
     .join(' · ')
@@ -88,6 +99,7 @@ type CourseRegistrationScreenProps = {
 // enrolling into a term — is still Tier 2 content that does not exist yet.
 export function CourseRegistrationScreen({ identity, onBack }: CourseRegistrationScreenProps) {
   const [courses, setCourses] = useState<Course[] | null>(null)
+  const [slots, setSlots] = useState<CourseSlot[]>([])
   const [error, setError] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
@@ -96,6 +108,7 @@ export function CourseRegistrationScreen({ identity, onBack }: CourseRegistratio
       .then((r) => r.json() as Promise<CoursesResponse>)
       .then((res) => {
         setCourses(res.courses)
+        setSlots(res.slots)
         setSelectedId((current) => current ?? res.courses[0]?.id ?? null)
       })
       .catch(() => setError(`No server on ${BASE}. Start it with \`npm run server\` in another window.`))
@@ -197,6 +210,22 @@ export function CourseRegistrationScreen({ identity, onBack }: CourseRegistratio
                     </li>
                   ))}
                 </ol>
+
+                {slots.filter((s) => s.course === selected.id).length > 0 && (
+                  <>
+                    <h3>Section slots</h3>
+                    <ul className="course-slots">
+                      {slots
+                        .filter((s) => s.course === selected.id)
+                        .map((s, i) => (
+                          <li key={i}>
+                            <span className="slot-time">{s.days.join('/')} {s.time}</span>
+                            <span className="slot-occupancy">{s.occupied}/{s.size} seats taken</span>
+                          </li>
+                        ))}
+                    </ul>
+                  </>
+                )}
               </article>
             )}
           </div>
