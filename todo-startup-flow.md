@@ -34,5 +34,18 @@
 
 ## Notes
 - Keep each screen separate and easy to test.
-- Use one screen at a time rather than building the whole flow at once.
-- The welcome screen should be the first stable screen before the game creation screen is expanded.
+- The welcome screen is the first HTML screen; it establishes the visual system for the rest
+	of the application.
+- The startup flow needs browser routes or client-side views, not terminal window launchers.
+- Build the GUI one screen at a time, starting with the welcome screen and then character
+	creation.
+
+## HTML GUI overhaul
+- [done] Replace the Ink client with a React HTML/CSS client served by Vite — the Ink
+  client, its terminal launcher scripts, and their tests have been deleted.
+- Preserve the existing HTTP API and server-authoritative game rules.
+- Establish the shared visual foundation first: typography, colors, spacing, focus states,
+	responsive breakpoints, and accessible controls.
+- Retire fixed terminal dimensions, ASCII branding, terminal-only keyboard handlers, and
+	detached-console launch scripts from the active UI path.
+- Add browser launch and production build checks before moving further screens.

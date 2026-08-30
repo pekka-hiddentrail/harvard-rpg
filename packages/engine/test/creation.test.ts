@@ -225,6 +225,16 @@ describe('validateBuild', () => {
     )
   })
 
+  it('reports spent, refunded and levels even while the budget is unbalanced', () => {
+    // A live-editing screen needs real numbers on every choice, not only once the build
+    // finally balances — otherwise the readout sits at zero for most of the session.
+    const r = validateBuild({ ...base, traits: [{ id: 'refund2' }] }, index, rules)
+    assert.equal(r.ok, false)
+    assert.equal(r.spent, 0)
+    assert.equal(r.refunded, 2)
+    assert.equal(r.levels.math, -2)
+  })
+
   it('nets refunds against spend', () => {
     // 14 spent, 3 + 1 refunded → net 10.
     const r = ok(

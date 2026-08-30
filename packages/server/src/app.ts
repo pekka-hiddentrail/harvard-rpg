@@ -1,4 +1,5 @@
 import { randomBytes, randomUUID } from 'node:crypto'
+import cors from '@fastify/cors'
 import Database from 'better-sqlite3'
 import Fastify, { type FastifyInstance } from 'fastify'
 import type { Content } from '@harvard/content'
@@ -26,7 +27,7 @@ import { z } from 'zod'
 
 /**
  * Tier 0 server. Two content routes and two game routes — enough to prove the slice
- * end to end: Ink → HTTP → engine → SQLite → back.
+ * end to end: client → HTTP → engine → SQLite → back.
  *
  * The rules live behind this boundary and stay there. The client cannot compute a cost,
  * cannot validate a build, and cannot see anything the engine did not hand it
@@ -59,6 +60,10 @@ export function buildApp({ content, dbFile }: ServerOptions): {
 
   const app = Fastify({ logger: false })
   app.addHook('onClose', () => db.close())
+
+  // The browser GUI runs on Vite's dev origin, distinct from this server's port. Local-first,
+  // single-player, no cookies or auth — a permissive dev CORS policy carries no real risk here.
+  void app.register(cors, { origin: true })
 
   /**
    * Reach is deliberately absent from this payload. §7.8 requires the creation screen to
@@ -117,7 +122,13 @@ export function buildApp({ content, dbFile }: ServerOptions): {
           levels: result.levels,
           languages: result.languages,
         }
-      : { ok: false, problems: result.problems }
+      : {
+          ok: false,
+          problems: result.problems,
+          spent: result.spent,
+          refunded: result.refunded,
+          levels: result.levels,
+        }
   })
 
   app.post('/api/game/new', (req, reply) => {

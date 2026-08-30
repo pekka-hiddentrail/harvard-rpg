@@ -109,6 +109,14 @@ Revision history:
   a squeezed screen reads as a broken game rather than a small window. Every pane gets a
   fixed height for the same reason. No mechanic changed; the game just stopped moving
   while being looked at. (r12 was `ARCHITECTURE.md` only — the tier plan.)
+- **r14** — **the interface moves to HTML.** Playing the ASCII prototype made the actual
+  problem plain: a fixed terminal canvas makes every visual change expensive and constrains
+  the game to the terminal's weakest affordances. The client remains a thin React renderer
+  over the existing HTTP view models, but is now semantic HTML and CSS in a browser window.
+  The day planner still needs a stable spatial layout, information-dense choices, visible
+  costs rather than outcomes, and clear scene mode changes; those are interaction rules,
+  not terminal rules. Ink, the alternate screen buffer, ASCII art, and the 100 × 34 terminal
+  constraint are retired from the active design.
 
 ---
 
@@ -2577,32 +2585,29 @@ Recommended.
 
 ---
 
-## 12. The interface is text
+## 12. The interface is HTML
 
-**r7, and the answer is yes — this is the right call, for reasons beyond nostalgia.**
+**r14. The game is rendered as a browser application: semantic HTML, CSS, and React.**
 
-Everything in this game is already text. Syllabi are text. The Chronicle is text.
-Narrated scenes are text. The Tier 0 day log is one line of text produced by the
-engine. A graphical layer would be a *translation* of text into boxes, and every hour
-spent on that translation is an hour not spent on the syllabi, which are the actual
-content bottleneck (§4.9). A text interface is the only presentation that doesn't tax
-the part of the project that is hard.
+The prototype established the important thing: the UI must make a dense life simulation
+legible and actionable. It did not establish that the terminal is the right medium. HTML
+removes the fixed-frame and ASCII constraints while preserving React, the server API, and
+the client rule that every game number comes from the server.
 
-Three more concrete arguments:
+The HTML client has these requirements:
 
-- **ASCII is genuinely good at calendars.** A week grid is eleven rows of seven
-  columns, with half-band ticks and density shading. Monospace does that natively and
-  it reads *better* than the CSS equivalent, because everything lines up by
-  construction. The §3.2 density read wants to be a column of characters.
-- **Numbered choices with prices attached** are the correct affordance for "everything
-  affects everything." You can print the cost inline, next to the option, at the
-  moment of the decision — which no amount of UI polish improves on.
-- **It removes the largest schedule risk.** The client was the least-designed 20% of
-  the build. A text UI over the same view models is a week's work instead of a month's,
-  and the server contract does not change, so a graphical client remains possible later
-  against identical endpoints.
+- **The planner is spatial.** It needs a stable band grid, direct manipulation, and a
+  readable relationship between free time, commitments, and consequences.
+- **Choices show their price, never their outcome.** `+1.0 h`, `1 band`, `due Wed`, and
+  a confidence shift are valid previews; hidden results remain hidden.
+- **Narrative scenes are a distinct reading mode.** They use comfortable prose layout
+  and choices at the end, visibly different from the planning view.
+- **The application is responsive without becoming vague.** Layout changes by deliberate
+  breakpoints and controls remain usable on mouse, keyboard, and touch.
+- **Accessibility is part of the renderer.** Use semantic landmarks, native controls,
+  visible focus, sufficient contrast, and labels that do not depend on color alone.
 
-The shape, close to the sketch:
+The shape, close to the planner sketch:
 
 ```
  Monday, 1 May 2028                                    day 213 · 3 free bands
@@ -2626,39 +2631,9 @@ The shape, close to the sketch:
   [c]alendar  [s]tudy plan  [p]eople  [j]ournal  [f]ast-forward  [?]
 ```
 
-Four rules that keep this honest:
-
-- **It is a screen, not a teletype.** Full-screen, redrawn in place, keyboard-driven,
-  with a cursor. Planning a day is a *spatial* task — you are placing hours into a
-  grid — and a scrolling question-and-answer transcript is genuinely bad at it. This is
-  the one decision that determines whether the interface is pleasant or miserable, and
-  it costs nothing to get right at the start.
-- **Options show their price, never their outcome.** `+1.0 h`, `1 band`, `due Wed`,
-  `confidence low → moderate` — a real student knows what a choice costs and what it is
-  aimed at. They do not know what it will produce. Printing a consequence next to an
-  option would hand back the oracle §4.4 was careful to withhold.
-- **Prose stays prose.** When a Tier 2/3 scene fires, the screen gives way to
-  paragraphs, and the numbered options come at the end. The mode switch is the reward
-  signal: most days are a grid, and a grid becoming a page means something happened.
-- **The Chronicle is readable in-game** as a journal view, because the prototype's
-  player kept one by hand and it was where the game's memory lived (§5.1).
-
-- **The canvas is fixed at 100 × 34, and the game opens its own window at that size**
-  (r13, from play). Reflowing to fit the terminal sounds accommodating and is in fact
-  where every layout glitch comes from: a column that loses four characters truncates a
-  trait name, and a pane that gains two lines pushes the keybindings off the bottom. So
-  one size, declared once, and the app **refuses to draw below it** with a card saying
-  what the window is and what it needs to be — a squeezed screen reads as a broken game
-  rather than a small window. Every pane has a **fixed height** for the same reason:
-  nothing below a pane may move when its contents change.
-  100 × 34 rather than the iconic 80 × 25 because of the day planner (§3): eleven band
-  rows plus chrome vertically, and horizontally a band label, the activity, a duration,
-  an effect hint *and* the status pane beside them.
-
-Practically: a terminal application, monospace, drawn with a TUI toolkit rather than
-`console.log`, on the alternate screen buffer so it leaves the terminal as it found it.
-If it should later run in a browser it can be the same renderer in a monospace canvas —
-the view models don't care. Details in `ARCHITECTURE.md` §1 and §4.
+The Chronicle remains readable in-game as a journal view, because the prototype's player
+kept one by hand and it was where the game's memory lived (§5.1). Details of the client
+toolchain and boundary are in `ARCHITECTURE.md` §1 and §4.
 
 ---
 

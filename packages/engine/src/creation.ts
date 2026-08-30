@@ -105,7 +105,15 @@ export type ValidBuild = {
   levels: Levels
   languages: readonly string[]
 }
-export type BuildResult = ValidBuild | { ok: false; problems: Problem[] }
+/**
+ * `spent`/`refunded`/`levels` ride along on the `ok: false` branch too — they are plain
+ * arithmetic over whatever is legally picked so far, independent of whether the budget is
+ * exactly spent yet. A creation screen mid-edit needs them on every choice, not only once
+ * the build finally balances.
+ */
+export type BuildResult =
+  | ValidBuild
+  | { ok: false; problems: Problem[]; spent: number; refunded: number; levels: Levels }
 
 /**
  * Five checks. Each one reports the arithmetic or the missing prerequisite by name,
@@ -136,13 +144,17 @@ export function validateBuild(
     seen.add(pick.id)
     picks.push(pick)
   }
-  if (problems.length > 0) return { ok: false, problems }
 
+  // Computed from whatever is legally picked so far, so a live-editing screen has real
+  // numbers to show even while `problems` is non-empty (§ above BuildResult).
   const chosen = picks.map((p) => index.get(p.id)!)
-
-  // 2. the budget, exactly. Not ≤ — there is no banking, so "left 0" is always the goal.
   const spent = chosen.reduce((n, t) => n + (t.cost < 0 ? -t.cost : 0), 0)
   const refunded = chosen.reduce((n, t) => n + (t.cost > 0 ? t.cost : 0), 0)
+  const levels = resolveLevels(picks, index)
+
+  if (problems.length > 0) return { ok: false, problems, spent, refunded, levels }
+
+  // 2. the budget, exactly. Not ≤ — there is no banking, so "left 0" is always the goal.
   const net = spent - refunded
   if (net !== rules.creation.budget) {
     const left = rules.creation.budget - net
@@ -203,7 +215,7 @@ export function validateBuild(
     }
   }
 
-  if (problems.length > 0) return { ok: false, problems }
+  if (problems.length > 0) return { ok: false, problems, spent, refunded, levels }
 
   return {
     ok: true,
