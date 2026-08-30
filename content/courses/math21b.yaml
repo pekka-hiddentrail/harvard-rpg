@@ -20,45 +20,47 @@ meetings:
   # Attendance flexible: a large lecture course like this is recorded, same as CS50.
   - { type: lecture, days: [Mon, Wed, Fri], pattern: MWF, size: 90, attendance: flexible }
 sessions:
-  # 36 MWF meetings across ~13 weeks: Sep 2 - Dec 4, 2026. Gaps for Labor Day (Mon Sep 7),
-  # Columbus Day (Mon Oct 12), and Thanksgiving week (Mon Nov 23 - Fri Nov 27). Topic order
-  # and section numbers (Bretscher) are Knill's published lecture-by-lecture breakdown.
-  - { n: 1, date: 2026-09-02, topic: "Introduction to linear systems (1.1)" }
-  - { n: 2, date: 2026-09-04, topic: "Gauss-Jordan elimination (1.2)" }
-  - { n: 3, date: 2026-09-09, topic: "Solutions of linear systems (1.3)" }
-  - { n: 4, date: 2026-09-11, topic: "Linear transformations (2.1)" }
-  - { n: 5, date: 2026-09-14, topic: "Linear transformations in geometry (2.2)" }
-  - { n: 6, date: 2026-09-16, topic: "Matrix product (2.3)" }
-  - { n: 7, date: 2026-09-18, topic: "The inverse (2.4)" }
-  - { n: 8, date: 2026-09-21, topic: "Image and kernel (3.1)" }
-  - { n: 9, date: 2026-09-23, topic: "Basis and linear independence (3.2)" }
-  - { n: 10, date: 2026-09-25, topic: "Dimension (3.3)" }
-  - { n: 11, date: 2026-09-28, topic: "Change of coordinates (3.4)" }
-  - { n: 12, date: 2026-09-30, topic: "Linear spaces (4.1)" }
-  - { n: 13, date: 2026-10-02, topic: "Review for Midterm 1" }
-  - { n: 14, date: 2026-10-05, topic: "Orthonormal bases and projections (5.1)" }
-  - { n: 15, date: 2026-10-07, topic: "Gram-Schmidt and QR factorization (5.2)" }
-  - { n: 16, date: 2026-10-09, topic: "Orthogonal transformations (5.3)" }
-  - { n: 17, date: 2026-10-14, topic: "Least squares and data fitting (5.4)" }
-  - { n: 18, date: 2026-10-16, topic: "Determinants I (6.1)" }
-  - { n: 19, date: 2026-10-19, topic: "Determinants II (6.2)" }
-  - { n: 20, date: 2026-10-21, topic: "Eigenvalues (7.1-7.2)" }
-  - { n: 21, date: 2026-10-23, topic: "Eigenvectors (7.3)" }
-  - { n: 22, date: 2026-10-26, topic: "Diagonalization (7.4)" }
-  - { n: 23, date: 2026-10-28, topic: "Complex eigenvalues (7.5)" }
-  - { n: 24, date: 2026-10-30, topic: "Review for Midterm 2" }
-  - { n: 25, date: 2026-11-02, topic: "Stability, discrete dynamical systems (7.6)" }
-  - { n: 26, date: 2026-11-04, topic: "Symmetric matrices / Spectral Theorem (8.1)" }
-  - { n: 27, date: 2026-11-06, topic: "Differential equations I (9.1)" }
-  - { n: 28, date: 2026-11-09, topic: "Differential equations II (9.2)" }
-  - { n: 29, date: 2026-11-11, topic: "Nonlinear systems (9.4)" }
-  - { n: 30, date: 2026-11-13, topic: "Linear operators (4.2)" }
-  - { n: 31, date: 2026-11-16, topic: "Linear differential operators (9.3)" }
-  - { n: 32, date: 2026-11-18, topic: "Inhomogeneous differential equations (handout)" }
-  - { n: 33, date: 2026-11-20, topic: "Inner product spaces (5.5)" }
-  - { n: 34, date: 2026-11-30, topic: "Fourier series (handout)" }
-  - { n: 35, date: 2026-12-02, topic: "Parseval's identity (handout)" }
-  - { n: 36, date: 2026-12-04, topic: "Partial differential equations (handout)" }
+  # 36 real MWF meetings. Dates are computed by `fitSessions` from this course's meeting
+  # pattern (Mon/Wed/Fri) against the shared `content/calendar/fall2026.yaml` term --
+  # not authored per session, so a holiday exception lives in exactly one place. Topic
+  # order and section numbers (Bretscher) are Knill's published lecture-by-lecture
+  # breakdown.
+  - { n: 1, topic: "Introduction to linear systems (1.1)" }
+  - { n: 2, topic: "Gauss-Jordan elimination (1.2)" }
+  - { n: 3, topic: "Solutions of linear systems (1.3)" }
+  - { n: 4, topic: "Linear transformations (2.1)" }
+  - { n: 5, topic: "Linear transformations in geometry (2.2)" }
+  - { n: 6, topic: "Matrix product (2.3)" }
+  - { n: 7, topic: "The inverse (2.4)" }
+  - { n: 8, topic: "Image and kernel (3.1)" }
+  - { n: 9, topic: "Basis and linear independence (3.2)" }
+  - { n: 10, topic: "Dimension (3.3)" }
+  - { n: 11, topic: "Change of coordinates (3.4)" }
+  - { n: 12, topic: "Linear spaces (4.1)" }
+  - { n: 13, topic: "Review for Midterm 1" }
+  - { n: 14, topic: "Orthonormal bases and projections (5.1)" }
+  - { n: 15, topic: "Gram-Schmidt and QR factorization (5.2)" }
+  - { n: 16, topic: "Orthogonal transformations (5.3)" }
+  - { n: 17, topic: "Least squares and data fitting (5.4)" }
+  - { n: 18, topic: "Determinants I (6.1)" }
+  - { n: 19, topic: "Determinants II (6.2)" }
+  - { n: 20, topic: "Eigenvalues (7.1-7.2)" }
+  - { n: 21, topic: "Eigenvectors (7.3)" }
+  - { n: 22, topic: "Diagonalization (7.4)" }
+  - { n: 23, topic: "Complex eigenvalues (7.5)" }
+  - { n: 24, topic: "Review for Midterm 2" }
+  - { n: 25, topic: "Stability, discrete dynamical systems (7.6)" }
+  - { n: 26, topic: "Symmetric matrices / Spectral Theorem (8.1)" }
+  - { n: 27, topic: "Differential equations I (9.1)" }
+  - { n: 28, topic: "Differential equations II (9.2)" }
+  - { n: 29, topic: "Nonlinear systems (9.4)" }
+  - { n: 30, topic: "Linear operators (4.2)" }
+  - { n: 31, topic: "Linear differential operators (9.3)" }
+  - { n: 32, topic: "Inhomogeneous differential equations (handout)" }
+  - { n: 33, topic: "Inner product spaces (5.5)" }
+  - { n: 34, topic: "Fourier series (handout)" }
+  - { n: 35, topic: "Parseval's identity (handout)" }
+  - { n: 36, topic: "Partial differential equations (handout)" }
 assignments:
   # Weekly PSets due Fridays. Real department policy: lowest PSet score is dropped, and
   # students get 2 late days across the term — neither is modeled yet (Syllabus has no

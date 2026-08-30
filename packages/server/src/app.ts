@@ -12,6 +12,7 @@ import {
   STRATEGIES,
   Save,
   bandOf,
+  fitSessions,
   formatLong,
   hasErrors,
   parseDate,
@@ -210,12 +211,20 @@ export function buildApp({ content, dbFile }: ServerOptions): {
 
   /** The course catalogue (Tier 2). Full syllabi — sessions and assignments included —
    * so a browse/shopping-week screen can render without a second round trip. Real,
-   * concrete section slots (the shopping-cart pool) ride along too. */
-  app.get('/api/courses', () => ({
-    contentHash: content.hash,
-    courses: content.courses,
-    slots: content.slots,
-  }))
+   * concrete section slots (the shopping-cart pool) ride along too. Session dates are
+   * computed here from the course's meeting pattern and the shared term calendar
+   * (`fitSessions`), never authored per session. */
+  app.get('/api/courses', () => {
+    const term = content.terms[0]
+    return {
+      contentHash: content.hash,
+      courses: content.courses.map((c) => ({
+        ...c,
+        sessions: term ? fitSessions(c, term) : c.sessions,
+      })),
+      slots: content.slots,
+    }
+  })
 
   // ── the day (Tier 1) ───────────────────────────────────────────────────────────────
 

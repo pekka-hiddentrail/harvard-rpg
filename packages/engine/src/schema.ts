@@ -325,14 +325,32 @@ export const CourseSlot = z
   .refine((s) => s.occupied <= s.size, { message: 'occupied cannot exceed size' })
 export type CourseSlot = z.infer<typeof CourseSlot>
 
+/**
+ * No `date` here on purpose. A session's real date is a function of the course's
+ * `meetings` pattern and the shared term calendar (`Term`, below) — computed once by
+ * `fitSessions`, not hand-typed per course and re-derived against holidays three times.
+ */
 export const Session = z
   .object({
     n: z.number().int().positive(),
-    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     topic: z.string().min(1),
   })
   .strict()
 export type Session = z.infer<typeof Session>
+
+/**
+ * The one shared term calendar every course's `meetings` is fit against — term bounds
+ * and holiday closures declared once, not re-derived by hand in every syllabus.
+ */
+export const Term = z
+  .object({
+    id: z.string().min(1),
+    firstDay: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    lastDay: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    holidays: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).default([]),
+  })
+  .strict()
+export type Term = z.infer<typeof Term>
 
 export const AssignmentKind = z.enum(['pset', 'exam', 'final', 'project', 'essay'])
 export type AssignmentKind = z.infer<typeof AssignmentKind>

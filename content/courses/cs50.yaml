@@ -25,29 +25,32 @@ meetings:
   # Attendance flexible: 340 people, and every lecture is recorded.
   - { type: lecture, days: [Mon, Wed], time: "09:00-10:30", size: 340, attendance: flexible }
 sessions:
-  - { n: 1, date: 2026-09-02, topic: "Scratch: computational thinking, algorithms, pseudocode" }
-  - { n: 2, date: 2026-09-09, topic: "Scratch: functions, variables, conditionals, loops, events" }
-  - { n: 3, date: 2026-09-14, topic: "C: source vs. machine code, compiling, types" }
-  - { n: 4, date: 2026-09-16, topic: "C: conditionals, loops, integer overflow, floating-point imprecision" }
-  - { n: 5, date: 2026-09-21, topic: "Arrays: preprocessing, compiling, assembling, linking; debugging" }
-  - { n: 6, date: 2026-09-23, topic: "Arrays: strings, command-line arguments, intro cryptography" }
-  - { n: 7, date: 2026-09-28, topic: "Algorithms: linear/binary search; bubble, selection, merge sort" }
-  - { n: 8, date: 2026-09-30, topic: "Algorithms: Big-O/Omega/Theta notation, recursion" }
-  - { n: 9, date: 2026-10-05, topic: "Memory: pointers, segmentation faults" }
-  - { n: 10, date: 2026-10-07, topic: "Memory: dynamic allocation, stack vs. heap, buffer overflow, file I/O" }
-  - { n: 11, date: 2026-10-14, topic: "Data Structures: abstract data types, queues, stacks, linked lists" }
-  - { n: 12, date: 2026-10-19, topic: "Data Structures: trees, binary search trees, hash tables, tries" }
-  - { n: 13, date: 2026-10-21, topic: "Python: functions, variables, conditionals, loops" }
-  - { n: 14, date: 2026-10-26, topic: "Python: modules and packages" }
-  - { n: 15, date: 2026-10-28, topic: "SQL: tables, types, statements, constraints, indexes" }
-  - { n: 16, date: 2026-11-02, topic: "SQL: transactions, race conditions, SQL injection" }
-  - { n: 17, date: 2026-11-04, topic: "Web: internet basics, HTTP, tags/attributes, CSS selectors" }
-  - { n: 18, date: 2026-11-09, topic: "Web: JavaScript variables, conditionals, loops, events" }
-  - { n: 19, date: 2026-11-11, topic: "Flask: routes, decorators, requests/responses" }
-  - { n: 20, date: 2026-11-16, topic: "Flask: sessions, cookies" }
-  - { n: 21, date: 2026-11-18, topic: "AI: LLMs, prompt engineering, decision trees, minimax" }
-  - { n: 22, date: 2026-11-30, topic: "AI: machine learning, transformer architecture" }
-  - { n: 23, date: 2026-12-02, topic: "The End: wrap-up, final project presentations" }
+  # 23 real MW meetings. Dates are computed by `fitSessions` from this course's meeting
+  # pattern (Mon/Wed) against the shared `content/calendar/fall2026.yaml` term -- not
+  # authored per session. Week topics and order are Malan's own published outline.
+  - { n: 1, topic: "Scratch: computational thinking, algorithms, pseudocode" }
+  - { n: 2, topic: "Scratch: functions, variables, conditionals, loops, events" }
+  - { n: 3, topic: "C: source vs. machine code, compiling, types" }
+  - { n: 4, topic: "C: conditionals, loops, integer overflow, floating-point imprecision" }
+  - { n: 5, topic: "Arrays: preprocessing, compiling, assembling, linking; debugging" }
+  - { n: 6, topic: "Arrays: strings, command-line arguments, intro cryptography" }
+  - { n: 7, topic: "Algorithms: linear/binary search; bubble, selection, merge sort" }
+  - { n: 8, topic: "Algorithms: Big-O/Omega/Theta notation, recursion" }
+  - { n: 9, topic: "Memory: pointers, segmentation faults" }
+  - { n: 10, topic: "Memory: dynamic allocation, stack vs. heap, buffer overflow, file I/O" }
+  - { n: 11, topic: "Data Structures: abstract data types, queues, stacks, linked lists" }
+  - { n: 12, topic: "Data Structures: trees, binary search trees, hash tables, tries" }
+  - { n: 13, topic: "Python: functions, variables, conditionals, loops" }
+  - { n: 14, topic: "Python: modules and packages" }
+  - { n: 15, topic: "SQL: tables, types, statements, constraints, indexes" }
+  - { n: 16, topic: "SQL: transactions, race conditions, SQL injection" }
+  - { n: 17, topic: "Web: internet basics, HTTP, tags/attributes, CSS selectors" }
+  - { n: 18, topic: "Web: JavaScript variables, conditionals, loops, events" }
+  - { n: 19, topic: "Flask: routes, decorators, requests/responses" }
+  - { n: 20, topic: "Flask: sessions, cookies" }
+  - { n: 21, topic: "AI: LLMs, prompt engineering, decision trees, minimax" }
+  - { n: 22, topic: "AI: machine learning, transformer architecture" }
+  - { n: 23, topic: "The End: wrap-up, final project presentations" }
 assignments:
   - { id: ps0, title: "Problem Set 0 -- Scratch", kind: pset, assigned: 2026-09-02, due: 2026-09-14, estHours: 6, weight: 0.05, dependsOnSessions: [1, 2] }
   - { id: ps1, title: "Problem Set 1 -- C", kind: pset, assigned: 2026-09-14, due: 2026-09-21, estHours: 8, weight: 0.05, dependsOnSessions: [3, 4] }

@@ -9,7 +9,9 @@ import {
   Preset,
   Rules,
   Syllabus,
+  Term,
   TraitPack,
+  fitSessions,
   indexActivities,
   indexTraits,
   type Activity,
@@ -41,6 +43,8 @@ export type Content = {
   courses: Syllabus[]
   /** The real, concrete, capacity-tracked section-slot pool (the shopping cart). */
   slots: CourseSlot[]
+  /** Shared term calendars every course's `meetings` is fit against (`fitSessions`). */
+  terms: Term[]
   /** sha256 over every content file, sorted by path. Pinned into each save. */
   hash: string
 }
@@ -122,6 +126,21 @@ export function loadContent(root: string): Content {
   }
   const slots = slotsParsed.data
 
+  const terms = listYaml(join(root, 'calendar')).map((p) => {
+    const parsed = Term.safeParse(parse(take(p)))
+    if (!parsed.success) {
+      throw new Error(`${p} is not a valid term calendar:\n${describe(parsed.error)}`)
+    }
+    return parsed.data
+  })
+
+  // Fails at boot, not at first render, if a course's session count drifts from its
+  // meeting pattern × the shared term's real dates (a miscounted holiday, e.g.).
+  const primaryTerm = terms[0]
+  if (primaryTerm) {
+    for (const course of courses) fitSessions(course, primaryTerm)
+  }
+
   // Sorted by path so the hash does not depend on directory-read order.
   const h = createHash('sha256')
   for (const f of [...files].sort((a, b) => a.path.localeCompare(b.path))) {
@@ -141,6 +160,7 @@ export function loadContent(root: string): Content {
     presets,
     courses,
     slots,
+    terms,
     hash: h.digest('hex').slice(0, 16),
   }
 }
