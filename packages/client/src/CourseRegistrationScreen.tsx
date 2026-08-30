@@ -226,13 +226,15 @@ export function CourseRegistrationScreen({ identity, onBack }: CourseRegistratio
                 {slots.filter((s) => s.course === selected.id).length > 0 && (
                   <>
                     <h3>Section slots</h3>
+                    {/* Occupancy is a registration-time concern, not a browsing one --
+                        it belongs to a not-yet-built "choose your section" step that
+                        happens after committing to the course, not here. */}
                     <ul className="course-slots">
                       {slots
                         .filter((s) => s.course === selected.id)
                         .map((s, i) => (
                           <li key={i}>
                             <span className="slot-time">{s.days.join('/')} {s.time}</span>
-                            <span className="slot-occupancy">{s.occupied}/{s.size} seats taken</span>
                           </li>
                         ))}
                     </ul>
