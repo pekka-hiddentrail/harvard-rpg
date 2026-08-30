@@ -15,6 +15,7 @@
     "balance": "tsx scripts/balance.ts",
     "screen": "tsx scripts/play.ts screen",
     "screen:here": "tsx scripts/screen.tsx",
+    "welcome": "tsx scripts/play.ts welcome",
     "play": "tsx scripts/play.ts",
     "calendar": "tsx scripts/play.ts calendar",
     "play:here": "tsx packages/client/src/main.tsx"

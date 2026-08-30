@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
+  CourseHint,
+  RequirementGroup,
   Rules,
+  Track,
   Trait,
   indexTraits,
   priceTrait,
@@ -70,6 +73,41 @@ const base = {
   schoolType: 'finnish upper secondary',
   program: 'degree' as const,
 }
+
+describe('track course hints', () => {
+  it('accepts requirement groups and course lead-in hints for a track', () => {
+    const track = Track.parse({
+      id: 'cs_mbb',
+      name: 'Computer Science — MBB',
+      field: 'cs',
+      honorsEligible: true,
+      thesisRequired: true,
+      declareBy: { year: 2, term: 'fall' },
+      requirements: [
+        RequirementGroup.parse({
+          id: 'linear-algebra',
+          label: 'Linear algebra',
+          kind: 'set',
+          need: 1,
+          from: ['math21b', 'math22a', 'math23a'],
+        }),
+      ],
+      courseHints: [
+        CourseHint.parse({
+          id: 'math21b',
+          likelyTracks: ['cs_mbb', 'cs_basic'],
+          countsToward: ['linear-algebra', 'cs-core'],
+          leadsTo: ['cs_mbb'],
+          notes: ['default linear algebra route for CS-MBB'],
+        }),
+      ],
+    })
+
+    assert.equal(track.id, 'cs_mbb')
+    assert.equal(track.courseHints[0]?.likelyTracks[0], 'cs_mbb')
+    assert.equal(track.courseHints[0]?.countsToward[0], 'linear-algebra')
+  })
+})
 
 describe('shapeOf', () => {
   it('sorts by magnitude and names the primary tag', () => {

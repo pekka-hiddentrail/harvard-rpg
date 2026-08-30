@@ -58,6 +58,56 @@ type Options = {
 }
 
 type Pick = { id: string; language?: string }
+
+type MathCourse = {
+  id: string
+  title: string
+  flavor: string
+  likelyTracks: string[]
+  signals: string[]
+}
+
+const MATH_COURSES: MathCourse[] = [
+  { id: 'math1a', title: 'Math 1a', flavor: 'pre-calculus / first calculus', likelyTracks: ['cs_basic', 'cs_honors'], signals: ['foundational math', 'gets the bridge started'] },
+  { id: 'math1b', title: 'Math 1b', flavor: 'second calculus', likelyTracks: ['cs_basic', 'cs_honors'], signals: ['standard calculus sequence', 'opens the normal CS route'] },
+  { id: 'math21b', title: 'Math 21b', flavor: 'linear algebra + differential equations', likelyTracks: ['cs_mbb', 'cs_basic', 'cs_honors'], signals: ['default linear algebra', 'normal CS/MBB path'] },
+  { id: 'math22a', title: 'Math 22a', flavor: 'proof-based linear algebra', likelyTracks: ['cs_mbb', 'cs_honors'], signals: ['theory-minded', 'strong analytical route'] },
+  { id: 'math23a', title: 'Math 23a', flavor: 'honors linear algebra + real analysis', likelyTracks: ['cs_mbb', 'cs_honors'], signals: ['honors math', 'proof-heavy and rigorous'] },
+  { id: 'math25a', title: 'Math 25a', flavor: 'faster abstract honors linear algebra', likelyTracks: ['cs_mbb', 'cs_honors'], signals: ['abstract theory', 'high-rigor path'] },
+  { id: 'math55a', title: 'Math 55a', flavor: 'legendary freshman honors algebra', likelyTracks: ['cs_mbb', 'theory_heavy_cs'], signals: ['intense theory', 'very serious math signal'] },
+  { id: 'am22a', title: 'AM 22a', flavor: 'applied linear algebra', likelyTracks: ['cs_mbb', 'cs_basic'], signals: ['applied bent', 'more modeling-oriented math'] },
+]
+
+const buildMathGuidance = (choices: string[]): string[] => {
+  const selected = new Set(choices)
+  const reasons: string[] = []
+
+  if (selected.size === 0) return ['No math courses chosen yet — start with the foundation sequence.']
+  if (selected.has('math55a') || selected.has('math25a') || selected.has('math23a')) {
+    reasons.push('Strong theory-heavy signal: this looks like a rigorous CS or CS-MBB path.')
+  }
+  if (selected.has('math21b') || selected.has('math22a')) {
+    reasons.push('Standard path: this is the normal CS / CS-MBB linear-algebra route.')
+  }
+  if (selected.has('am22a')) {
+    reasons.push('Applied bent: this leans toward modeling-heavy or applied CS. Still compatible with CS-MBB.')
+  }
+  if (selected.has('math1a') || selected.has('math1b')) {
+    reasons.push('Foundation sequence: you are still establishing the math bridge into the concentration track.')
+  }
+
+  if (reasons.length === 0) reasons.push('This mix is still broad — the concentration is not fully pinned down yet.')
+
+  const bestTrack =
+    selected.has('math55a') || selected.has('math25a') || selected.has('math23a')
+      ? 'CS-MBB or a theory-heavy CS path'
+      : selected.has('math21b') || selected.has('math22a') || selected.has('am22a')
+        ? 'CS-MBB or standard CS'
+        : 'Foundational CS / early math path'
+
+  return [`Likely concentration: ${bestTrack}.`, ...reasons]
+}
+
 type Problem = { code: string; message: string }
 type Validation = {
   ok: boolean
@@ -160,7 +210,9 @@ function App() {
 
   const [picks, setPicks] = useState<Pick[]>([])
   const [cursor, setCursor] = useState(0)
-  const [pane, setPane] = useState<'identity' | 'traits'>('traits')
+  const [pane, setPane] = useState<'identity' | 'traits' | 'math'>('traits')
+  const [mathCursor, setMathCursor] = useState(0)
+  const [mathChoices, setMathChoices] = useState<string[]>([])
   const [field, setField] = useState(0)
   const [valid, setValid] = useState<Validation | null>(null)
   const [sheet, setSheet] = useState<Sheet | null>(null)
@@ -270,7 +322,23 @@ function App() {
     if (!options) return
 
     if (key.tab) {
-      setPane((p) => (p === 'traits' ? 'identity' : 'traits'))
+      setPane((p) => (p === 'traits' ? 'identity' : p === 'identity' ? 'math' : 'traits'))
+      return
+    }
+
+    if (pane === 'math') {
+      if (key.upArrow) return setMathCursor((c) => (c + MATH_COURSES.length - 1) % MATH_COURSES.length)
+      if (key.downArrow) return setMathCursor((c) => (c + 1) % MATH_COURSES.length)
+      if (input === ' ' && MATH_COURSES[mathCursor]) {
+        const course = MATH_COURSES[mathCursor]!
+        setMathChoices((prev) => {
+          const selected = prev.includes(course.id)
+          if (selected) return prev.filter((id) => id !== course.id)
+          if (prev.length >= 5) return prev
+          return [...prev, course.id]
+        })
+        return
+      }
       return
     }
 
@@ -355,6 +423,7 @@ function App() {
   // Every pane below is given a fixed height and every row a fixed width. The screen is a
   // grid the player learns the shape of, not a document that reflows under them.
   const detail = here ? detailLines(here) : []
+  const mathSummary = buildMathGuidance(mathChoices)
 
   return (
     <Box flexDirection="column">
@@ -414,9 +483,26 @@ function App() {
       <Text dimColor>{rule()}</Text>
 
       <Box flexDirection="column" height={PANES.detail}>
-        {fill(detail, PANES.detail).map((line, i) => (
-          <Row key={i} line={line} />
-        ))}
+        {pane === 'math'
+          ? fill(
+              [
+                { text: 'MATH COURSE ADVISOR', bold: true, color: 'cyan' },
+                { text: `selected ${mathChoices.length} / 2–5 for this semester`, dim: true },
+                ...MATH_COURSES.map((course) => {
+                  const selected = mathChoices.includes(course.id)
+                  const active = mathCursor === MATH_COURSES.indexOf(course)
+                  return {
+                    text: `${selected ? '[x]' : '[ ]'} ${course.title} — ${course.flavor}${active ? ' <-' : ''}`,
+                    color: selected ? 'green' : active ? 'yellow' : undefined,
+                    bold: active,
+                  }
+                }),
+                { text: ' ' },
+                ...mathSummary.map((line) => ({ text: line, color: 'cyan' })),
+              ],
+              PANES.detail,
+            ).map((line, i) => <Row key={i} line={line} />)
+          : fill(detail, PANES.detail).map((line, i) => <Row key={i} line={line} />)}
       </Box>
 
       <Text dimColor>{rule()}</Text>
@@ -453,7 +539,7 @@ function App() {
       <Box flexGrow={1} />
       <Text dimColor>{rule()}</Text>
       <Text dimColor>
-        ↑↓ move · space take/drop · ←→ language · p preset · x clear · tab identity ·{' '}
+        ↑↓ move · space take/drop · ←→ language · p preset · x clear · tab identity/math ·{' '}
         {busy ? 'matriculating…' : valid?.ok ? 'enter MATRICULATE' : 'enter (blocked)'} · q quit
       </Text>
     </Box>
