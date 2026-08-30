@@ -1,5 +1,4 @@
-# cs_mbb.yaml — Computer Science, Mind Brain & Behavior (13–16 courses / 52–64 credits).
-# Honors-only, affiliated with the university-wide MBB Initiative. This is Pekka's track.
+version: 1
 id: cs_mbb
 name: "Computer Science — Mind, Brain & Behavior"
 field: cs
@@ -18,7 +17,8 @@ requirements:
     sequence: [math1a, math1b]
     min: 0
     max: 2
-    # Only if placement testing shows it's needed.
+    notes:
+      - "Only if placement testing shows you need it."
 
   - id: linear-algebra
     label: "Linear algebra"
@@ -31,8 +31,10 @@ requirements:
       - math25a
       - math55a
       - am22a
-    # 21b/22a are the default routes; 23a/25a/55a are progressively more rigorous honors
-    # tracks. Any advanced linear algebra course also counts.
+    notes:
+      - "21b/22a are the default routes."
+      - "23a/25a/55a are progressively more rigorous honors tracks."
+      - "Any advanced linear algebra course also counts."
 
   - id: probability
     label: "Probability"
@@ -43,30 +45,26 @@ requirements:
       - stat111
       - stat210
       - higher_probability_or_stats_course
-    # Stat 110 is the standard default; any more advanced probability or statistics
-    # course qualifies.
+    notes:
+      - "Stat 110 is the standard default."
+      - "Any more advanced probability or statistics course qualifies."
 
   - id: cs-core
     label: "CS core"
     kind: set
     need: 8
     from:
-      - programming_1
-      - programming_2
-      - formal_reasoning
-      - systems
-      - computation_and_world
-      # 4 Advanced CS electives instead of Honors' 5:
-      - advanced_cs_a
-      - advanced_cs_b
-      - advanced_cs_c
-      - advanced_cs_d
-      # CS 91r may count toward this group as well as toward the thesis requirement below —
-      # the two are not double-counted against the 8, but 91r can satisfy either.
+      - cs50
+      - cs51
+      - cs61
+      - cs20
+      - cs1200
+      - cs1210
+      - cs1240
       - cs91r
-    # 8 courses total, vs. 11 for straight Honors. The exact composition beyond "4 fewer
-    # Advanced CS" is not fully specified in the source material; confirm once the real
-    # requirement sheet is available.
+      - advanced_cs_course
+    notes:
+      - "MBB uses only 8 CS courses, not the full 11-course honors track."
 
   - id: mbb-core
     label: "MBB core"
@@ -76,17 +74,16 @@ requirements:
       - neuro80
       - approved_mbb_elective
       - approved_mbb_junior_tutorial
-    # One neuroscience course, one MBB-related course outside CS, and one approved junior
-    # tutorial. Also required, outside the course count: an adviser in the MBB milieu,
-    # annual registration on the MBB website, and a non-credit senior seminar for MBB
-    # thesis writers.
+    notes:
+      - "One neuroscience course, one MBB-related course outside CS, and one approved junior tutorial."
 
   - id: thesis
     label: "MBB thesis"
     kind: course
     need: 1
     from: [cs91r]
-    # Required, not optional — must be computationally-oriented and MBB-related.
+    notes:
+      - "Computationally oriented and MBB-related."
 
 courseHints:
   - id: math21b
