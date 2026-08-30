@@ -1,0 +1,140 @@
+# econ_basic.yaml — Economics, Basic Track (11 courses), refetched from the Department of
+# Economics page.
+#
+# Facts that don't map onto an engine-enforced field yet, kept here so they aren't lost:
+# - None of the 11 required courses may be taken Pass/Fail (only the 3 electives may, up to
+#   two, with professor permission).
+# - As of Fall 2026, the writing-course elective requirement was dropped entirely.
+# - Intermediate theory (1010/1011) requires B- or higher; below that, retake for zero
+#   credit or substitute an approved theory-content course with a B- or better.
+# - `declareBy` reuses the Harvard-wide sophomore-fall default seen on the CS tracks; the
+#   Economics page didn't restate it, so treat this as an assumption pending confirmation.
+id: econ_basic
+name: "Economics"
+field: economics
+honorsEligible: false
+thesisRequired: false
+declareBy:
+  year: 2
+  term: fall
+diploma: "Economics"
+
+requirements:
+  - id: intro-calculus
+    label: "Introductory calculus"
+    kind: course
+    need: 1
+    from: [math1a]
+    min: 0
+    max: 1
+    # Waived — no replacement course needed — if you place into Math 1B or higher, score a
+    # 5 on AP Calc AB/BC, or pass the verification exam.
+
+  - id: principles
+    label: "Principles of micro/macro"
+    kind: sequence
+    need: 2
+    sequence: [ec10a, ec10b]
+    # Both required. An AP 5 can substitute for either semester, but each semester skipped
+    # this way must be replaced with an extra elective.
+
+  - id: statistics
+    label: "Statistics"
+    kind: set
+    need: 1
+    from:
+      - econ20
+      - stat100
+      - stat102
+      - stat104
+      - stat109
+      - stat109a
+      - stat110
+      - apmth101
+      - math18b
+      - math19b
+      - math154
+    # Only one of these counts toward the concentration, however many are taken.
+
+  - id: intermediate-micro
+    label: "Intermediate microeconomic theory"
+    kind: set
+    need: 1
+    from: [econ1010a, econ1011a]
+    # 1011a is the honors-level version of 1010a. Must earn B- or higher.
+
+  - id: intermediate-macro
+    label: "Intermediate macroeconomic theory"
+    kind: set
+    need: 1
+    from: [econ1010b, econ1011b]
+    # 1011b is the honors-level version of 1010b. Must earn B- or higher.
+
+  - id: sophomore-tutorial
+    label: "Sophomore tutorial"
+    kind: course
+    need: 1
+    from: [econ970]
+    # ECON 970. Can be taken junior year instead. Requires statistics and intermediate
+    # theory first.
+
+  - id: econometrics
+    label: "Econometrics"
+    kind: set
+    need: 1
+    from: [econ1123, econ1126]
+    # Requires statistics first.
+
+  - id: electives
+    label: "Additional electives"
+    kind: set
+    need: 3
+    from: [econ_elective_1, econ_elective_2, econ_elective_3, econ_elective_4]
+    # Placeholders for "any economics elective" — the requirement is open, not a curated
+    # pool. One elective must have intermediate theory (1010/1011) as a prerequisite.
+    # Two-credit electives need pairing. Up to two of the three may be P/F with professor
+    # permission — the only P/F exception in the whole track.
+
+courseHints:
+  - id: ec10a
+    title: "EC 10a"
+    likelyTracks: [econ_basic, econ_honors_thesis, econ_honors_advanced]
+    countsToward: [principles]
+    leadsTo: [econ_basic]
+    notes:
+      - "Principles of microeconomics. Required unless replaced by an AP 5."
+
+  - id: ec10b
+    title: "EC 10b"
+    likelyTracks: [econ_basic, econ_honors_thesis, econ_honors_advanced]
+    countsToward: [principles]
+    leadsTo: [econ_basic]
+    notes:
+      - "Principles of macroeconomics. Required unless replaced by an AP 5."
+
+  - id: stat110
+    title: "Statistics 110"
+    likelyTracks: [econ_basic, econ_honors_thesis, econ_honors_advanced, cs_basic, cs_honors, cs_mbb]
+    countsToward: [statistics]
+    leadsTo: [econ_basic]
+    notes:
+      - "The department explicitly weighs strength of program in honors recommendations —"
+      - "Stat 110 over Stat 100/104 is read as the stronger choice."
+
+  - id: econ1011a
+    title: "ECON 1011a"
+    likelyTracks: [econ_basic, econ_honors_thesis, econ_honors_advanced]
+    countsToward: [intermediate-micro]
+    leadsTo: [econ_basic]
+    notes:
+      - "Honors-level intermediate micro theory."
+      - "The department reads 1011 over 1010 as the stronger choice for honors."
+
+  - id: econ1011b
+    title: "ECON 1011b"
+    likelyTracks: [econ_basic, econ_honors_thesis, econ_honors_advanced]
+    countsToward: [intermediate-macro]
+    leadsTo: [econ_basic]
+    notes:
+      - "Honors-level intermediate macro theory."
+      - "The department reads 1011 over 1010 as the stronger choice for honors."

@@ -1,0 +1,136 @@
+# econ_honors_thesis.yaml — Economics, Honors: Thesis Track (14 courses = Basic's 11 + 3).
+#
+# Eligible for summa/magna/cum honors. The alternative path is Advanced Course Track
+# (econ_honors_advanced.yaml), which is cum-only. The schema has no group-level "either/or"
+# between requirement groups, so the two paths are modeled as separate track files, each
+# built on top of Basic.
+#
+# Also worth keeping: the department explicitly weighs strength of program in honors
+# recommendations — e.g. 1011 over 1010, or Stat 110 over 104/100 — so course *choices*
+# within the requirements, not just completion, factor into the honors decision.
+id: econ_honors_thesis
+name: "Economics (Honors — Thesis Track)"
+field: economics
+honorsEligible: true
+thesisRequired: true
+declareBy:
+  year: 2
+  term: fall
+diploma: "Economics"
+
+requirements:
+  - id: intro-calculus
+    label: "Introductory calculus"
+    kind: course
+    need: 1
+    from: [math1a]
+    min: 0
+    max: 1
+    # Same waiver as the Basic track.
+
+  - id: principles
+    label: "Principles of micro/macro"
+    kind: sequence
+    need: 2
+    sequence: [ec10a, ec10b]
+    # Same as the Basic track.
+
+  - id: statistics
+    label: "Statistics"
+    kind: set
+    need: 1
+    from:
+      - econ20
+      - stat100
+      - stat102
+      - stat104
+      - stat109
+      - stat109a
+      - stat110
+      - apmth101
+      - math18b
+      - math19b
+      - math154
+    # Same options as the Basic track.
+
+  - id: multivariable-calc
+    label: "Multivariable calculus"
+    kind: set
+    need: 1
+    from: [math18a, math21a, higher_multivariable_calc]
+    # Added on top of Basic for both honors paths. No placement exemption exists for this
+    # one, unlike introductory calculus.
+
+  - id: intermediate-micro
+    label: "Intermediate microeconomic theory"
+    kind: set
+    need: 1
+    from: [econ1010a, econ1011a]
+    # Same as the Basic track. Must earn B- or higher.
+
+  - id: intermediate-macro
+    label: "Intermediate macroeconomic theory"
+    kind: set
+    need: 1
+    from: [econ1010b, econ1011b]
+    # Same as the Basic track. Must earn B- or higher.
+
+  - id: sophomore-tutorial
+    label: "Sophomore tutorial"
+    kind: course
+    need: 1
+    from: [econ970]
+    # Same as the Basic track.
+
+  - id: econometrics
+    label: "Econometrics"
+    kind: set
+    need: 1
+    from: [econ1123, econ1126]
+    # Same as the Basic track.
+
+  - id: electives
+    label: "Additional electives"
+    kind: set
+    need: 3
+    from: [econ_elective_1, econ_elective_2, econ_elective_3, econ_elective_4]
+    # Same as the Basic track.
+
+  - id: thesis-seminar
+    label: "Thesis seminar"
+    kind: sequence
+    need: 2
+    sequence: [econ985_fall, econ985_spring]
+    # Two semesters of ECON 985.
+
+  - id: thesis
+    label: "Senior thesis"
+    kind: course
+    need: 1
+    from: [econ_senior_thesis]
+    # Completed senior thesis.
+
+  - id: honors-exam
+    label: "Honors exam"
+    kind: course
+    need: 1
+    from: [econ_honors_exam]
+    # An exam, not a course — modeled the same way since there's no separate schema shape
+    # for a standalone examination requirement.
+
+courseHints:
+  - id: econ985_fall
+    title: "ECON 985 (fall)"
+    likelyTracks: [econ_honors_thesis]
+    countsToward: [thesis-seminar]
+    leadsTo: [econ_honors_thesis]
+    notes:
+      - "First semester of the thesis seminar sequence."
+
+  - id: econ985_spring
+    title: "ECON 985 (spring)"
+    likelyTracks: [econ_honors_thesis]
+    countsToward: [thesis-seminar]
+    leadsTo: [econ_honors_thesis]
+    notes:
+      - "Second semester of the thesis seminar sequence."
