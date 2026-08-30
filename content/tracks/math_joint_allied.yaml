@@ -1,0 +1,47 @@
+# math_joint_allied.yaml — Mathematics as the ALLIED (non-primary) field in a Joint
+# Concentration. Much lighter than the primary-field version: no thesis, no expository
+# paper on the math side — that all belongs to the primary field's own track.
+id: math_joint_allied
+name: "Mathematics (Joint Concentration, Math allied)"
+field: math
+honorsEligible: true
+thesisRequired: false
+declareBy:
+  year: 2
+  term: fall
+diploma: "Joint Concentration — paired field varies by student"
+
+requirements:
+  - id: math-courses
+    label: "Mathematics-labeled courses"
+    kind: set
+    need: 5
+    from:
+      # At least 3 of these 5 must be 100-level and satisfy breadth.
+      - math_100_level_a
+      - math_100_level_b
+      - math_100_level_c
+      - math_upper_a
+      - math_upper_b
+    # C- or higher in each, averaging B+ across the five. No thesis, no expository paper
+    # required on the math side.
+
+  - id: breadth-analysis
+    label: "Breadth: Analysis"
+    kind: set
+    need: 1
+    from: [math_analysis_a, math_analysis_b]
+
+  - id: breadth-algebra
+    label: "Breadth: Algebra"
+    kind: set
+    need: 1
+    from: [math_algebra_a, math_algebra_b]
+
+  - id: breadth-geometry-topology
+    label: "Breadth: Geometry/Topology"
+    kind: set
+    need: 1
+    from: [math_geometry_a, math_topology_a]
+    # The three breadth courses count toward the 5 Mathematics-labeled courses above, not
+    # as an additional 3 on top — same convention as the non-joint Mathematics track.

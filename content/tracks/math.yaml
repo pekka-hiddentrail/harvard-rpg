@@ -1,0 +1,194 @@
+# math.yaml — Mathematics concentration, straight from the Department of Mathematics'
+# undergraduate brochure. Structured differently from CS/Econ: there is no separate Basic
+# vs. Honors track — one set of 12 letter-graded courses, with honors gated purely on
+# whether a senior thesis is written, not on extra coursework.
+#
+# `thesisRequired: false` plus an `optional: true` thesis requirement below models "honors
+# is thesis-gated, not mandatory for the concentration itself." The schema has no
+# group-level "either/or", so Straight Honors' "thesis OR four extra courses" alternative
+# is noted rather than enforced.
+#
+# Freshman Seminar substitution: one Freshman Seminar can replace one of the twelve
+# courses, with DUS permission, but it can never satisfy the breadth requirement below —
+# also noted rather than modeled, since it's a substitution rule on an otherwise-fixed slot.
+id: math
+name: "Mathematics"
+field: math
+honorsEligible: true
+thesisRequired: false
+declareBy:
+  year: 2
+  term: fall
+diploma: "Mathematics"
+
+requirements:
+  - id: math-courses
+    label: "Mathematics-labeled courses"
+    kind: set
+    need: 8
+    from:
+      # At least 4 of these 8 must be 100-level; the four named "100-level" slots below
+      # stand in for that sub-requirement until real course codes replace them.
+      - math_100_level_a
+      - math_100_level_b
+      - math_100_level_c
+      - math_100_level_d
+      - math_upper_a
+      - math_upper_b
+      - math_upper_c
+      - math_upper_d
+    # Math Ma + Mb count as one combined credit toward this group, not two.
+
+  - id: related-field-courses
+    label: "Related-field courses"
+    kind: set
+    need: 4
+    from:
+      - related_field_a
+      - related_field_b
+      - related_field_c
+      - related_field_d
+    # In Mathematics itself or an officially approved related field: Applied Math, CS,
+    # Economics, Engineering Sciences, Physics, Applied Physics, or Statistics.
+
+  - id: breadth-analysis
+    label: "Breadth: Analysis"
+    kind: set
+    need: 1
+    from: [math_analysis_a, math_analysis_b]
+
+  - id: breadth-algebra
+    label: "Breadth: Algebra"
+    kind: set
+    need: 1
+    from: [math_algebra_a, math_algebra_b]
+
+  - id: breadth-geometry-topology
+    label: "Breadth: Geometry/Topology"
+    kind: set
+    need: 1
+    from: [math_geometry_a, math_topology_a]
+    # Analysis, Algebra, and Geometry/Topology are the department's three "main branches."
+    # These three breadth courses count toward the 8 Mathematics-labeled courses above,
+    # not as an additional 3 courses on top.
+
+  - id: expository-paper
+    label: "Math Expository Requirement"
+    kind: course
+    need: 1
+    from: [math_expository_paper]
+    # A 5-page expository paper on an approved math topic, due by end of third year.
+    # Usually satisfied through a tutorial (Math 99r), a reading course (Math 91r), or a
+    # 100/200-level course.
+
+  - id: thesis
+    label: "Senior thesis"
+    kind: course
+    need: 1
+    from: [math_senior_thesis]
+    optional: true
+    # High or Highest Honors requires a senior thesis: original exposition of material
+    # (no new theorems needed), on any pure or applied math topic not directly covered in
+    # coursework. Straight Honors (neither high nor highest) is thesis OR four extra
+    # courses beyond the required twelve. The department strongly urges everyone to write
+    # one anyway, calling it better grad-school/research prep than coursework alone.
+
+courseHints:
+  - id: mathm
+    title: "Math M"
+    likelyTracks: [math]
+    countsToward: [math-courses]
+    leadsTo: [math1a]
+    notes:
+      - "Placement-based starting point: Math M/1 works up through 1a/1b, then 21a/b,"
+      - "concurrently with Math 101 (a proof-writing intro course)."
+
+  - id: math1a
+    title: "Math 1a"
+    likelyTracks: [math]
+    countsToward: [math-courses]
+    leadsTo: [math21a]
+    notes:
+      - "Follows Math M/1 placement. Leads into 21a/b."
+
+  - id: math1b
+    title: "Math 1b"
+    likelyTracks: [math]
+    countsToward: [math-courses]
+    leadsTo: [math21b]
+    notes:
+      - "Follows Math 1a. Leads into 21a/b."
+
+  - id: math21a
+    title: "Math 21a"
+    likelyTracks: [math, econ_honors_thesis, econ_honors_advanced]
+    countsToward: [math-courses, breadth-analysis]
+    leadsTo: [math101]
+    notes:
+      - "Placed into 18/19/21: same 21a/b track, with Math 101/112/121 as proof-writing"
+      - "options afterward."
+
+  - id: math21b
+    title: "Math 21b"
+    likelyTracks: [math, cs_basic, cs_honors, cs_mbb, cs_joint]
+    countsToward: [math-courses, breadth-algebra]
+    leadsTo: [math101]
+    notes:
+      - "Same placement track as 21a."
+
+  - id: math101
+    title: "Math 101"
+    likelyTracks: [math]
+    countsToward: [math-courses]
+    leadsTo: [math]
+    notes:
+      - "Proof-writing intro course, taken after or alongside 1a/1b/21a/21b depending on"
+      - "placement."
+
+  - id: math112
+    title: "Math 112"
+    likelyTracks: [math]
+    countsToward: [math-courses]
+    leadsTo: [math]
+    notes:
+      - "Alternative proof-writing option for the 18/19/21 placement track."
+
+  - id: math121
+    title: "Math 121"
+    likelyTracks: [math]
+    countsToward: [math-courses]
+    leadsTo: [math]
+    notes:
+      - "Alternative proof-writing option for the 18/19/21 placement track."
+
+  - id: math25a
+    title: "Math 25a"
+    likelyTracks: [math, cs_basic, cs_honors, cs_mbb]
+    countsToward: [math-courses, breadth-analysis]
+    leadsTo: [math25b]
+    notes:
+      - "Placed into 22/25 (strong interest): starts directly here, skipping 1a/1b/21a/21b."
+
+  - id: math25b
+    title: "Math 25b"
+    likelyTracks: [math]
+    countsToward: [math-courses, breadth-algebra]
+    leadsTo: [math]
+    notes:
+      - "Follows 25a."
+
+  - id: math55a
+    title: "Math 55a"
+    likelyTracks: [math, cs_basic, cs_honors, cs_mbb]
+    countsToward: [math-courses, breadth-analysis]
+    leadsTo: [math55b]
+    notes:
+      - "The fastest, most rigorous option. Legendary intensity."
+
+  - id: math55b
+    title: "Math 55b"
+    likelyTracks: [math]
+    countsToward: [math-courses, breadth-algebra]
+    leadsTo: [math]
+    notes:
+      - "Follows 55a."

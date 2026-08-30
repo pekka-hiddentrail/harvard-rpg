@@ -1,0 +1,73 @@
+# math_joint_primary.yaml — Mathematics as the PRIMARY field in a Joint Concentration.
+# Same coursework as math.yaml, but joint concentrations are honors-only by definition, so
+# the thesis is mandatory here rather than optional. Whatever the allied department
+# requires on its own side is out of scope for this file.
+id: math_joint_primary
+name: "Mathematics (Joint Concentration, Math primary)"
+field: math
+honorsEligible: true
+thesisRequired: true
+declareBy:
+  year: 2
+  term: fall
+diploma: "Joint Concentration — paired field varies by student"
+
+requirements:
+  - id: math-courses
+    label: "Mathematics-labeled courses"
+    kind: set
+    need: 8
+    from:
+      - math_100_level_a
+      - math_100_level_b
+      - math_100_level_c
+      - math_100_level_d
+      - math_upper_a
+      - math_upper_b
+      - math_upper_c
+      - math_upper_d
+    # Same as the non-joint Mathematics track.
+
+  - id: related-field-courses
+    label: "Related-field courses"
+    kind: set
+    need: 4
+    from:
+      - related_field_a
+      - related_field_b
+      - related_field_c
+      - related_field_d
+    # Same as the non-joint Mathematics track.
+
+  - id: breadth-analysis
+    label: "Breadth: Analysis"
+    kind: set
+    need: 1
+    from: [math_analysis_a, math_analysis_b]
+
+  - id: breadth-algebra
+    label: "Breadth: Algebra"
+    kind: set
+    need: 1
+    from: [math_algebra_a, math_algebra_b]
+
+  - id: breadth-geometry-topology
+    label: "Breadth: Geometry/Topology"
+    kind: set
+    need: 1
+    from: [math_geometry_a, math_topology_a]
+
+  - id: expository-paper
+    label: "Math Expository Requirement"
+    kind: course
+    need: 1
+    from: [math_expository_paper]
+    # Same as the non-joint Mathematics track.
+
+  - id: thesis
+    label: "Senior thesis"
+    kind: course
+    need: 1
+    from: [math_senior_thesis]
+    # Mandatory here, unlike the non-joint track's optional thesis — full Math Honors
+    # requirements apply when Math is the primary field of a joint concentration.
