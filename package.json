@@ -16,6 +16,9 @@
     "screen": "tsx scripts/play.ts screen",
     "screen:here": "tsx scripts/screen.tsx",
     "welcome": "tsx scripts/play.ts welcome",
+    "gui": "npm run dev --workspace=@harvard/client",
+    "gui:build": "npm run build --workspace=@harvard/client",
+    "gui:test": "npm run test --workspace=@harvard/client",
     "play": "tsx scripts/play.ts",
     "calendar": "tsx scripts/play.ts calendar",
     "play:here": "tsx packages/client/src/main.tsx"

@@ -95,6 +95,12 @@ Companion to `GAME_DESIGN.md`.
   held non-negotiable at Tier 0 regardless: the complete save shape, the boundary greps, and
   content-hash pinning (§11.1). The lint rules promised in r10 ship as a **grep test**
   instead of an ESLint config — same enforcement, no toolchain.
+- **r13** — **the client moves from Ink to HTML/CSS.** The terminal implementation proved
+  the server and engine boundary, but its fixed ASCII canvas is too costly to evolve. The
+  client remains a thin React renderer that holds no rules; its transport and view models
+  are unchanged. The new browser client uses semantic HTML, CSS, and Vite for development
+  and production builds (§1). Terminal scripts and Ink components are legacy code during
+  the GUI-overhaul migration, not a constraint on new screens.
 
 ---
 
@@ -110,24 +116,14 @@ TypeScript end to end. Node 22 is already on this machine; Python is not.
 | Sim engine | plain TS, no deps | pure functions; stays dependency-free and portable |
 | Persistence | SQLite (`better-sqlite3`) | single-player, local-first, zero ops, synchronous |
 | LLM | `@anthropic-ai/sdk`, `claude-opus-5` | §5 |
-| Client | **Ink** (React for terminals) | text UI, `GAME_DESIGN.md` §12; thin renderer only, §4 |
+| Client | **React + HTML/CSS, served by Vite** | browser UI; thin renderer only, §4 |
 | Monorepo | npm workspaces | nothing heavier is warranted |
 
-**r7: the client is a TUI, not a web app.** `GAME_DESIGN.md` §12 makes the interface
-full-screen monospace text. Ink is the right pick for three reasons: it is React, so
-the component model and the view-model contract are unchanged from the r6 plan; it does
-**full-screen redraw with a cursor**, which the design explicitly requires over a
-scrolling transcript; and it lives in this TypeScript monorepo with no second toolchain.
-Vite goes away. The alternatives and why not: raw ANSI escapes (fine for the calendar
-grid, painful for focus and input handling), `blessed` (capable, effectively
-unmaintained), a browser terminal emulator like xterm.js (adds a browser host back in
-for no gain — but it remains the cheap path if this ever needs to be shareable, since
-the renderer and the view models would not change).
-
-One consequence worth stating: **the terminal is a hard constraint on view models, and
-a useful one.** Eighty columns and no scrollback means a view model that needs a
-paragraph of explanation is a view model that is doing too much. The assessment readout
-in `GAME_DESIGN.md` §4.4 is six lines because it has to be.
+**r13: the client is a browser UI.** React stays because the client boundary stays. Vite
+serves and builds a semantic HTML/CSS application, which gives the planner a durable grid,
+native focus and form behavior, responsive layout, and space for narrative reading without
+forcing those concerns into a 100 × 34 terminal. The renderer still receives server-owned
+view models and never implements simulation rules or copies engine calculations.
 
 ## 2. Repo layout
 
@@ -215,7 +211,7 @@ harvard-rpg/
 │   │   │   └── schemas.ts
 │   │   └── test/                # golden-file tests against a mock provider
 │   ├── server/                  # Fastify routes, session store, SQLite
-│   └── client/                  # Ink TUI. Renders server view models. No rules.
+│   └── client/                  # React HTML/CSS UI. Renders server view models. No rules.
 │       └── src/
 │           ├── app.tsx          # view router: one component per `view` value
 │           ├── views/           # dayPlanner · weekGrid · scene · dayLog ·

@@ -18,8 +18,9 @@ already good at"* — not "design a game from scratch."
 Core principle: **the simulation owns all state and all consequences; the LLM only
 renders and interprets.** Nothing academic is ever LLM-generated.
 
-The interface is a **text UI** — full-screen monospace, ASCII, keyboard-driven,
-old-school, in its own window at fixed dimensions. Ink (React for terminals).
+The interface is migrating to a **browser HTML/CSS UI**. React remains the renderer and
+the client remains rule-free; Ink, ASCII layout, and fixed terminal dimensions are legacy
+code while the `gui-overhaul` branch replaces the presentation layer.
 
 ## Status as of 2026-08-29
 
@@ -142,7 +143,8 @@ Nothing was committed for this request. The repo is clean at the tier1 commit.
   that are not plans (overlaps, a run at midnight, a session after bedtime).
 - **The canvas is fixed at 100 × 34** (`FRAME` = 99 × 33). The app refuses to draw
   below it, every pane has a fixed height, alternate screen buffer. A reflowing
-  layout has no shape. It is sized for the **day planner**, not for creation.
+  layout has no shape. It is sized for the **day planner**, not for creation. This is
+  historical context only: r14 moves the active interface to responsive HTML/CSS.
 
 ## Two things deliberately left broken at Tier 1
 
