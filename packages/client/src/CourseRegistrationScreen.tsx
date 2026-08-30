@@ -38,7 +38,7 @@ type CourseSection = {
   theme: string
   blurb: string
   instructor: string
-  band: string
+  meetings: Meeting[]
 }
 
 type Course = {
@@ -56,6 +56,11 @@ type Course = {
 type CoursesResponse = { contentHash: string; courses: Course[] }
 
 const dueOf = (a: Assignment): string | null => a.date ?? a.due ?? null
+
+const meetingsLabel = (meetings: Meeting[]): string =>
+  meetings
+    .map((m) => `${m.type} · ${m.days.join('/')} · ${m.band}${m.sections ? ' (section)' : ''}`)
+    .join(' · ')
 
 /** A deterministic section pick per playthrough — same seed, same section, every time.
  * Courses without a `sections` pool (Math 21b, CS50) just keep their one fixed offering. */
@@ -123,7 +128,7 @@ export function CourseRegistrationScreen({ identity, onBack }: CourseRegistratio
                       onClick={() => setSelectedId(c.id)}
                     >
                       <span className="course-title">{section ? `${c.title.split(':')[0]}: ${section.theme}` : c.title}</span>
-                      {section && <span className="course-instructor">Section {section.id} · {section.instructor} · {c.meetings[0]?.days.join('/')} {section.band}</span>}
+                      {section && <span className="course-instructor">Section {section.id} · {section.instructor} · {meetingsLabel(section.meetings)}</span>}
                       <span className="course-summary">
                         difficulty {c.difficulty} · {c.workloadHint}
                       </span>
@@ -153,9 +158,7 @@ export function CourseRegistrationScreen({ identity, onBack }: CourseRegistratio
                   )
                 })()}
                 <p className="course-meetings">
-                  {selected.meetings
-                    .map((m) => `${m.type} · ${m.days.join('/')} · ${m.band}${m.sections ? ' (section)' : ''}`)
-                    .join(' · ')}
+                  {meetingsLabel(pickSection(selected, identity.seed)?.meetings ?? selected.meetings)}
                 </p>
 
                 <h3>Assignments</h3>

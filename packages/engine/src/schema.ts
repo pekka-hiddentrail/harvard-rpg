@@ -347,9 +347,10 @@ export const Syllabus = z
     assignments: z.array(Assignment).default([]),
     /**
      * Some courses (Expos 20, notably) are taught as many parallel sections that share
-     * one structural skeleton — same units, same weights, same meeting pattern — but
-     * each section picks its own theme, instructor and time slot. When present, a
-     * player's actual section is drawn from this pool rather than always being `title`.
+     * one structural skeleton — same units, same weights — but each section picks its
+     * own theme, instructor and meeting slot (its own days/band/size, not just a
+     * different time on the same schedule). When present, a player's actual section is
+     * drawn from this pool rather than always using the top-level `title`/`meetings`.
      */
     sections: z
       .array(
@@ -359,7 +360,7 @@ export const Syllabus = z
             theme: z.string().min(1),
             blurb: z.string().min(1),
             instructor: z.string().min(1),
-            band: z.string().min(1),
+            meetings: z.array(Meeting).min(1),
           })
           .strict(),
       )
