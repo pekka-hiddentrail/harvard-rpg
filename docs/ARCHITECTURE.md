@@ -99,8 +99,8 @@ Companion to `GAME_DESIGN.md`.
   the server and engine boundary, but its fixed ASCII canvas is too costly to evolve. The
   client remains a thin React renderer that holds no rules; its transport and view models
   are unchanged. The new browser client uses semantic HTML, CSS, and Vite for development
-  and production builds (§1). Terminal scripts and Ink components are legacy code during
-  the GUI-overhaul migration, not a constraint on new screens.
+  and production builds (§1). Terminal scripts and Ink components have been removed
+  entirely — the screens they drew are rebuilt as HTML from a clean start, not ported.
 
 ---
 
@@ -479,7 +479,7 @@ POST /api/game/:id/declare             → { trackId }        # sophomore fall o
 
 `view` is one of `day_planner` · `week_ahead` · `calendar` · `scene` · `day_log` ·
 `shopping_week` · `assessment` · `study_plan` · `journal` · `term_results` ·
-`epilogue`. One Ink component each (§1), and the value alone decides what is on
+`epilogue`. One HTML screen component each (§1), and the value alone decides what is on
 screen — the client never composes a view out of two responses.
 
 Notes on the ones that aren't obvious.
@@ -634,10 +634,10 @@ does not change: still pure, still cached, still one join.
 
 The client cannot compute a stat change, cannot see an unrevealed outcome, and
 cannot know a risk roll before it happens. r6 noted that swapping React for a TUI
-would touch nothing behind this boundary; r7 does exactly that, and it doesn't — the
-only change in this section is that the renderer draws with Ink instead of DOM nodes.
-The same property still holds forward: a browser client, or a Discord bot, is a
-renderer swap.
+would touch nothing behind this boundary, and r13's move from Ink to HTML/CSS is the
+same swap again — the only change in either case is what the renderer draws with, DOM
+nodes now rather than Ink. The same property still holds forward: any future renderer
+swap changes nothing behind this boundary.
 
 ## 5. LLM layer
 
@@ -1187,10 +1187,10 @@ rather than by planning it, and the next tier needs to know which numbers are lo
   cannot show that. So `DayResult.trace` carries the clock, energy, stress and the yield
   multiplier for each of the twenty-two halves, and the planner prints them on the row they
   happened on. This is what the 100-column canvas was widened for.
-- **`scripts/screen.ts` renders the planner to stdout** by driving the real server in-process
-  and calling the same pure line builders Ink renders. Looking at the hardest screen in the
-  game should not require resizing a terminal and clicking through creation first, and §11's
-  claim about owning the interface risk at Tier 1 is only honest if it is cheap to look.
+- **`scripts/screen.ts` rendered the planner to stdout**, by driving the real server
+  in-process and calling the same pure line builders Ink drew with. It was retired with the
+  rest of the Ink client (r13); the equivalent cheap-to-look-at guarantee for the browser
+  client is the GUI test suite (`npm run gui:test`) plus the running dev server itself.
 
 Two claims in `GAME_DESIGN.md` are **false in the shipped build**, are pinned as failing-if-fixed
 assertions in `packages/content/test/balance.test.ts`, and must be revisited at the tier named:
@@ -1246,6 +1246,10 @@ assertions in `packages/content/test/balance.test.ts`, and must be revisited at 
 - **Ink, not raw ANSI and not a browser.** Revision 7. It keeps React and therefore
   keeps the r6 component plan, and it does full-screen redraw, which the design requires
   (§1). A browser terminal stays available as a pure renderer swap.
+- **The client is HTML, not Ink.** Revision 13. Played, and the fixed ASCII canvas was too
+  costly to evolve. React stays; the terminal renderer and its launcher scripts do not —
+  they are deleted, not kept as a fallback, since a dead code path someone might revive by
+  accident is worse than no code path.
 - **Halves are the floor of time granularity — never quarters, never minutes.**
   Revision 7. Twenty-two units a day is enough to express everything the prototype's
   journal recorded, and one more level of subdivision turns the planner back into the

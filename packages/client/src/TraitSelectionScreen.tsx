@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { CharacterIdentity } from './CharacterGenerationScreen.tsx'
 
-// Same server contract the Ink client uses (packages/client/src/main.tsx) — the trait pool,
-// budget and cost schedule are content-authored and validated server-side; this screen only
-// asks and renders (ARCHITECTURE §4). Never duplicate the price schedule here.
+// The trait pool, budget and cost schedule are content-authored and validated server-side;
+// this screen only asks and renders (ARCHITECTURE §4). Never duplicate the price schedule here.
 const BASE = (import.meta.env.VITE_HARVARD_SERVER as string | undefined) ?? 'http://127.0.0.1:4711'
 
 type TraitOpt = {

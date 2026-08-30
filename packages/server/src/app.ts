@@ -27,7 +27,7 @@ import { z } from 'zod'
 
 /**
  * Tier 0 server. Two content routes and two game routes — enough to prove the slice
- * end to end: Ink → HTTP → engine → SQLite → back.
+ * end to end: client → HTTP → engine → SQLite → back.
  *
  * The rules live behind this boundary and stay there. The client cannot compute a cost,
  * cannot validate a build, and cannot see anything the engine did not hand it

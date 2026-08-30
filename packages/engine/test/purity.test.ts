@@ -82,7 +82,7 @@ describe('engine boundaries', () => {
       [/from\s+['"]node:(fs|crypto|http|https|child_process|net|os)['"]/, 'the engine does no i/o'],
       [/require\(['"]node:/, 'the engine does no i/o'],
       [/from\s+['"]@harvard\/(narrator|content|server|client)['"]/, 'the engine sits below every other package'],
-      [/from\s+['"](fastify|better-sqlite3|ink|react|@anthropic-ai\/sdk)['"]/, 'the engine has one dependency, and it is zod'],
+      [/from\s+['"](fastify|better-sqlite3|react|@anthropic-ai\/sdk)['"]/, 'the engine has one dependency, and it is zod'],
     ])
     assert.deepEqual(offences, [], `\n${offences.join('\n')}\n`)
   })

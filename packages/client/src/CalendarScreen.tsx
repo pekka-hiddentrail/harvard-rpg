@@ -24,8 +24,8 @@ type CalendarScreenProps = {
   onBack: () => void
 }
 
-// A structural placeholder, same as the Ink client's Calendar.tsx: real events, terms and
-// deadlines are Tier 2 content that does not exist yet (ARCHITECTURE §11, milestone 2).
+// A structural placeholder: real events, terms and deadlines are Tier 2 content that
+// does not exist yet (ARCHITECTURE §11, milestone 2).
 export function CalendarScreen({ onBack }: CalendarScreenProps) {
   const today = new Date()
   const { title, weeks } = monthCells(today)

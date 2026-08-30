@@ -18,9 +18,9 @@ already good at"* — not "design a game from scratch."
 Core principle: **the simulation owns all state and all consequences; the LLM only
 renders and interprets.** Nothing academic is ever LLM-generated.
 
-The interface is migrating to a **browser HTML/CSS UI**. React remains the renderer and
-the client remains rule-free; Ink, ASCII layout, and fixed terminal dimensions are legacy
-code while the `gui-overhaul` branch replaces the presentation layer.
+The interface is a **browser HTML/CSS UI**. React remains the renderer and the client
+remains rule-free; Ink, ASCII layout, and fixed terminal dimensions have been removed
+entirely — the `gui-overhaul` branch replaced the presentation layer from scratch.
 
 ## Status as of 2026-08-29
 
@@ -186,12 +186,11 @@ hand-built fixtures instead of shipped content.
 - The auto-mode permission classifier **blocks chained git commands and
   `git push -u`** — issue them one at a time.
 - Windows 11, Git Bash as the shell. `unzip` is available.
-- Stack: Fastify + Zod + better-sqlite3 + Ink + npm workspaces. Vite is out.
+- Stack: Fastify + Zod + better-sqlite3 + React/Vite (browser client) + npm workspaces.
+  Ink and the terminal launcher scripts have been removed entirely.
 
 ## Loose ends, smallest first
 
-- `npm run play` requires a separately started server. Fold the server start in.
-- The window opener has never been verified to actually open on this machine.
 - `tier0` and `design/r7` are fully merged and still on the remote; deletable at the
   user's discretion.
 - Cosmetic: `git add --renormalize .` for two CRLF-stored design docs.

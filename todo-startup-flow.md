@@ -41,7 +41,8 @@
 	creation.
 
 ## HTML GUI overhaul
-- Replace the Ink client with a React HTML/CSS client served by Vite.
+- [done] Replace the Ink client with a React HTML/CSS client served by Vite — the Ink
+  client, its terminal launcher scripts, and their tests have been deleted.
 - Preserve the existing HTTP API and server-authoritative game rules.
 - Establish the shared visual foundation first: typography, colors, spacing, focus states,
 	responsive breakpoints, and accessible controls.
