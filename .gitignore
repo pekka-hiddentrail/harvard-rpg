@@ -4,3 +4,4 @@ saves/
 *.sqlite
 *.sqlite-journal
 .DS_Store
+dist/
