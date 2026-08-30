@@ -1,0 +1,82 @@
+# Math 21b — Linear Algebra and Differential Equations. Real, cross-checked course
+# structure (department course page + Prof. Knill's published "hour to hour" syllabus,
+# Bretscher's "Linear Algebra with Applications"), placed onto Fall 2026's real calendar
+# since that's the term this game currently starts in (Sep 2026, per the CS50 example in
+# GAME_DESIGN.md §4.1). Nothing here is invented content — session topics, the weekly PSet
+# cadence, the two evening midterms, and the grading weights are the department's own
+# stated pattern. Exact 2026 midterm dates are not published; the Thursday-evening slot IS
+# published, so Oct 8 and Nov 5 are placed on real Thursdays following that pattern, not
+# guessed at random.
+id: math21b
+title: "Math 21b: Linear Algebra and Differential Equations"
+difficulty: 7
+workloadHint: "~10-12h/week"
+demands:
+  math: 3
+meetings:
+  # The department sections by time slot (9:00, 10:30, 12:00, 1:30, 3:00); this is the
+  # 10:30 section. All five run the same syllabus, so only the band changes if the player
+  # enrolls in a different slot.
+  - { type: lecture, days: [Mon, Wed, Fri], band: "10:30", size: 90 }
+sessions:
+  # 36 MWF meetings across ~13 weeks: Sep 2 - Dec 4, 2026. Gaps for Labor Day (Mon Sep 7),
+  # Columbus Day (Mon Oct 12), and Thanksgiving week (Mon Nov 23 - Fri Nov 27). Topic order
+  # and section numbers (Bretscher) are Knill's published lecture-by-lecture breakdown.
+  - { n: 1, date: 2026-09-02, topic: "Introduction to linear systems (1.1)" }
+  - { n: 2, date: 2026-09-04, topic: "Gauss-Jordan elimination (1.2)" }
+  - { n: 3, date: 2026-09-09, topic: "Solutions of linear systems (1.3)" }
+  - { n: 4, date: 2026-09-11, topic: "Linear transformations (2.1)" }
+  - { n: 5, date: 2026-09-14, topic: "Linear transformations in geometry (2.2)" }
+  - { n: 6, date: 2026-09-16, topic: "Matrix product (2.3)" }
+  - { n: 7, date: 2026-09-18, topic: "The inverse (2.4)" }
+  - { n: 8, date: 2026-09-21, topic: "Image and kernel (3.1)" }
+  - { n: 9, date: 2026-09-23, topic: "Basis and linear independence (3.2)" }
+  - { n: 10, date: 2026-09-25, topic: "Dimension (3.3)" }
+  - { n: 11, date: 2026-09-28, topic: "Change of coordinates (3.4)" }
+  - { n: 12, date: 2026-09-30, topic: "Linear spaces (4.1)" }
+  - { n: 13, date: 2026-10-02, topic: "Review for Midterm 1" }
+  - { n: 14, date: 2026-10-05, topic: "Orthonormal bases and projections (5.1)" }
+  - { n: 15, date: 2026-10-07, topic: "Gram-Schmidt and QR factorization (5.2)" }
+  - { n: 16, date: 2026-10-09, topic: "Orthogonal transformations (5.3)" }
+  - { n: 17, date: 2026-10-14, topic: "Least squares and data fitting (5.4)" }
+  - { n: 18, date: 2026-10-16, topic: "Determinants I (6.1)" }
+  - { n: 19, date: 2026-10-19, topic: "Determinants II (6.2)" }
+  - { n: 20, date: 2026-10-21, topic: "Eigenvalues (7.1-7.2)" }
+  - { n: 21, date: 2026-10-23, topic: "Eigenvectors (7.3)" }
+  - { n: 22, date: 2026-10-26, topic: "Diagonalization (7.4)" }
+  - { n: 23, date: 2026-10-28, topic: "Complex eigenvalues (7.5)" }
+  - { n: 24, date: 2026-10-30, topic: "Review for Midterm 2" }
+  - { n: 25, date: 2026-11-02, topic: "Stability, discrete dynamical systems (7.6)" }
+  - { n: 26, date: 2026-11-04, topic: "Symmetric matrices / Spectral Theorem (8.1)" }
+  - { n: 27, date: 2026-11-06, topic: "Differential equations I (9.1)" }
+  - { n: 28, date: 2026-11-09, topic: "Differential equations II (9.2)" }
+  - { n: 29, date: 2026-11-11, topic: "Nonlinear systems (9.4)" }
+  - { n: 30, date: 2026-11-13, topic: "Linear operators (4.2)" }
+  - { n: 31, date: 2026-11-16, topic: "Linear differential operators (9.3)" }
+  - { n: 32, date: 2026-11-18, topic: "Inhomogeneous differential equations (handout)" }
+  - { n: 33, date: 2026-11-20, topic: "Inner product spaces (5.5)" }
+  - { n: 34, date: 2026-11-30, topic: "Fourier series (handout)" }
+  - { n: 35, date: 2026-12-02, topic: "Parseval's identity (handout)" }
+  - { n: 36, date: 2026-12-04, topic: "Partial differential equations (handout)" }
+assignments:
+  # Weekly PSets due Fridays. Real department policy: lowest PSet score is dropped, and
+  # students get 2 late days across the term — neither is modeled yet (Syllabus has no
+  # homework-policy field), so it's noted here rather than silently ignored.
+  - { id: ps1, title: "Problem Set 1", kind: pset, assigned: 2026-09-02, due: 2026-09-11, estHours: 8, weight: 0.0208, dependsOnSessions: [1, 2, 3] }
+  - { id: ps2, title: "Problem Set 2", kind: pset, assigned: 2026-09-11, due: 2026-09-18, estHours: 8, weight: 0.0208, dependsOnSessions: [4, 5, 6] }
+  - { id: ps3, title: "Problem Set 3", kind: pset, assigned: 2026-09-18, due: 2026-09-25, estHours: 8, weight: 0.0208, dependsOnSessions: [7, 8, 9] }
+  - { id: ps4, title: "Problem Set 4", kind: pset, assigned: 2026-09-25, due: 2026-10-02, estHours: 8, weight: 0.0208, dependsOnSessions: [10, 11, 12] }
+  - { id: ps5, title: "Problem Set 5", kind: pset, assigned: 2026-10-02, due: 2026-10-09, estHours: 8, weight: 0.0208, dependsOnSessions: [13, 14, 15] }
+  - { id: ps6, title: "Problem Set 6", kind: pset, assigned: 2026-10-09, due: 2026-10-16, estHours: 8, weight: 0.0208, dependsOnSessions: [16, 17, 18] }
+  - { id: ps7, title: "Problem Set 7", kind: pset, assigned: 2026-10-16, due: 2026-10-23, estHours: 8, weight: 0.0208, dependsOnSessions: [19, 20, 21] }
+  - { id: ps8, title: "Problem Set 8", kind: pset, assigned: 2026-10-23, due: 2026-10-30, estHours: 8, weight: 0.0208, dependsOnSessions: [22, 23, 24] }
+  - { id: ps9, title: "Problem Set 9", kind: pset, assigned: 2026-10-30, due: 2026-11-06, estHours: 8, weight: 0.0208, dependsOnSessions: [25, 26, 27] }
+  - { id: ps10, title: "Problem Set 10", kind: pset, assigned: 2026-11-06, due: 2026-11-13, estHours: 8, weight: 0.0208, dependsOnSessions: [28, 29, 30] }
+  - { id: ps11, title: "Problem Set 11", kind: pset, assigned: 2026-11-13, due: 2026-11-20, estHours: 8, weight: 0.0208, dependsOnSessions: [31, 32, 33] }
+  - { id: ps12, title: "Problem Set 12", kind: pset, assigned: 2026-11-20, due: 2026-12-04, estHours: 8, weight: 0.0208, dependsOnSessions: [34, 35, 36] }
+  # Two midterms, evening block outside normal class time — the department's real,
+  # long-standing pattern (various Thursdays, 6-9pm), not a daytime in-lecture exam.
+  - { id: midterm1, title: "Midterm 1", kind: exam, date: 2026-10-08, time: "18:00-21:00", weight: 0.20, coversSessions: ["1-13"] }
+  - { id: midterm2, title: "Midterm 2", kind: exam, date: 2026-11-05, time: "18:00-21:00", weight: 0.20, coversSessions: ["14-24"] }
+  # Set by the University during December exam period; exact date not published this far out.
+  - { id: final, title: "Final Exam", kind: final, date: 2026-12-16, weight: 0.35, coversSessions: ["1-36"] }

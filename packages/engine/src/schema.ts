@@ -251,6 +251,102 @@ export const TrackPack = z
   .strict()
 export type TrackPack = z.infer<typeof TrackPack>
 
+// ── syllabus: the academic spine (Tier 2, GAME_DESIGN §4.1) ─────────────────────────
+export const Weekday = z.enum(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
+export type Weekday = z.infer<typeof Weekday>
+
+export const Meeting = z
+  .object({
+    type: z.enum(['lecture', 'section', 'lab', 'seminar']),
+    days: z.array(Weekday).min(1),
+    /** A band label per §3.1 — never a vague "morning". */
+    band: z.string().min(1),
+    size: z.number().int().positive(),
+    /** True when this meeting is the small, section-sized half of the course. */
+    sections: z.boolean().default(false),
+  })
+  .strict()
+export type Meeting = z.infer<typeof Meeting>
+
+export const Session = z
+  .object({
+    n: z.number().int().positive(),
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    topic: z.string().min(1),
+  })
+  .strict()
+export type Session = z.infer<typeof Session>
+
+export const AssignmentKind = z.enum(['pset', 'exam', 'final', 'project', 'essay'])
+export type AssignmentKind = z.infer<typeof AssignmentKind>
+
+export const Assignment = z
+  .object({
+    id: z.string().min(1),
+    title: z.string().min(1).optional(),
+    kind: AssignmentKind,
+    assigned: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .optional(),
+    due: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .optional(),
+    /** Exams and finals happen on a `date`, often outside normal class time. */
+    date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .optional(),
+    time: z.string().optional(),
+    estHours: z.number().positive().optional(),
+    weight: z.number().min(0).max(1),
+    dependsOnSessions: z.array(z.number().int().positive()).default([]),
+    /** Range shorthand kept as strings, e.g. `"1-12"`, so authors don't hand-expand them. */
+    coversSessions: z.array(z.string()).default([]),
+    /** Per-item override of the default 10/16 hour thresholds (§4.4). */
+    brackets: z
+      .object({ moderate: z.number().positive(), narrow: z.number().positive() })
+      .strict()
+      .optional(),
+    stages: z
+      .array(
+        z
+          .object({ id: z.string().min(1), due: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) })
+          .strict(),
+      )
+      .default([]),
+    /** The one authored "abandon sunk work at a discount" mechanic (§4.1). */
+    resettable: z
+      .object({
+        carryover: z.number().min(0).max(1),
+        before: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      })
+      .strict()
+      .optional(),
+  })
+  .strict()
+  .refine((a) => (a.kind === 'exam' || a.kind === 'final' ? !!a.date : !!a.due), {
+    message: 'exam/final assignments need a `date`; pset/project/essay assignments need a `due` date',
+  })
+export type Assignment = z.infer<typeof Assignment>
+
+export const Syllabus = z
+  .object({
+    id: z.string().min(1),
+    title: z.string().min(1),
+    /** Overall workload weight — what shopping week compares (§4.1). */
+    difficulty: z.number().int().min(1).max(10),
+    workloadHint: z.string().min(1),
+    /** r11 — what the course asks of you, per subject tag. */
+    demands: z.record(SubjectTag, z.number().int().nonnegative()),
+    meetings: z.array(Meeting).min(1),
+    sessions: z.array(Session).min(1),
+    assignments: z.array(Assignment).default([]),
+  })
+  .strict()
+export type Syllabus = z.infer<typeof Syllabus>
+
 /**
  * The immutable creation block. Seed material, not an action — the event log describes a
  * character *playing*, so there is nothing in it before the character (ARCHITECTURE §4).
