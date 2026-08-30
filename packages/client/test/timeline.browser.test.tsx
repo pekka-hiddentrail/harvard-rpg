@@ -5,7 +5,6 @@ import {
   AdmissionTimelineScreen,
   HOUSING_QUESTIONS,
   matchHousing,
-  type HousingAxis,
 } from '../src/AdmissionTimelineScreen.tsx'
 import type { CharacterIdentity } from '../src/CharacterGenerationScreen.tsx'
 
@@ -21,8 +20,8 @@ const identity: CharacterIdentity = {
   seed: 'test-seed',
 }
 
-const allFirstOption: Record<HousingAxis, 0 | 1> = { schedule: 0, tidiness: 0, social: 0, focus: 0 }
-const allSecondOption: Record<HousingAxis, 0 | 1> = { schedule: 1, tidiness: 1, social: 1, focus: 1 }
+const allFirstOption: Record<string, number> = Object.fromEntries(HOUSING_QUESTIONS.map((q) => [q.id, 0]))
+const allSecondOption: Record<string, number> = Object.fromEntries(HOUSING_QUESTIONS.map((q) => [q.id, 1]))
 
 describe('matchHousing', () => {
   it('is deterministic: the same seed and answers always match the same dorm and roommate', () => {
@@ -38,6 +37,19 @@ describe('matchHousing', () => {
       ['seed-a', 'seed-b', 'seed-c', 'seed-d', 'seed-e'].map((seed) => matchHousing(allFirstOption, seed).roommate),
     )
     expect(roommates.size).toBeGreaterThan(1)
+  })
+
+  it('ignores flavor-only answers (interests, hobbies, bathroom) when matching a dorm', () => {
+    const changedFlavorOnly = {
+      ...allFirstOption,
+      'academic-interest': 3,
+      hobbies: 4,
+      'music-taste': 2,
+      bathroom: 1,
+      'self-description': 3,
+      'roommate-priority': 4,
+    }
+    expect(matchHousing(changedFlavorOnly, 'seed-a').dorm).toEqual(matchHousing(allFirstOption, 'seed-a').dorm)
   })
 })
 
@@ -94,7 +106,7 @@ describe('admission timeline screen', () => {
     await user.click(screen.getByRole('button', { name: /Housing questionnaire/i }))
 
     const dialog = screen.getByRole('dialog', { name: 'Housing questionnaire' })
-    expect(within(dialog).getAllByRole('group')).toHaveLength(HOUSING_QUESTIONS.length)
+    expect(within(dialog).getAllByRole('combobox')).toHaveLength(HOUSING_QUESTIONS.length)
 
     await user.click(within(dialog).getByRole('button', { name: /submit/i }))
     expect(within(dialog).getByText(/you have been assigned to/i)).toBeVisible()

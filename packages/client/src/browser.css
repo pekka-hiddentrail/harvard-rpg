@@ -1009,31 +1009,51 @@ h1 {
 }
 
 .housing-popup {
+  width: min(100%, 620px);
   max-height: calc(100vh - 48px);
   overflow-y: auto;
 }
 
-.housing-question {
-  padding: 0;
-  margin: 0 0 16px;
-  border: 0;
+.housing-caveat {
+  padding: 10px 14px;
+  color: #7a5b00;
+  background: #fdf3d8;
+  border: 1px solid #e0c674;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
-.housing-question legend {
-  margin-bottom: 8px;
+.housing-section {
+  margin-top: 22px;
+}
+
+.housing-section h3 {
+  margin: 0 0 10px;
+  color: #8c1d31;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.housing-question {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 14px;
+  font-size: 14px;
   font-weight: 600;
 }
 
-.housing-question label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 0;
-  font-size: 14px;
+.housing-question select {
+  padding: 9px 10px;
+  color: #18201d;
+  font-weight: 400;
+  background: #fff;
+  border: 1px solid #7d897d;
 }
 
-.housing-question input {
-  accent-color: #8c1d31;
+.housing-question select:focus-visible {
+  outline: 3px solid #d3a72c;
+  outline-offset: 2px;
 }
 
 .housing-result p {

@@ -57,32 +57,149 @@ const ENTRIES: TimelineEntry[] = [
   },
   {
     id: 'housing',
-    date: 'June \u2013 July',
+    date: 'May',
     title: 'Housing questionnaire',
-    description: 'A short questionnaire the college uses to match you with a dorm and a roommate.',
+    description:
+      'Due in May, the summer before you arrive. Assignments come out late July or early ' +
+      'August, once Resident Deans have matched everyone up.',
   },
 ]
 
 // ── the housing questionnaire's tiny match algorithm ────────────────────────────────
-// Four questions, two options each. Each answer nudges one axis of a small profile
-// vector, and the dorm with the nearest profile wins. The roommate within that dorm's pool
-// is drawn from the player's seed, so the same seed always reproduces the same roommate.
+// Harvard's own line: this informs a match, it does not grant a request — nobody gets to
+// pick their dorm, room type or roommate. So only the ordinal lifestyle questions (the ones
+// with a natural "more of this ↔ less of this" order) feed the dorm/roommate pick; interests,
+// hobbies and the two self-description questions are collected but are flavor, not signal —
+// same as the bathroom question, which the source material calls informational, not matched.
+// The roommate within the matched dorm's pool is drawn from the player's seed, so the same
+// seed and answers always reproduce the same result.
 
-export type HousingAxis = 'schedule' | 'tidiness' | 'social' | 'focus'
+export type HousingAxis = 'schedule' | 'tidiness' | 'noise' | 'social' | 'guests' | 'privacy'
 export type HousingProfile = Record<HousingAxis, number>
 
-export type HousingQuestion = {
-  id: HousingAxis
+type ScoredQuestion = {
+  id: string
+  section: string
   prompt: string
-  options: [string, string]
+  options: string[]
+  axis: HousingAxis
 }
 
+type FlavorQuestion = {
+  id: string
+  section: string
+  prompt: string
+  options: string[]
+  axis?: undefined
+}
+
+export type HousingQuestion = ScoredQuestion | FlavorQuestion
+
+// A 2-option question scores +1/−1; a 3-option question scores +1/0/−1. The first option is
+// always the "more schedule/tidy/quiet/private" end of the axis.
+const scoreOf = (question: ScoredQuestion, optionIndex: number): number =>
+  question.options.length === 2 ? (optionIndex === 0 ? 1 : -1) : 1 - optionIndex
+
 export const HOUSING_QUESTIONS: HousingQuestion[] = [
-  { id: 'schedule', prompt: 'When do you feel sharpest?', options: ['Early morning', 'Late at night'] },
-  { id: 'tidiness', prompt: 'Your ideal room?', options: ['Tidy and quiet', 'Lived-in and relaxed'] },
-  { id: 'social', prompt: 'Weekend plans?', options: ['Out with people', 'In with a book'] },
-  { id: 'focus', prompt: 'How do you study?', options: ['Dead silence', 'Background noise or music'] },
+  {
+    id: 'sleep-schedule',
+    section: 'Personal habits & lifestyle',
+    prompt: 'Typical sleep schedule',
+    options: ['Early riser', 'Somewhere in between', 'Night owl'],
+    axis: 'schedule',
+  },
+  {
+    id: 'smoking',
+    section: 'Personal habits & lifestyle',
+    prompt: 'Smoking habits',
+    options: ['Non-smoker', 'Occasional smoker', 'Regular smoker'],
+  },
+  {
+    id: 'cleanliness',
+    section: 'Personal habits & lifestyle',
+    prompt: 'Cleanliness / neatness level',
+    options: ['Very tidy', 'Moderately tidy', 'Relaxed — lived-in'],
+    axis: 'tidiness',
+  },
+  {
+    id: 'noise-tolerance',
+    section: 'Personal habits & lifestyle',
+    prompt: 'Noise tolerance while studying',
+    options: ['I need silence', 'Some background noise is fine', 'Music or TV on is normal for me'],
+    axis: 'noise',
+  },
+  {
+    id: 'guest-policy',
+    section: 'Personal habits & lifestyle',
+    prompt: 'Guest policy comfort',
+    options: ['Rarely have guests over', 'Occasional guests', 'Frequent or overnight guests are fine'],
+    axis: 'guests',
+  },
+  {
+    id: 'dorm-social-level',
+    section: 'Social preferences',
+    prompt: 'How social do you want your dorm environment?',
+    options: ['Quiet and low-key', 'Balanced', 'Social and lively'],
+    axis: 'social',
+  },
+  {
+    id: 'room-size',
+    section: 'Social preferences',
+    prompt: 'Preferred rooming group size',
+    options: ['Single', 'Double', 'Suite (3+ roommates)'],
+  },
+  {
+    id: 'privacy',
+    section: 'Social preferences',
+    prompt: 'Sharing a bedroom vs. privacy',
+    options: ['Comfortable sharing a bedroom', 'Prefer more privacy'],
+    axis: 'privacy',
+  },
+  {
+    id: 'academic-interest',
+    section: 'Interests',
+    prompt: 'Academic interests / intended area of study',
+    options: ['Humanities', 'Social Sciences', 'STEM', 'Arts', 'Undecided'],
+  },
+  {
+    id: 'extracurricular',
+    section: 'Interests',
+    prompt: 'Extracurricular interests',
+    options: ['Athletics', 'Performing arts', 'Community service', 'Student government or publications', 'Not sure yet'],
+  },
+  {
+    id: 'music-taste',
+    section: 'Interests',
+    prompt: 'Music taste',
+    options: ['Pop', 'Rock or alternative', 'Hip-hop or R&B', 'Classical or jazz', 'Eclectic — no strong preference'],
+  },
+  {
+    id: 'hobbies',
+    section: 'Interests',
+    prompt: 'Hobbies',
+    options: ['Gaming', 'Reading and writing', 'Sports and outdoors', 'Cooking and food', 'Arts and crafts'],
+  },
+  {
+    id: 'self-description',
+    section: 'About you',
+    prompt: 'How would you describe yourself?',
+    options: ['Introverted homebody', 'Social butterfly', 'Focused and driven', 'Laid-back and easygoing', 'A mix of all of the above'],
+  },
+  {
+    id: 'roommate-priority',
+    section: 'About you',
+    prompt: 'What matters most to you in a roommate?',
+    options: ['Respect for quiet/study time', 'Similar social energy', 'Cleanliness compatibility', 'Being easygoing about most things', 'Shared interests'],
+  },
+  {
+    id: 'bathroom',
+    section: 'Logistics',
+    prompt: 'Bathroom preference',
+    options: ['En-suite (not guaranteed)', 'Shared bathroom is fine', 'No strong preference'],
+  },
 ]
+
+const SCORED_QUESTIONS = HOUSING_QUESTIONS.filter((q): q is ScoredQuestion => q.axis !== undefined)
 
 type Dorm = {
   name: string
@@ -91,29 +208,43 @@ type Dorm = {
 }
 
 const DORMS: Dorm[] = [
-  { name: 'Wigglesworth', profile: { schedule: 1, tidiness: 1, social: -1, focus: 1 }, roommates: ['Mira Chen', 'Ollie Park'] },
-  { name: 'Matthews', profile: { schedule: -1, tidiness: -1, social: 1, focus: -1 }, roommates: ['Jamal Reyes', 'Théo Laurent'] },
-  { name: 'Straus', profile: { schedule: 1, tidiness: -1, social: 0, focus: 1 }, roommates: ['Priya Nair', 'Sofia Marín'] },
-  { name: 'Grays', profile: { schedule: -1, tidiness: 1, social: 1, focus: -1 }, roommates: ['Amara Boateng', 'Nikolai Petrov'] },
+  {
+    name: 'Wigglesworth',
+    profile: { schedule: 1, tidiness: 1, noise: 1, social: -1, guests: -1, privacy: 1 },
+    roommates: ['Mira Chen', 'Ollie Park'],
+  },
+  {
+    name: 'Matthews',
+    profile: { schedule: -1, tidiness: -1, noise: -1, social: 1, guests: 1, privacy: -1 },
+    roommates: ['Jamal Reyes', 'Théo Laurent'],
+  },
+  {
+    name: 'Straus',
+    profile: { schedule: 1, tidiness: -1, noise: 1, social: 0, guests: 0, privacy: -1 },
+    roommates: ['Priya Nair', 'Sofia Marín'],
+  },
+  {
+    name: 'Grays',
+    profile: { schedule: -1, tidiness: 1, noise: -1, social: 1, guests: 1, privacy: 1 },
+    roommates: ['Amara Boateng', 'Nikolai Petrov'],
+  },
 ]
 
-const distance = (a: HousingProfile, b: HousingProfile): number =>
-  (['schedule', 'tidiness', 'social', 'focus'] as HousingAxis[]).reduce(
-    (sum, axis) => sum + (a[axis] - b[axis]) ** 2,
-    0,
-  )
+const AXES: HousingAxis[] = ['schedule', 'tidiness', 'noise', 'social', 'guests', 'privacy']
 
-export function profileFromAnswers(answers: Record<HousingAxis, 0 | 1>): HousingProfile {
-  return {
-    schedule: answers.schedule === 0 ? 1 : -1,
-    tidiness: answers.tidiness === 0 ? 1 : -1,
-    social: answers.social === 0 ? 1 : -1,
-    focus: answers.focus === 0 ? 1 : -1,
+const distance = (a: HousingProfile, b: HousingProfile): number =>
+  AXES.reduce((sum, axis) => sum + (a[axis] - b[axis]) ** 2, 0)
+
+export function profileFromAnswers(answers: Record<string, number>): HousingProfile {
+  const profile = { schedule: 0, tidiness: 0, noise: 0, social: 0, guests: 0, privacy: 0 } as HousingProfile
+  for (const q of SCORED_QUESTIONS) {
+    profile[q.axis] = scoreOf(q, answers[q.id] ?? 0)
   }
+  return profile
 }
 
 export function matchHousing(
-  answers: Record<HousingAxis, 0 | 1>,
+  answers: Record<string, number>,
   seed: string,
 ): { dorm: string; roommate: string } {
   const profile = profileFromAnswers(answers)
@@ -128,16 +259,15 @@ type AdmissionTimelineScreenProps = {
   onContinue: () => void
 }
 
+const SECTIONS = [...new Set(HOUSING_QUESTIONS.map((q) => q.section))]
+
 export function AdmissionTimelineScreen({ identity, onBack, onContinue }: AdmissionTimelineScreenProps) {
   const [step, setStep] = useState(0)
   const [expanded, setExpanded] = useState(false)
   const [housingOpen, setHousingOpen] = useState(false)
-  const [housingAnswers, setHousingAnswers] = useState<Record<HousingAxis, 0 | 1>>({
-    schedule: 0,
-    tidiness: 0,
-    social: 0,
-    focus: 0,
-  })
+  const [housingAnswers, setHousingAnswers] = useState<Record<string, number>>(
+    Object.fromEntries(HOUSING_QUESTIONS.map((q) => [q.id, 0])),
+  )
   const [housingResult, setHousingResult] = useState<{ dorm: string; roommate: string } | null>(null)
 
   const isLast = step === ENTRIES.length - 1
@@ -218,24 +348,33 @@ export function AdmissionTimelineScreen({ identity, onBack, onContinue }: Admiss
 
             {!housingResult ? (
               <>
-                {HOUSING_QUESTIONS.map((q) => (
-                  <fieldset className="housing-question" key={q.id}>
-                    <legend>{q.prompt}</legend>
-                    {q.options.map((option, optionIndex) => (
-                      <label key={option}>
-                        <input
-                          type="radio"
-                          name={q.id}
-                          checked={housingAnswers[q.id] === optionIndex}
-                          onChange={() =>
-                            setHousingAnswers((prev) => ({ ...prev, [q.id]: optionIndex as 0 | 1 }))
+                <p className="housing-caveat">
+                  Harvard cannot honor requests for a specific dorm, room type or roommate —
+                  Resident Deans use these answers to inform a match, not to grant one.
+                </p>
+
+                {SECTIONS.map((section) => (
+                  <div className="housing-section" key={section}>
+                    <h3>{section}</h3>
+                    {HOUSING_QUESTIONS.filter((q) => q.section === section).map((q) => (
+                      <label className="housing-question" htmlFor={`housing-${q.id}`} key={q.id}>
+                        <span>{q.prompt}</span>
+                        <select
+                          id={`housing-${q.id}`}
+                          value={housingAnswers[q.id]}
+                          onChange={(e) =>
+                            setHousingAnswers((prev) => ({ ...prev, [q.id]: Number(e.target.value) }))
                           }
-                        />
-                        {option}
+                        >
+                          {q.options.map((option, optionIndex) => (
+                            <option key={option} value={optionIndex}>{option}</option>
+                          ))}
+                        </select>
                       </label>
                     ))}
-                  </fieldset>
+                  </div>
                 ))}
+
                 <button type="button" className="continue-button" onClick={submitHousing}>
                   Submit
                 </button>
