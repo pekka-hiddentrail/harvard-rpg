@@ -12,6 +12,7 @@ type Meeting = {
   pattern: 'MWF' | 'TTh' | 'MW' | null
   time: string | null
   size: number
+  attendance: 'mandatory' | 'flexible'
   sections: boolean
 }
 
@@ -60,6 +61,7 @@ type CourseSlot = {
   time: string
   days: string[]
   size: number
+  attendance: 'mandatory' | 'flexible'
   occupied: number
 }
 
@@ -80,6 +82,17 @@ const meetingsLabel = (meetings: Meeting[]): string =>
       return `${m.type} · ${m.days.join('/')}${length}${m.sections ? ' (section)' : ''}`
     })
     .join(' · ')
+
+const capitalize = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1)
+
+/** "Lecture flexible, Section mandatory" -- one entry per distinct meeting type, drawn
+ * from the course's own meetings plus any matching real section slots. */
+const attendanceSummary = (course: Course, slots: CourseSlot[]): string => {
+  const byType = new Map<string, 'mandatory' | 'flexible'>()
+  for (const m of course.meetings) byType.set(m.type, m.attendance)
+  for (const s of slots) if (s.course === course.id) byType.set(s.type, s.attendance)
+  return [...byType.entries()].map(([type, attendance]) => `${capitalize(type)} ${attendance}`).join(', ')
+}
 
 /** A deterministic section pick per playthrough — same seed, same section, every time.
  * Courses without a `sections` pool (Math 21b, CS50) just keep their one fixed offering. */
@@ -181,6 +194,7 @@ export function CourseRegistrationScreen({ identity, onBack }: CourseRegistratio
                 <p className="course-meetings">
                   {meetingsLabel(selected.meetings)} — exact slot chosen at registration
                 </p>
+                <p className="course-attendance">{attendanceSummary(selected, slots)}</p>
 
                 <h3>Assignments</h3>
                 <ul className="course-assignments">

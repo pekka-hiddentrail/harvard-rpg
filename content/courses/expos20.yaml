@@ -26,7 +26,8 @@ meetings:
   # number GAME_DESIGN.md already uses for this course ("Expos 20 has 14 people"). The
   # specific slot (09:00/10:30/12:00/13:30/15:00/16:30, or an evening slot) is a
   # registration-time fact for whichever section is picked below, not authored here.
-  - { type: seminar, days: [Tue, Thu], pattern: TTh, size: 14 }
+  # Attendance mandatory: every Expos 20 meeting is a small seminar, not a lecture.
+  - { type: seminar, days: [Tue, Thu], pattern: TTh, size: 14, attendance: mandatory }
 sessions:
   # "Individual conferences" (sessions 9, 17, 27) aren't a shared class meeting: each
   # student books a 15-minute slot sometime that week with their own section's instructor

@@ -265,6 +265,16 @@ export const BLOCK_MINUTES: Record<MeetingPattern, number> = { MWF: 50, TTh: 75,
 export const BLOCK_STARTS = ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30'] as const
 export const BLOCK_NIGHT_STARTS = ['18:00', '19:30'] as const
 
+/**
+ * Whether attendance is actually expected. Real rule of thumb: sections, labs and
+ * seminars are always `mandatory` (so are language classes and every Gen Ed course,
+ * regardless of meeting type — Gen Ed isn't modeled as its own flag since no current
+ * course needs it, but a future one should still mark its lecture `mandatory`); a large,
+ * recorded lecture is typically `flexible`.
+ */
+export const Attendance = z.enum(['mandatory', 'flexible'])
+export type Attendance = z.infer<typeof Attendance>
+
 export const Meeting = z
   .object({
     type: z.enum(['lecture', 'section', 'lab', 'seminar']),
@@ -285,6 +295,7 @@ export const Meeting = z
      */
     time: z.string().min(1).optional(),
     size: z.number().int().positive(),
+    attendance: Attendance,
     /** True when this meeting is the small, section-sized half of the course. */
     sections: z.boolean().default(false),
   })
@@ -306,6 +317,7 @@ export const CourseSlot = z
     time: z.string().min(1),
     days: z.array(Weekday).min(1),
     size: z.number().int().positive(),
+    attendance: Attendance,
     /** Seats already taken. Seeded content, not derived — shopping week may move it. */
     occupied: z.number().int().nonnegative().default(0),
   })

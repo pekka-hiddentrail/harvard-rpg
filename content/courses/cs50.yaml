@@ -22,7 +22,8 @@ meetings:
   # the course (not one of the three canonical 50/75-min blocks; CS50 gets its own
   # extended lecture time). Sections are a separate, real, concrete choice -- see the
   # four real section instances in `content/sections.yaml`, not authored here.
-  - { type: lecture, days: [Mon, Wed], time: "09:00-10:30", size: 340 }
+  # Attendance flexible: 340 people, and every lecture is recorded.
+  - { type: lecture, days: [Mon, Wed], time: "09:00-10:30", size: 340, attendance: flexible }
 sessions:
   - { n: 1, date: 2026-09-02, topic: "Scratch: computational thinking, algorithms, pseudocode" }
   - { n: 2, date: 2026-09-09, topic: "Scratch: functions, variables, conditionals, loops, events" }
