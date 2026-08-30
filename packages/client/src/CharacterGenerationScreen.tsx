@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { randomSeed } from './rng.ts'
 
 export type Gender = 'woman' | 'man'
 
@@ -11,6 +12,7 @@ export type CharacterIdentity = {
   state: string
   school: string
   avatarIndex: number
+  seed: string
 }
 
 const AVATARS_PER_GENDER = 4
@@ -38,6 +40,7 @@ export function CharacterGenerationScreen({ onBack, onContinue }: CharacterGener
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const data = new FormData(e.currentTarget)
+    const seed = String(data.get('seed')).trim()
     onContinue({
       name: String(data.get('name')),
       gender,
@@ -47,6 +50,7 @@ export function CharacterGenerationScreen({ onBack, onContinue }: CharacterGener
       state: String(data.get('state')),
       school: String(data.get('school')),
       avatarIndex,
+      seed: seed === '' ? randomSeed() : seed,
     })
   }
 
@@ -130,6 +134,14 @@ export function CharacterGenerationScreen({ onBack, onContinue }: CharacterGener
               <span>Secondary school</span>
               <input id="character-school" name="school" defaultValue="Boston High School" required />
             </label>
+
+            <div className="field">
+              <label htmlFor="character-seed">
+                <span>Seed (optional)</span>
+                <input id="character-seed" name="seed" placeholder="Random" aria-describedby="seed-help" />
+              </label>
+              <small id="seed-help">Leave blank for a random one. The same seed always plays out the same way.</small>
+            </div>
 
             <button className="continue-button" type="submit">Continue <span aria-hidden="true">→</span></button>
           </form>

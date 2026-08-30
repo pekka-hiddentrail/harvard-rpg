@@ -73,16 +73,43 @@ describe('character generation screen', () => {
     await user.type(screen.getByRole('textbox', { name: 'Character name' }), 'Pekka')
     await user.click(screen.getByRole('button', { name: /continue/i }))
 
-    expect(onContinue).toHaveBeenCalledWith({
-      name: 'Pekka',
-      gender: 'woman',
-      age: '18',
-      country: 'United States',
-      city: 'Boston',
-      state: 'Massachusetts',
-      school: 'Boston High School',
-      avatarIndex: 0,
-    })
+    expect(onContinue).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Pekka',
+        gender: 'woman',
+        age: '18',
+        country: 'United States',
+        city: 'Boston',
+        state: 'Massachusetts',
+        school: 'Boston High School',
+        avatarIndex: 0,
+      }),
+    )
+  })
+
+  it('generates a random seed when the seed field is left blank', async () => {
+    const user = userEvent.setup()
+    const onContinue = vi.fn()
+    render(<CharacterGenerationScreen onBack={() => {}} onContinue={onContinue} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Character name' }), 'Pekka')
+    await user.click(screen.getByRole('button', { name: /continue/i }))
+
+    const identity = onContinue.mock.calls[0]![0]
+    expect(typeof identity.seed).toBe('string')
+    expect(identity.seed.length).toBeGreaterThan(0)
+  })
+
+  it('uses the exact seed typed in, when one is given', async () => {
+    const user = userEvent.setup()
+    const onContinue = vi.fn()
+    render(<CharacterGenerationScreen onBack={() => {}} onContinue={onContinue} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Character name' }), 'Pekka')
+    await user.type(screen.getByRole('textbox', { name: /seed/i }), 'my-test-seed')
+    await user.click(screen.getByRole('button', { name: /continue/i }))
+
+    expect(onContinue).toHaveBeenCalledWith(expect.objectContaining({ seed: 'my-test-seed' }))
   })
 
   it('changes the portrait when a different gender is selected', async () => {
