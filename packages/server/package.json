@@ -5,6 +5,7 @@
   "type": "module",
   "main": "src/index.ts",
   "dependencies": {
+    "@fastify/cors": "^9.0.1",
     "@harvard/content": "*",
     "@harvard/engine": "*",
     "better-sqlite3": "^11.3.0",

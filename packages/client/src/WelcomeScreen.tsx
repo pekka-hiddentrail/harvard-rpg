@@ -22,7 +22,12 @@ const menu: MenuItem[] = [
   },
 ]
 
-export function WelcomeScreen({ onStartNewGame }: { onStartNewGame: () => void }) {
+type WelcomeScreenProps = {
+  onStartNewGame: () => void
+  onLoadGame?: () => void
+}
+
+export function WelcomeScreen({ onStartNewGame, onLoadGame }: WelcomeScreenProps) {
   return (
     <main className="welcome-shell">
       <section className="welcome" aria-labelledby="game-title">
@@ -45,16 +50,21 @@ export function WelcomeScreen({ onStartNewGame }: { onStartNewGame: () => void }
 
         <nav className="menu" aria-label="Game menu">
           {menu.map((item) => (
-            <article className={`menu-item${item.primary ? ' primary' : ''}`} key={item.title}>
+            <button
+              type="button"
+              className={`menu-item${item.primary ? ' primary' : ''}`}
+              key={item.title}
+              onClick={item.primary ? onStartNewGame : onLoadGame}
+            >
               <p className="menu-eyebrow">{item.eyebrow}</p>
               <div className="menu-copy">
                 <h2>{item.title}</h2>
                 <p>{item.detail}</p>
               </div>
-              <button type="button" className="menu-action" onClick={item.primary ? onStartNewGame : undefined}>
+              <span className="menu-action">
                 {item.action}<span aria-hidden="true"> →</span>
-              </button>
-            </article>
+              </span>
+            </button>
           ))}
         </nav>
 

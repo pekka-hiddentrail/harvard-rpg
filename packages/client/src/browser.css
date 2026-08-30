@@ -154,21 +154,29 @@ h1 {
   gap: 28px 12px;
   min-height: 196px;
   padding: 24px;
+  color: inherit;
+  text-align: left;
   background: rgba(248, 248, 243, 0.88);
+  border: 0;
   border-right: 1px solid #a7b0a5;
   border-bottom: 1px solid #a7b0a5;
   transition: background 160ms ease, color 160ms ease;
 }
 
 .menu-item:hover,
-.menu-item:focus-within {
+.menu-item:focus-visible {
   color: #fff;
   background: #18201d;
 }
 
-.menu-item.primary {
+.menu-item.primary:hover,
+.menu-item.primary:focus-visible {
   background: #8c1d31;
-  color: #fff;
+}
+
+.menu-item:focus-visible {
+  outline: 3px solid #d3a72c;
+  outline-offset: -3px;
 }
 
 .menu-eyebrow {
@@ -198,16 +206,9 @@ h1 {
   align-self: end;
   padding: 0;
   color: inherit;
-  background: transparent;
-  border: 0;
   border-bottom: 1px solid currentcolor;
   font-size: 13px;
   font-weight: 700;
-}
-
-.menu-action:focus-visible {
-  outline: 3px solid #d3a72c;
-  outline-offset: 4px;
 }
 
 .secondary-menu {
@@ -475,6 +476,374 @@ h1 {
   font-weight: 500;
 }
 
+.traits-shell {
+  min-height: 100vh;
+  padding: 24px;
+  background: #d9e0d6;
+}
+
+.traits {
+  width: min(100%, 1320px);
+  min-height: calc(100vh - 48px);
+  margin: 0 auto;
+  padding: clamp(28px, 5vw, 56px);
+  background: #f8f8f3;
+  border: 1px solid #a7b0a5;
+  box-shadow: 12px 12px 0 #8c1d31;
+}
+
+.traits-message {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  justify-items: start;
+}
+
+.traits-name {
+  margin: 28px 0 0;
+  font-size: 18px;
+}
+
+.traits-columns-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 6px 0 22px;
+}
+
+.traits-columns-header h1 {
+  margin: 0;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: clamp(30px, 3vw, 40px);
+  font-weight: 650;
+}
+
+.points-readout {
+  margin: 0;
+  color: #465048;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.points-readout.ok {
+  color: #2f6d3f;
+}
+
+.points-readout.over {
+  color: #8c1d31;
+}
+
+.traits-columns {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.1fr) minmax(220px, 1fr) minmax(220px, 0.9fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.traits-list-column {
+  display: grid;
+  gap: 10px;
+}
+
+.traits-list {
+  display: grid;
+  gap: 8px;
+  max-height: 420px;
+  margin: 0;
+  padding: 12px;
+  overflow-y: auto;
+  list-style: none;
+  background: #fff;
+  border: 1px solid #a7b0a5;
+}
+
+.traits-list li {
+  display: grid;
+  gap: 6px;
+}
+
+.traits-list button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  color: #18201d;
+  text-align: left;
+  background: #f8f8f3;
+  border: 1px solid #a7b0a5;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.traits-list button:not(:disabled):hover {
+  color: #fff;
+  background: #18201d;
+}
+
+.traits-list button.selected {
+  color: #fff;
+  background: #8c1d31;
+  border-color: #8c1d31;
+}
+
+.traits-list button:disabled {
+  color: #9aa39a;
+  cursor: not-allowed;
+  background: #eceee9;
+}
+
+.traits-list button:focus-visible {
+  outline: 3px solid #d3a72c;
+  outline-offset: -3px;
+}
+
+.trait-cost {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.traits-list button.selected .trait-cost {
+  color: #fff;
+}
+
+.traits-list li select {
+  width: 100%;
+  padding: 6px 8px;
+  color: #18201d;
+  background: #fff;
+  border: 1px solid #7d897d;
+}
+
+.trait-description,
+.traits-summary {
+  padding: 18px;
+  background: #fff;
+  border: 1px solid #a7b0a5;
+}
+
+.trait-description h2,
+.traits-summary h2 {
+  margin: 0 0 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.traits-summary h2:not(:first-child) {
+  margin-top: 20px;
+}
+
+.trait-description p {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.trait-heading {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 19px;
+  font-weight: 650;
+}
+
+.trait-kinds {
+  color: #59635c;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.trait-relation {
+  color: #2f6d3f;
+}
+
+.trait-relation.closes {
+  color: #8c1d31;
+}
+
+.trait-why {
+  color: #59635c;
+  font-style: italic;
+}
+
+.trait-placeholder {
+  margin: 0;
+  color: #59635c;
+  font-size: 14px;
+}
+
+.ability-scores {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ability-scores li {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.ability-scores .positive {
+  color: #2f6d3f;
+  font-weight: 700;
+}
+
+.ability-scores .negative {
+  color: #8c1d31;
+  font-weight: 700;
+}
+
+.ability-scores .zero {
+  color: #9aa39a;
+}
+
+.traits-summary ul:not(.ability-scores) {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 14px;
+}
+
+.traits-problems {
+  margin: 20px 0 0;
+  padding: 14px 18px;
+  color: #7a5b00;
+  background: #fdf3d8;
+  border: 1px solid #e0c674;
+  list-style: none;
+}
+
+.traits-problems li {
+  font-size: 13px;
+}
+
+.traits-problems li + li {
+  margin-top: 6px;
+}
+
+.traits-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.traits-actions .back-button {
+  align-self: center;
+}
+
+.traits-actions .continue-button:disabled {
+  color: #9aa39a;
+  cursor: not-allowed;
+  background: #eceee9;
+  border-color: #a7b0a5;
+}
+
+.traits-actions .continue-button:disabled:hover {
+  color: #9aa39a;
+  background: #eceee9;
+}
+
+.calendar-shell {
+  min-height: 100vh;
+  padding: 24px;
+  background: #d9e0d6;
+}
+
+.calendar-page {
+  width: min(100%, 1100px);
+  min-height: calc(100vh - 48px);
+  margin: 0 auto;
+  padding: clamp(28px, 5vw, 56px);
+  background: #f8f8f3;
+  border: 1px solid #a7b0a5;
+  box-shadow: 12px 12px 0 #8c1d31;
+}
+
+.calendar-heading {
+  margin: 28px 0 26px;
+}
+
+.calendar-heading h1 {
+  margin: 0;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: clamp(30px, 3vw, 40px);
+  font-weight: 650;
+}
+
+.calendar-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(200px, 0.7fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.month-grid {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.month-grid th {
+  padding: 8px 4px;
+  color: #59635c;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
+  text-transform: uppercase;
+  border: 1px solid #a7b0a5;
+}
+
+.month-grid td {
+  height: 52px;
+  padding: 6px 8px;
+  color: #18201d;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  text-align: right;
+  vertical-align: top;
+  background: #fff;
+  border: 1px solid #a7b0a5;
+}
+
+.month-grid td.today {
+  color: #fff;
+  font-weight: 700;
+  background: #8c1d31;
+}
+
+.calendar-notes {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  padding: 18px;
+  background: #fff;
+  border: 1px solid #a7b0a5;
+}
+
+.calendar-notes p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.calendar-notes .kicker {
+  margin-top: 14px;
+  color: #8c1d31;
+}
+
+.calendar-notes .kicker:first-child {
+  margin-top: 0;
+}
+
 @media (max-width: 720px) {
   .welcome-shell {
     padding: 12px;
@@ -554,5 +923,57 @@ h1 {
 
   .portrait-panel {
     grid-row: 1;
+  }
+
+  .traits-shell {
+    padding: 12px;
+  }
+
+  .traits {
+    min-height: calc(100vh - 24px);
+    padding: 24px;
+    box-shadow: 6px 6px 0 #8c1d31;
+  }
+
+  .traits .character-header {
+    grid-template-columns: 1fr auto;
+  }
+
+  .traits .character-header .brand-name {
+    display: none;
+  }
+
+  .traits-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .traits-list {
+    max-height: 280px;
+  }
+
+  .calendar-shell {
+    padding: 12px;
+  }
+
+  .calendar-page {
+    min-height: calc(100vh - 24px);
+    padding: 24px;
+    box-shadow: 6px 6px 0 #8c1d31;
+  }
+
+  .calendar-page .character-header {
+    grid-template-columns: 1fr auto;
+  }
+
+  .calendar-page .character-header .brand-name {
+    display: none;
+  }
+
+  .calendar-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .month-grid td {
+    height: 40px;
   }
 }

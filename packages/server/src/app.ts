@@ -1,4 +1,5 @@
 import { randomBytes, randomUUID } from 'node:crypto'
+import cors from '@fastify/cors'
 import Database from 'better-sqlite3'
 import Fastify, { type FastifyInstance } from 'fastify'
 import type { Content } from '@harvard/content'
@@ -60,6 +61,10 @@ export function buildApp({ content, dbFile }: ServerOptions): {
   const app = Fastify({ logger: false })
   app.addHook('onClose', () => db.close())
 
+  // The browser GUI runs on Vite's dev origin, distinct from this server's port. Local-first,
+  // single-player, no cookies or auth — a permissive dev CORS policy carries no real risk here.
+  void app.register(cors, { origin: true })
+
   /**
    * Reach is deliberately absent from this payload. §7.8 requires the creation screen to
    * show what a choice *reaches*, never a score — and reach is a count over the NPC pool,
@@ -117,7 +122,13 @@ export function buildApp({ content, dbFile }: ServerOptions): {
           levels: result.levels,
           languages: result.languages,
         }
-      : { ok: false, problems: result.problems }
+      : {
+          ok: false,
+          problems: result.problems,
+          spent: result.spent,
+          refunded: result.refunded,
+          levels: result.levels,
+        }
   })
 
   app.post('/api/game/new', (req, reply) => {
