@@ -69,6 +69,26 @@ export function effectiveHoursMultiplier(
   }, 0)
 }
 
+/**
+ * The same weighting as `effectiveHoursMultiplier`, but averaging the raw signed gap
+ * instead of the multiplier — a display-only "lean" for the forecast screen. The card
+ * draw itself stays symmetric and fair; this just says which half of the shown range is
+ * more likely, since a player well ahead of a course's asks (a negative average gap)
+ * should read as more likely in the upper half, not a coin flip.
+ */
+export function weightedAverageGap(
+  demands: Partial<Record<SubjectTag, number>>,
+  levels: Levels,
+): number {
+  const entries = Object.entries(demands) as [SubjectTag, number][]
+  const totalDemand = entries.reduce((sum, [, level]) => sum + level, 0)
+  if (totalDemand === 0) return 0
+  return entries.reduce((sum, [tag, courseLevel]) => {
+    const weight = courseLevel / totalDemand
+    return sum + weight * demandGap(courseLevel, levels[tag])
+  }, 0)
+}
+
 /** An assignment's personalized cost: the authored hours, run through this player's gaps. */
 export function effectiveHours(
   estHours: number,
