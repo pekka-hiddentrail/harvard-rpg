@@ -1,6 +1,6 @@
 # Harvard RPG
 
-Terminal-first university life simulator.
+Browser-first university life simulator.
 
 ## Requirements
 
@@ -15,7 +15,9 @@ npm install
 
 ## Launch Guide
 
-All commands are run from the repo root.
+All commands are run from the repo root. Both the server and the client need to be
+running at once — the client is a thin renderer over the server's HTTP view models
+(ARCHITECTURE §2) and holds zero game rules of its own.
 
 ### 1) API server
 
@@ -23,66 +25,43 @@ All commands are run from the repo root.
 npm run server
 ```
 
-Keep this running when you want the full game client.
+Serves on `http://127.0.0.1:4711` by default (override with `PORT`). Keep this running
+in one terminal.
 
-### 2) Main game (character creation -> sheet -> planner)
-
-Detached popout window:
-
-```bash
-npm run play
-```
-
-Inline in current terminal (best for debugging stack traces):
+### 2) Client (browser)
 
 ```bash
-npm run play:here
+npm run gui
 ```
 
-### 3) Planner screen only
+Starts the Vite dev server on `http://localhost:5173` and opens in a browser window.
 
-Detached popout window:
-
-```bash
-npm run screen
-```
-
-Inline in current terminal:
-
-```bash
-npm run screen:here
-```
-
-Notes:
-- This launches the interactive planner directly.
-- It can bootstrap an in-memory demo save when no game id is passed.
-
-### 4) Calendar screen only
-
-Detached popout window:
-
-```bash
-npm run calendar
-```
-
-Note:
-- Calendar can also bootstrap an in-memory demo save when no game id is passed.
+To jump straight to a specific screen during development rather than clicking through
+from the welcome screen, append `?screen=<name>` to the URL — `character`, `traits`,
+`calendar`, `timeline`, or `courseRegistration` (`npm run gui:character` does this for
+character creation specifically).
 
 ## Test and Balance
 
-Run tests:
+Run all tests (engine, content, server — Node's test runner):
 
 ```bash
 npm test
 ```
 
-Run linter:
+Run the client's own browser tests (Vitest + jsdom):
+
+```bash
+npm run gui:test
+```
+
+Run the linter:
 
 ```bash
 npm run lint
 ```
 
-Run balance harness:
+Run the balance harness (plays many days headlessly against a set of strategies):
 
 ```bash
 npm run balance
@@ -90,5 +69,7 @@ npm run balance
 
 ## Troubleshooting
 
-- If `npm run play` says the server is not answering, start `npm run server` first.
-- If a popout flashes and closes, run the corresponding `:here` command to see errors in the current terminal.
+- If the client shows "No server on http://127.0.0.1:4711", start `npm run server`
+  first — the client fetches content and resolves days over HTTP, it never computes
+  game rules itself.
+- `npm run gui:build` type-checks and builds the client for production.

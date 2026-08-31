@@ -1206,6 +1206,70 @@ assertions in `packages/content/test/balance.test.ts`, and must be revisited at 
    untuned, and tuning it now would fit it to an empty world. It waits for Tier 2's calendar,
    where deadlines are what actually generate stress.
 
+### 11.3 The grading system: what shipped, what's deliberately not wired up yet
+
+Tier 2's go/no-go gate asked whether a mid-October Tuesday is an interesting decision
+before any prose exists (§11's own framing). The academic-spine half of that — the
+calendar, recurrence, conflicts, density — landed first and is exercised by
+`packages/engine/test/calendar.test.ts`. This section is the other half: the demand
+gap, levels, effort/bracket derivation, and the hidden draw (`GAME_DESIGN.md` §4.4-4.6,
+r15). All of it is pure, tested functions in `packages/engine/src/{demands,levels,
+effort,grading}.ts` — **none of it is wired into `day.ts` or `state.ts` yet.** There is
+no code path today where playing a day calls `drawCards` or banks a level. That wiring —
+deciding when in the day-resolution loop a study action calls into this module, and how
+a `DayResult` carries a grade change back to the player — is the next real work, not a
+follow-up detail.
+
+What's built and where to find it:
+
+- **The demand gap** (`demands.ts`): the §4.5 multiplier table, `isCourseOpen` for the
+  +5 not-survivable line, and multi-tag composition (hours split by demand-level ratio,
+  same weighting reused for leveling below). `effectiveHoursMultiplier`/`effectiveHours`
+  return `Infinity` for a closed course rather than throwing, precisely so a
+  shopping-week preview that loops over every candidate course can render one bad row
+  instead of crashing — `demandGapMultiplier` itself still throws if called directly
+  past the line, which is why `isCourseOpen` exists as the thing to check first.
+- **Levels** (`levels.ts`): the asymmetric hour-cost curve (`100 · max(x+1, -x)`), the
+  0.6 base accrual rate (halved for isolated study, ×1.25 for just attending), and
+  `splitHoursByDemand`, which is the actual mechanism — one real hour feeds a course's
+  grading pool *and* every demanded tag's level ledger, independently, in the same call.
+- **Effort and brackets** (`effort.ts`): `effort`/`workloadHint` derived from `meetings`
+  + `estHours` + `demands` rather than hand-authored (the ~120-course problem this
+  solves is `GAME_DESIGN.md` §4.6's own framing); `deriveBrackets`, the per-item
+  moderate/narrow thresholds, weight-derived rather than authored; essay draw-count
+  escalation; the soft semester effort cap.
+- **The draw** (`grading.ts`): three bands (not the four a mid-session proposal
+  considered — wide absorbs both the ±3 and ±4 magnitudes, so no third threshold exists
+  anywhere in the schema), a seeded-PRNG card draw fixed at T-48h with no early-trigger
+  path, linear point-averaged scoring, the bump mechanic for the final 48 hours,
+  `psetGradePercentage`/`courseGradePercentage`, and a display-only `leanFor` that
+  reuses the demand-gap weighting to hint which half of a shown range is more likely —
+  without touching the symmetric, fair draw itself.
+
+**What's explicitly deferred, not forgotten:**
+
+- The §4.3 attendance-cost-inflation formula itself (what number a missed lecture
+  actually produces) is unbuilt — only the rule that it stacks *multiplicatively* with
+  the demand gap on the same assignment's effective hours is decided.
+- `resettable` (§4.1, the "abandon sunk work at a discount" mechanic) and probation's
+  actual triggering (designed at `GAME_DESIGN.md` §4.10, a term GPA below 2.0 — not
+  wired to anything) are both explicitly Tier 3/4.
+- The requirement solver, joint study (`studyGroup.ts`), and the narrator are untouched
+  — this work is entirely inside the "hidden grading, the bracket, `confidence`, and the
+  leak test" line item of the Tier 2 build order (§11's table), not the whole tier.
+
+**One load-bearing gotcha a code-review pass caught, worth stating plainly for whoever
+wires this up next:** `deriveBrackets` must build its total-hours figure from each
+component's own raw total (`Σ estHours`, `Σ examSitHours`) rather than a per-week *rate*
+multiplied back out by a *different* span than the one that rate was computed over.
+`courseworkHoursPerWeek` and `examSitHoursPerWeek` are legitimately rates over their own
+natural spans (a course's psets can end several weeks before its final does); only
+`meetings` legitimately scales by the full course span, because a lecture actually
+recurs every week of it. Getting this wrong doesn't error — it silently inflates every
+milestone's bracket by the mismatch, which is exactly the kind of bug the balance bot
+won't catch on its own once it's extended to exercise this module, since a systematically
+inflated-but-internally-consistent bracket still produces plausible-looking play.
+
 ## 12. Decisions I made for you
 
 - **TypeScript**, inferred from Node 22 present / Python absent.
@@ -1317,3 +1381,25 @@ assertions in `packages/content/test/balance.test.ts`, and must be revisited at 
   creation screen into a sequence puzzle. Exclusions are DAG structure, and they are free —
   paying for one would make the best hindrance the one that excludes three traits nobody
   takes (`GAME_DESIGN.md` §7.8).
+- **The hidden draw is a fixed number of integer cards, not a mean that hours move plus
+  noise confidence sets.** Revision 15. Building the mean+noise version the earlier
+  revisions described surfaced that it contradicts §4.4's own claim that hours *narrow the
+  range*, not shift it. Cards drawn from `-range..range`, always centered on zero, with a
+  non-linear point table (`0/±1/±2` score, `±3/±4` don't) means a narrower band is better on
+  average *and* less variable — one mechanism does both jobs, rather than two independently
+  tuned ones that can disagree.
+- **The two-day crisis has no early-trigger path.** Revision 15, reversing part of Revision
+  7's own text. A practice exam or 1-on-1 review looked like a natural way to see the draw
+  sooner; modeling it showed that triggering it early only shortens the 48 hours left to
+  recover in afterward, which is strictly worse for the player. It's priced instead as an
+  ordinary study session with the highest support multiplier available — no early path
+  exists to remove later, because it was never built.
+- **`effort` and `workloadHint` are derived from `meetings`/`estHours`/`demands`, not
+  hand-authored.** Revision 15. The only per-course number a human still picks is `demands`
+  itself — everything else is arithmetic over data the content already has to carry anyway,
+  which is what makes ~120 future courses tractable rather than 120 hand-tuned guesses.
+- **Levels move via hours banked, never via passing a course.** Revision 15. The design
+  explored a discrete "passing a course bumps the level" rule first and rejected it: it
+  would decouple a stat from the actual behavior (studying) the design wants to reward,
+  and would make the amount of the bump an arbitrary second number to tune on top of the
+  hour-cost curve that already exists.

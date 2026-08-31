@@ -117,6 +117,39 @@ Revision history:
   costs rather than outcomes, and clear scene mode changes; those are interaction rules,
   not terminal rules. Ink, the alternate screen buffer, ASCII art, and the 100 × 34 terminal
   constraint are retired from the active design.
+- **r15** — **the grading matrix is replaced, not ported.** r6-r7 kept the prototype's
+  matrix as internals ("a cheap way to get a bounded distribution with the right shape")
+  without ever specifying it; building it surfaced that the specified shape (a mean that
+  moves with hours, plus noise) contradicts §4.4's own claim that hours *narrow the range*
+  rather than *move the center*. The shipped mechanic takes that claim literally instead:
+  a fixed number of integer "cards", each in a range set by the bracket band you're in
+  (narrow ±1, moderate ±2, wide ±3-or-4 — the prototype's three-band table collapses to
+  two thresholds, not three), always centered on zero. Points per card (`0→1.0, ±1→0.75,
+  ±2→0.5, ±3/±4→0`) average linearly into a percentage — no mean-shift formula, and
+  correspondingly no separate `readiness` bar distinct from `confidence`; the band *is*
+  the whole readout. **The two-day crisis is now a hard T-48h rule with no early path.**
+  §4.4's "a player who wants that moment earlier can buy it" is withdrawn — modeling it
+  showed that triggering the draw before T-48h can only shrink your own bumping window,
+  which is strictly worse for the player, never better. A practice exam or 1-on-1 review
+  is instead just a study session with the highest support multiplier available; hours
+  spent in the last 48 hours no longer bank pool progress at all, they only **bump**
+  already-drawn cards toward zero, worst-scoring-card first (a card at ±3/±4 scores
+  nothing until it reaches ±2, so a lone ±4 is deliberately serviced last). `effort`
+  (§4.1's `demand` scalar) and the per-item bracket thresholds are now **derived** from
+  `meetings`/`estHours`/`demands` rather than hand-authored — the only per-course number
+  a human still picks is `demands` itself, which is what makes ~120 future courses
+  tractable (§4.6). Levels (§7.8's starting values) now **move**: a hands-on hour-cost
+  curve (100 h per level above zero, `100·|x|` to climb out of a hindrance below it) and
+  a 0.6 base accrual rate, discounted to half for study unconnected to any enrolled
+  course's demand, and multiplied up by joint study, tutoring, or simply attending a
+  class (×1.25 — showing up counts). One real hour now feeds two ledgers at once: the
+  course's grading pool in full, and every demanded tag's level ledger split by the same
+  demand-weight ratio that prices the demand gap. A copied problem set still completes
+  the assignment (per r6) but now grades flatly at a C rather than scaling with the
+  (nonexistent) real hours behind it. See `packages/engine/src/{demands,levels,effort,
+  grading}.ts` for the implementation and `ARCHITECTURE.md` §11.2 for what's still
+  unimplemented (probation's triggering condition is designed at §4.10 but not wired up;
+  `resettable` (§4.1) and the requirement solver are explicitly Tier 3/4).
 
 ---
 
@@ -586,8 +619,8 @@ course's own pattern — an evening exam, a reading-period deadline). See `Cours
 ```yaml
 id: cs50
 title: Introduction to Computer Science
-demand: 7
-workload_hint: "~12h/week"          # visible at shopping week
+demand: 7                            # r15 — derived at runtime, not hand-picked (§4.6)
+workload_hint: "~12h/week"          # r15 — also derived; shown here as what it evaluates to
 demands:                             # r11 — what the course asks of you, per tag
   code: 2
   math: 1
@@ -763,32 +796,59 @@ Mechanically confidence *is* the volatility bracket from the prototype, promoted
 the surface and named. It was always the interesting half of that mechanic; r6 left it
 hidden behind a readiness bar for no good reason. The bracket is now the readout.
 
+**r15 correction.** Position and confidence are no longer two independently-set dials.
+Banked hours pick *which band* you're in (§4.5's `moderate`/`narrow` thresholds); the
+band alone then sets both the width of the outcome *and*, through the point table below,
+its expected value — a wider band isn't just less certain, it's worse on average too,
+because it includes more scoring-nothing outcomes. There's no separate mean-shift term:
+narrowing the band is the entire mechanism, exactly as the sentence above always claimed,
+which is what building it revealed the old two-axis description didn't actually satisfy.
+
 #### Under the hood
 
-The prototype's matrix survives as the *implementation*, because it is a cheap way to
-get a bounded distribution with the right shape, and it is already tuned:
+The prototype's matrix does not survive as the implementation — building it surfaced
+that the specified shape (hours move a mean, confidence sets noise around it) was never
+consistent with "hours narrow the range, they don't raise it." What ships instead:
 
 1. **Hours accumulate per course toward the next milestone**, with no gaps between
-   milestones. Sources: a study band at ×1.0, a joint session at a multiplier set by
-   §4.5, and **+1 h** per completed problem set, reading, or homework.
-2. **Hours buy a volatility bracket**, not a score: under 10 h wide, 10–15 h
-   moderate, 16 h+ narrow. Per-item overrides are authored (the prototype used 15/20
-   for large open-ended projects), so *how much study makes this safe* is a
-   difficulty lever the content author sets per item. **The bracket is what the player
-   sees as `confidence`**, and the confidence inputs above narrow it independently of
-   hours — so there are two ways into a narrow bracket and they cost different things.
-3. **Two days out, the hidden draw resolves** — N values from the bracket, N by type
-   (8 midterm, 10 final, 12 major project, 4 per essay stage).
-4. **Values convert to a percentage** and read off an authored threshold table. Pass
-   at 50%.
-5. **Hours in the final two days still improve it**, at a declining rate, applied by
-   the engine.
+   milestones — same claim as before, but now two ledgers at once: the course's pool in
+   full, and every demanded tag's level ledger split by the same demand-weight ratio
+   that prices the demand gap (§4.5, §7.8). Sources: a study band at ×1.0, a joint
+   session at a multiplier set by §4.5, simply attending a class at ×1.25, and **+1 h**
+   per completed problem set, reading, or homework toward the pool specifically (a pset's
+   own hours bank to the level ledger regardless, even though they never touch the pool).
+2. **Hours buy a band**, not a score: under the item's `moderate` threshold is *wide*,
+   at or above it but below `narrow` is *moderate*, at or above `narrow` is *narrow* —
+   two thresholds, not three; a fourth, wider band was considered and dropped; wide
+   absorbs it. The thresholds themselves are **derived**, not hand-set per item — see
+   §4.6 — with a per-item override (the prototype used 15/20 for large open-ended
+   projects) as the escape hatch for a genuine exception.
+3. **At T-48h, and not one moment earlier, the hidden draw resolves**: N integer "cards",
+   each drawn uniformly from `-range..range` where `range` is 1 (narrow), 2 (moderate),
+   or 4 (wide) — N by type (8 midterm, 10 final, 12 major project, an essay's stages
+   escalate 4, 5, 6…, capped at 8 as the course progresses). There is no early trigger:
+   a practice exam or a 1-on-1 review only banks hours at a higher multiplier before this
+   moment, it does not move the moment itself (see the two-day crisis, below).
+4. **Each card scores points** — `0 → 1.0`, `±1 → 0.75`, `±2 → 0.5`, `±3` or `±4 → 0` —
+   and the average of all N, times 100, **is** the percentage. Linear, no curve. Read off
+   an authored letter table (evenly spaced, pass at 50%) for display.
+5. **Hours after the draw no longer bank pool progress.** Every 2 hours instead **bumps**
+   one card one step toward zero — whichever card is closest to its next *scoring*
+   transition (a card at ±1, ±2 or ±3 always gains points from a bump; a card at ±4 gains
+   nothing until it reaches ±3, so it's serviced last, never first). The level ledger
+   keeps accruing from these same hours regardless — leveling never stops, an item's
+   grading does, the moment its cards are drawn.
 
-The bracket table is the whole design in three rows: more hours doesn't raise your
-grade, it *narrows the range you can land in*. That is both closer to how studying
-actually feels and a far better incentive shape than a linear score, because it means
-an under-prepared player can get lucky and a well-prepared one is merely safe. Luck
-is only available to people who left room for it.
+The band is the whole design in two rows: more hours doesn't raise your grade, it
+*narrows the range you can land in* — and because the scoring curve punishes distance
+from zero non-linearly, a narrower range is also a better one on average, not merely a
+more certain one. That is both closer to how studying actually feels and a far better
+incentive shape than a linear score, because it means an under-prepared player can get
+lucky and a well-prepared one is merely safe. Luck is only available to people who left
+room for it, and the room shrinks in an already-decided, non-adjustable proportion to
+how many cards are drawn — averaging more cards over a wider band still under-performs
+averaging fewer over a narrower one, so "more chances to get lucky" is never the better
+strategy than actually banking the hours.
 
 **The forecast never leaks the draw.** The range shown is derived from the *bracket*,
 not from the resolved values. So the forecast is honest and un-gameable at the same
@@ -815,10 +875,15 @@ Read the first two lines together, because that is the r7 shape: **the practice 
 always better than the guess.** For two weeks you have a range you cannot act on
 precisely; then you sit the past paper and the range collapses to a position, and it is
 worse than the middle of your guess. The information and the bad news arrive in the
-same moment, which is why it works as a crisis rather than a status update. A player
-who wants that moment earlier can buy it — practice problems raise confidence any time
-— and paying to find out sooner that you are in trouble is a genuinely good decision to
-offer someone.
+same moment, which is why it works as a crisis rather than a status update.
+
+**r15 withdraws the last sentence of the paragraph above.** r7 said a player could buy
+that moment earlier; modeling it showed the opposite is true. The draw is fixed at
+T-48h and nowhere else — triggering it sooner would only shrink the 48 hours of
+bumping left to recover in, which is strictly worse for the player, never better. A
+practice exam or a 1-on-1 review is still worth doing early, but as *the highest
+support-multiplier study session available*, banking more effective hours into the pool
+before the fixed moment arrives — not as a way to see the moment sooner.
 
 That is the prototype's real Psych recovery, same arithmetic, same three days, no
 alphabet. And the diminishing returns still land where they landed: a later two-hour
@@ -847,18 +912,29 @@ problem set finished by copying a friend's answer at 6am was *explicitly exclude
 from the tally, and the hour spent later genuinely solving it *was* counted. Worth
 keeping as an authored property of the action, not a judgement — `copied` work
 completes the assignment and buys no bracket progress. It is the cleanest expression
-of "everything affects everything" in the whole prototype.
+of "everything affects everything" in the whole prototype. **r15**: a copied pset
+grades flatly at a C, rather than being scaled by real hours it doesn't have — copying
+still "completes the assignment" in the sense that matters for prerequisites and
+dependent sessions, it just never earns better than average credit for doing so.
 
 **Two additions of mine that the prototype did not have**, flagged as additions:
 
 - **Assignment weights and a course grade.** The prototype tracked item grades (B,
   B, C+, B+) and never combined them into anything. Weights (§4.1) let a course
   produce a grade and the year produce a GPA. Keep them — but note the player's
-  felt experience is the *item*, so the UI should lead with items.
+  felt experience is the *item*, so the UI should lead with items. **r15**: the
+  combination is a plain weighted average of percentages — `Σ(item% × weight) / Σweight`
+  — since psets (completion-graded) and milestones (card-drawn) both already live on the
+  same 0-100 scale by the time they're combined; no separate GPA-conversion step exists
+  yet between a course's percentage and a term GPA.
 - **Attendance feeding the tally.** §4.3's `depends_on_sessions` raises an
   assignment's hour cost when you skipped its lectures. That composes cleanly:
   skipping lectures makes each assignment cost more hours, which starves the exam
-  tally, which widens the bracket. One resource, three systems.
+  tally, which widens the bracket. One resource, three systems. **r15**: this stacks
+  *multiplicatively* with the demand gap (§4.5) on the same assignment's effective
+  hours — two independent penalties, same composition rule as every other multiplier
+  pair in this design. The §4.3 formula that actually computes the attendance
+  multiplier itself is still unbuilt; only the stacking rule is decided.
 
 ### 4.5 Levels, and the two gaps that use them
 
@@ -973,7 +1049,43 @@ size penalty also stops "invite everyone" from being the dominant move.
 by someone who mostly studied with well-matched people. Keeping the average and losing
 the curve would keep the number and throw away the decision.
 
-### 4.6 Shopping week becomes the real decision
+#### Levels move (r15)
+
+§7.8 derives *starting* levels from the trait build; until now nothing moved them
+afterward, which meant a `bad with numbers` handicap taken at creation was a life
+sentence rather than a bet with a due date, contradicting §4.5's own demand-gap table
+("not this year," not "never"). Levels now move, purely on hours banked — **passing a
+course grants nothing by itself**, only the hours spent studying do, since the whole
+point is that the debt is repayable but expensive.
+
+The cost to climb one level is asymmetric around zero:
+
+```
+cost(x → x+1) = 100 · max(x+1, -x)
+```
+
+At or above zero each level costs more than the last (100, 200, 300…); below zero,
+climbing out of a hindrance costs `100 · |x|` — escaping `-2` costs 200 hours, escaping
+`-1` costs 100. Running one tag from 0 to 5 by pure hours costs 1,500 hours total, over
+a multi-year career, if it's the only thing ever studied — which is why the actual
+route out of a bad handicap, per §4.5's own demand-gap table, is a lower-demand course
+in the same tag first, not raw grinding.
+
+**One real hour funds two ledgers at once, independently.** It banks in full to whatever
+course's grading pool it was spent on (§4.4), *and* it splits across every tag that
+course demands — weighted the same way the demand gap is priced, by demand level — into
+each tag's level ledger. A CS50 hour (`code: 2, math: 1`) is 0.67h of `code` progress and
+0.33h of `math` progress, simultaneously with its full hour banking to CS50's grade. A
+pset's hours count toward leveling even though they never touch the milestone pool at
+all (§4.4) — leveling doesn't care what a course-graded hour was *for*.
+
+Real hours only partly convert into durable level progress: a **0.6 base accrual rate**,
+halved again to 0.3 for study on a tag no enrolled course currently demands (isolated
+study is real, just discounted — the design already prices "study ahead" this way
+elsewhere), and multiplied *up* by the same support multipliers everything else gets:
+joint study's partner-gap multiplier, tutoring, and simply **attending a class counts as
+studying, at ×1.25** — showing up is guaranteed contact with the material, and it's
+priced like it.
 
 Because syllabi are readable in advance, shopping week is an **information
 problem, not a gamble.** You can open every candidate syllabus and see the whole
@@ -1003,6 +1115,24 @@ an argument they can check:
 Two rules this screen obeys, both inherited from §4.4. It shows **price, never outcome** —
 hours and gaps, no predicted grade. And a closed course is closed *with its reason and its
 route*, because §9.3's job is to report why rather than to refuse.
+
+**r15: `base ~12h` is derived, not hand-typed**, and so is the `demand` scalar itself
+(now called `effort` when discussed as a number, though the schema field is still named
+`demand`). Both used to be per-course guesses — the exact thing that makes ~120 future
+courses unmanageable by hand. Now: raw weekly hours come from summing `meetings`'
+contact time, a representative section length (joined from the real, registration-time
+section pool in `sections.yaml` — a syllabus alone never pins one), exam sit-time
+amortized over the course, and total pset hours over the weeks they actually span; and
+`effort = round((rawHours + Σdemands) / 2)` — so `effort` answers "how heavy is this in
+general," `demands` answers "heavy for *whom, specifically*," and neither substitutes
+for the other. `demands` (the tag-level map) remains the one number per course that still
+needs a human, because it's the only one that's actually about subject content rather
+than workload arithmetic.
+
+There is also a **semester effort cap** (`rules.academics.semesterEffortCap`, 28) —
+a *soft* warning, not a hard block, on the sum of `effort` across a player's enrolled
+courses. It's a line, not a wall: shopping week names it, it never refuses a course set
+for crossing it.
 
 This makes **workload collision an authored difficulty lever.** The content author
 places the crunch weeks deliberately. Difficulty comes from level design, not from
