@@ -200,6 +200,8 @@ function assertActivitiesUsable(activities: readonly Activity[]): void {
   if (!activities.some((a) => a.curve.length > 0)) throw new Error('no activity banks hours')
 }
 
+export { representativeSectionHours } from './workload.ts'
+
 const describe = (e: { issues: { path: (string | number)[]; message: string }[] }) =>
   e.issues.map((i) => `  ${i.path.join('.') || '(root)'}: ${i.message}`).join('\n')
 

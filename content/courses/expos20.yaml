@@ -85,6 +85,10 @@ assignments:
     assigned: { week: 1, session: 1 }
     due: { week: 5, session: 2 }
     weight: 0.25
+    # Total hours across response/draft/workshop/revision -- an estimate, not a real
+    # published number (Expos 20 doesn't publish one), feeding the same workload-hours
+    # derivation psets do (`courseworkHoursPerWeek`, packages/engine/src/effort.ts).
+    estHours: 14
     dependsOnSessions: [1, 2, 3]
     notes:
       - "Sources: the primary text only. Skill tested: close reading -- extracting an
@@ -100,6 +104,7 @@ assignments:
     assigned: { week: 6, session: 1 }
     due: { week: 9, session: 2 }
     weight: 0.30
+    estHours: 18
     dependsOnSessions: [11]
     notes:
       - "Sources: the primary text plus one theoretical/critical lens. Skill tested:
@@ -115,6 +120,7 @@ assignments:
     assigned: { week: 10, session: 1 }
     due: { week: 15, day: "Wed" }
     weight: 0.35
+    estHours: 24
     dependsOnSessions: [19]
     notes:
       - "Sources: 1 primary + 4-6 secondary sources, at least 2 of them peer-reviewed.

@@ -6,6 +6,7 @@ import {
   deriveBrackets,
   drawCount,
   effortScore,
+  examSitHoursPerWeek,
   meetingHoursPerWeek,
   rawWeeklyHours,
 } from '../src/effort.ts'
@@ -68,6 +69,23 @@ describe('courseworkHoursPerWeek', () => {
 
   it('is 0 when nothing in the course carries estHours (e.g. an essay-only syllabus today)', () => {
     assert.equal(courseworkHoursPerWeek([cs50FinalProject]), 0)
+  })
+})
+
+describe('examSitHoursPerWeek', () => {
+  const midterm1: Assignment = { id: 'mt1', kind: 'exam', date: { week: 6, day: 'Thu' }, time: '18:00-21:00', weight: 0.2, dependsOnSessions: [], coversSessions: [], stages: [], notes: [] }
+  const midterm2: Assignment = { id: 'mt2', kind: 'exam', date: { week: 10, day: 'Thu' }, time: '18:00-21:00', weight: 0.2, dependsOnSessions: [], coversSessions: [], stages: [], notes: [] }
+  // No `time` authored -- real department policy not yet published, matching Math21b's own final.
+  const final: Assignment = { id: 'final', kind: 'final', date: { week: 16, day: 'Wed' }, weight: 0.35, dependsOnSessions: [], coversSessions: [], stages: [], notes: [] }
+  const math21bLike: Syllabus = { ...cs50, assignments: [...cs50Psets, midterm1, midterm2, final] }
+
+  it('sums sit-time (falling back to a default 3h when time is unauthored) over the full course span', () => {
+    // span = wk16 - wk1 + 1 = 16; sit-time = 3 + 3 + 3(default) = 9 -> 9/16
+    assert.ok(Math.abs(examSitHoursPerWeek(math21bLike) - 9 / 16) < 1e-6)
+  })
+
+  it('is 0 for a course with no exam/final assignments', () => {
+    assert.equal(examSitHoursPerWeek(cs50), 0)
   })
 })
 

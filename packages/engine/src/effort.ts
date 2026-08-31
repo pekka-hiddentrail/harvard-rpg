@@ -19,7 +19,9 @@ function meetingHours(meeting: Meeting): number {
   return 0
 }
 
-function parseHourRange(time: string): number {
+/** Exported so `packages/content` can size a real `CourseSlot`'s section length the
+ * same way — one parser, not two copies drifting apart. */
+export function parseHourRange(time: string): number {
   const match = /^(\d{2}):(\d{2})-(\d{2}):(\d{2})$/.exec(time)
   if (!match) return 0
   const [, h1, m1, h2, m2] = match.map(Number)
@@ -57,9 +59,36 @@ export function courseworkHoursPerWeek(assignments: readonly Assignment[]): numb
   return weeks === 0 ? 0 : total / weeks
 }
 
+/**
+ * A sit-down exam is contact time, the same category as a lecture — not prep time,
+ * which already has a home in the bracket/draw system and would be double-counted here.
+ * Amortized over the whole course span, same as a weekly lecture would be. Falls back to
+ * a standard 3h block when an exam/final's own `time` isn't authored yet (real department
+ * policy often isn't published this far out — e.g. Math21b's final).
+ */
+const DEFAULT_EXAM_SIT_HOURS = 3
+
+function sitHours(assignment: Assignment): number {
+  if (assignment.kind !== 'exam' && assignment.kind !== 'final') return 0
+  return assignment.time ? parseHourRange(assignment.time) : DEFAULT_EXAM_SIT_HOURS
+}
+
+export function examSitHoursPerWeek(syllabus: Syllabus): number {
+  const exams = syllabus.assignments.filter((a) => a.kind === 'exam' || a.kind === 'final')
+  if (exams.length === 0) return 0
+  const weeks = courseSpanWeeks(syllabus)
+  const total = exams.reduce((sum, a) => sum + sitHours(a), 0)
+  return weeks === 0 ? 0 : total / weeks
+}
+
 /** The raw weekly-hours estimate a "workload hint" is actually reporting. */
 export function rawWeeklyHours(syllabus: Syllabus, extraMeetingHours = 0): number {
-  return meetingHoursPerWeek(syllabus.meetings) + extraMeetingHours + courseworkHoursPerWeek(syllabus.assignments)
+  return (
+    meetingHoursPerWeek(syllabus.meetings) +
+    extraMeetingHours +
+    examSitHoursPerWeek(syllabus) +
+    courseworkHoursPerWeek(syllabus.assignments)
+  )
 }
 
 function sumDemands(demands: Syllabus['demands']): number {
