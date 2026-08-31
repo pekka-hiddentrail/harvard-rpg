@@ -124,13 +124,16 @@ export function applyBumps(cards: readonly number[], extraHours: number): number
 // ── when the draw happens ────────────────────────────────────────────────────────────
 
 /**
- * The draw fires at T-48h, or earlier if the player triggers it themselves — a practice
- * exam (with a TF or in class) or a 1-on-1 review of a paper/project/essay. Once fired,
- * it never fires again for the same assessment; the caller is responsible for that
- * one-shot bookkeeping, this only answers "should it fire on this check."
+ * T-48h, always — no exception. A practice exam or a 1-on-1 review isn't a way to see the
+ * draw sooner; it's just a study session with the highest support multiplier available
+ * (see `PRACTICE_MULTIPLIER` in levels.ts), banking effective hours toward the pool like
+ * any other. Triggering the draw earlier than T-48h would only leave less runway to bump
+ * with afterward — worse for the player, not better — so there is no early path at all.
+ * Once fired, it never fires again for the same assessment; the caller owns that one-shot
+ * bookkeeping, this only answers "should it fire on this check."
  */
-export function isDrawTriggered(hoursUntilDue: number, earlyTrigger: boolean): boolean {
-  return earlyTrigger || hoursUntilDue <= 48
+export function isDrawTriggered(hoursUntilDue: number): boolean {
+  return hoursUntilDue <= 48
 }
 
 // ── letter table ──────────────────────────────────────────────────────────────────────
@@ -151,6 +154,39 @@ const LETTER_TABLE: readonly { min: number; letter: string }[] = [
 
 export function letterFor(percentage: number): string {
   return LETTER_TABLE.find((row) => percentage >= row.min)!.letter
+}
+
+// ── psets: completion-graded, never drawn (§4.1) ────────────────────────────────────────
+
+/** A copied submission still completes the assignment, banks zero pool hours (already
+ * decided), and grades flat at a C — not scaled by how little real work went into it. */
+const COPIED_WORK_PERCENTAGE = 67 // midpoint of the C band (65-69)
+
+/**
+ * A pset's own grade, on the same 0-100 scale as everything else. `effectiveEstHours` is
+ * the authored cost run through this player's demand-gap (and, once stacked, attendance)
+ * multipliers — never the raw authored number.
+ */
+export function psetGradePercentage(
+  realHours: number,
+  effectiveEstHours: number,
+  copied: boolean,
+): number {
+  if (copied) return COPIED_WORK_PERCENTAGE
+  return Math.round(Math.min(1, realHours / effectiveEstHours) * 100)
+}
+
+// ── the course grade ──────────────────────────────────────────────────────────────────
+
+/**
+ * One weighted average across every graded item, pset and milestone alike — everything
+ * already lives on the same 0-100 scale, so there is no separate combination step per kind.
+ */
+export function courseGradePercentage(items: readonly { percentage: number; weight: number }[]): number {
+  const weightTotal = items.reduce((sum, i) => sum + i.weight, 0)
+  if (weightTotal === 0) return 0
+  const weighted = items.reduce((sum, i) => sum + i.percentage * i.weight, 0)
+  return Math.round((weighted / weightTotal) * 10) / 10
 }
 
 // ── lean (display-only, §4.5's demand gap reused for the forecast) ──────────────────────

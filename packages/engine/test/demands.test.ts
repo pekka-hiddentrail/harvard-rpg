@@ -63,10 +63,20 @@ describe('effectiveHoursMultiplier — the CS50 code/math worked example', () =>
 
 describe('effectiveHours', () => {
   it('scales estHours by the blended multiplier', () => {
-    const levels = { ...zeroLevels(), code: -1, math: -1 } // gap +3 on both vs demands 2/1...
     const hours = effectiveHours(6, { code: 1 }, { ...zeroLevels(), code: -1 })
     // gap = 1 - (-1) = 2 -> x1.7
     assert.ok(Math.abs(hours - 6 * 1.7) < 1e-9)
+  })
+
+  it('stacks a missed-attendance multiplier multiplicatively, not additively', () => {
+    const hours = effectiveHours(6, { code: 1 }, { ...zeroLevels(), code: -1 }, 1.4)
+    assert.ok(Math.abs(hours - 6 * 1.7 * 1.4) < 1e-9)
+  })
+
+  it('defaults the attendance multiplier to 1 -- nothing missed', () => {
+    const withDefault = effectiveHours(6, { code: 1 }, { ...zeroLevels(), code: -1 })
+    const explicit = effectiveHours(6, { code: 1 }, { ...zeroLevels(), code: -1 }, 1)
+    assert.equal(withDefault, explicit)
   })
 })
 

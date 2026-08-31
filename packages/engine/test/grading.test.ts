@@ -3,10 +3,12 @@ import { describe, it } from 'node:test'
 import {
   applyBumps,
   bandFor,
+  courseGradePercentage,
   drawCards,
   isDrawTriggered,
   leanFor,
   letterFor,
+  psetGradePercentage,
   scorePercentage,
 } from '../src/grading.ts'
 import { zeroLevels } from '../src/schema.ts'
@@ -95,12 +97,42 @@ describe('applyBumps', () => {
 })
 
 describe('isDrawTriggered', () => {
-  it('fires at 48 hours out', () => {
-    assert.equal(isDrawTriggered(48, false), true)
-    assert.equal(isDrawTriggered(49, false), false)
+  it('fires at 48 hours out, and never earlier -- a practice exam is just a high-multiplier study session, not a trigger', () => {
+    assert.equal(isDrawTriggered(48), true)
+    assert.equal(isDrawTriggered(49), false)
+    assert.equal(isDrawTriggered(400), false)
   })
-  it('fires early on a practice exam or 1-on-1 review, regardless of time remaining', () => {
-    assert.equal(isDrawTriggered(400, true), true)
+})
+
+describe('psetGradePercentage', () => {
+  it('full credit at or above the effective hour cost', () => {
+    assert.equal(psetGradePercentage(6, 6, false), 100)
+    assert.equal(psetGradePercentage(9, 6, false), 100) // extra hours don't overshoot 100
+  })
+  it('partial credit below it', () => {
+    assert.equal(psetGradePercentage(3, 6, false), 50)
+  })
+  it('copied work flatlines at a C (67), regardless of hours', () => {
+    assert.equal(psetGradePercentage(6, 6, true), 67)
+    assert.equal(psetGradePercentage(0, 6, true), 67)
+  })
+})
+
+describe('courseGradePercentage', () => {
+  it('is the weighted average of every graded item, on one scale', () => {
+    // 5 psets at 10% each + a final project at 50%
+    const items = [
+      { percentage: 87, weight: 0.1 },
+      { percentage: 67, weight: 0.1 },
+      { percentage: 99, weight: 0.1 },
+      { percentage: 83, weight: 0.1 },
+      { percentage: 38, weight: 0.1 },
+      { percentage: 88, weight: 0.5 },
+    ]
+    assert.equal(courseGradePercentage(items), 81.4)
+  })
+  it('is 0 for no graded items rather than NaN', () => {
+    assert.equal(courseGradePercentage([]), 0)
   })
 })
 

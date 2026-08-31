@@ -89,11 +89,17 @@ export function weightedAverageGap(
   }, 0)
 }
 
-/** An assignment's personalized cost: the authored hours, run through this player's gaps. */
+/**
+ * An assignment's personalized cost: the authored hours, run through this player's gaps
+ * and, multiplicatively, whatever the §4.3 missed-attendance cost inflation comes to for
+ * this specific assignment (1 when nothing was missed). Two independent penalties stack
+ * by multiplying, same as any other pair of multipliers in this game.
+ */
 export function effectiveHours(
   estHours: number,
   demands: Partial<Record<SubjectTag, number>>,
   levels: Levels,
+  attendanceMultiplier = 1,
 ): number {
-  return estHours * effectiveHoursMultiplier(demands, levels)
+  return estHours * effectiveHoursMultiplier(demands, levels) * attendanceMultiplier
 }

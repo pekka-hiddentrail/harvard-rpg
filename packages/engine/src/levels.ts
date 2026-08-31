@@ -1,3 +1,5 @@
+import type { SubjectTag } from './schema'
+
 /**
  * Level progression: how a subject-tag level moves after creation. Purely hours-banked
  * — passing a course grants nothing on its own, only the hours spent studying do.
@@ -35,4 +37,26 @@ export function bankedLevelHours(
 ): number {
   const relevance = relevant ? 1 : ISOLATED_STUDY_DISCOUNT
   return realHours * BASE_ACCRUAL_RATE * relevance * supportMultiplier
+}
+
+/** Just showing up to a lecture/section/lab/workshop counts as studying — at a bonus,
+ * since it's guaranteed contact with the material rather than self-directed effort. */
+export const ATTENDANCE_SUPPORT_MULTIPLIER = 1.25
+
+/**
+ * One real hour banks in full to the course's milestone pool *and*, simultaneously, splits
+ * across every tag the course demands — weighted the same way `effectiveHoursMultiplier`
+ * prices a gap, by demand level. A CS50 hour (code:2, math:1) is 0.67h of `code` study and
+ * 0.33h of `math` study for leveling purposes, even on a pset whose own hours never touch
+ * the milestone pool at all (§4.1) — leveling and grading are two separate ledgers fed by
+ * the same real hour.
+ */
+export function splitHoursByDemand(
+  demands: Partial<Record<SubjectTag, number>>,
+  hours: number,
+): Partial<Record<SubjectTag, number>> {
+  const entries = Object.entries(demands) as [SubjectTag, number][]
+  const totalDemand = entries.reduce((sum, [, level]) => sum + level, 0)
+  if (totalDemand === 0) return {}
+  return Object.fromEntries(entries.map(([tag, level]) => [tag, (level / totalDemand) * hours]))
 }
