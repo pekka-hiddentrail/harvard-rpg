@@ -570,51 +570,63 @@ topic, and a list of **assignments**, each with an assigned date, a due date, an
 estimated hour cost, a weight toward the final grade, and the sessions whose
 material it depends on. Exams are assignments with a date and a coverage range.
 
+**Revised since first written, to match what shipped.** Two things below moved out of
+this example and into the engine, both for the same reason: a hand-typed absolute date is
+one holiday away from being wrong, and the fix should live in one place, not be re-derived
+per course. `sessions` carry no `date` — `fitSessions()` computes it from `meetings` against
+the shared term calendar (`content/calendar/`), so a cancelled Monday simply doesn't consume
+a session number. And `meetings` names a real block-schedule `pattern`/`time`, not a single
+`band` string, because which of the three canonical slots (§3.1's `BLOCK_STARTS`) a section
+lands on is a registration-time fact, not something a syllabus pins. Assignment dates follow
+the same rule: `assigned`/`due`/`date` are `{ week, session }` (the Nth of the course's own
+real meetings that term week) or `{ week, day }` (an explicit weekday, for a date outside the
+course's own pattern — an evening exam, a reading-period deadline). See `CourseWeek` in
+`packages/engine/src/schema.ts`.
+
 ```yaml
 id: cs50
 title: Introduction to Computer Science
-difficulty: 7
+demand: 7
 workload_hint: "~12h/week"          # visible at shopping week
 demands:                             # r11 — what the course asks of you, per tag
   code: 2
   math: 1
-meetings:                            # bands, per §3.1 — not "morning"
-  - { type: lecture, days: [Mon, Wed], band: "13:30" , size: 340 }
-  - { type: section, days: [Thu],      band: "13:30" , size: 18, sections: true }
-sessions:
-  - { n: 1, date: 2026-09-03, topic: "Scratch, and what a program is" }
-  - { n: 2, date: 2026-09-08, topic: "C, types, and the compiler" }
-  - { n: 3, date: 2026-09-10, topic: "Arrays, strings, and memory" }
+meetings:
+  - { type: lecture, days: [Mon, Wed], time: "09:00-10:30", size: 850, attendance: flexible }
+sessions:                            # dates computed by fitSessions(), never authored here
+  - { n: 1, topic: "Scratch, and what a program is" }
+  - { n: 2, topic: "C, types, and the compiler" }
+  - { n: 3, topic: "Arrays, strings, and memory" }
 assignments:
   - id: ps1
     title: "Problem Set 1 — Scratch"
     kind: pset
-    assigned: 2026-09-03
-    due: 2026-09-11
+    assigned: { week: 1, session: 1 }
+    due: { week: 2, session: 1 }
     est_hours: 6
     weight: 0.05
     depends_on_sessions: [1]
   - id: ps2
     title: "Problem Set 2 — Caesar"
     kind: pset
-    assigned: 2026-09-10
-    due: 2026-09-18
+    assigned: { week: 2, session: 1 }
+    due: { week: 3, session: 2 }
     est_hours: 9
     weight: 0.07
     depends_on_sessions: [2, 3]
   - id: midterm
     kind: exam                      # kind drives the hour target + bracket, §4.4
-    date: 2026-10-22
+    date: { week: 8, day: "Thu" }   # an evening exam, outside the lecture pattern
     weight: 0.25
     covers_sessions: [1-12]
   - id: final_project
     kind: project
-    assigned: 2026-10-25
-    due: 2026-12-07
+    assigned: { week: 8, day: "Sun" }
+    due: { week: 15, day: "Mon" }    # reading period — past the term's last day of classes
     weight: 0.30
     brackets: { moderate: 15, narrow: 20 }   # override of the default 10/16
     stages:
-      - { id: proposal, due: 2026-11-15 }
+      - { id: proposal, due: { week: 11, day: "Sun" } }
 ```
 
 `kind` selects the exam-matrix defaults (§4.4): `pset` grades on completion,
@@ -633,7 +645,7 @@ single difficulty number because multi-tag courses are the interesting ones: CS 
 The tag set is **closed at seven** — `math` · `stats` · `code` · `writing` · `reading` ·
 `lab` · `discussion` — and closed on purpose. Every course stub carries them, so adding an
 eighth means revisiting all ~120 stubs; whereas the other two tag namespaces (§7.4) can grow
-freely. `difficulty` survives alongside `demands` and keeps its old job: overall workload
+freely. `demand` survives alongside `demands` and keeps its old job: overall workload
 weight, which is what shopping week compares. `demands` is about *whose* workload it is.
 
 **Milestone reset.** The prototype allowed one genuinely interesting move: after a
@@ -1065,6 +1077,13 @@ This is the largest authoring job in the project: roughly 8-10 syllabi for
 freshman year, each with ~25 sessions and ~10 assignments. Call it ~250 sessions
 and ~100 assignments of YAML.
 
+**Correction from the first three shipped syllabi.** The ~25-session figure was a flat
+per-syllabus average; it isn't. A TTh/MW course (Expos 20: 26, CS 50: 23) lands near it,
+but a full-term MWF course does not — Math 21b runs 36 real sessions, 44% over the
+estimate, simply because MWF meets three times a week for the same ~14 weeks. If the
+remaining 5-7 syllabi include other MWF lecture courses, plan on **~28-30 sessions
+average** and a total nearer **~280-300 sessions**, not 250.
+
 It's tractable — it's fast, mechanical writing, and it's the kind of content that
 can be drafted quickly and tuned later — but it should be scheduled as real work,
 not assumed to fall out of the engine. Upside: because syllabi are pure data,
@@ -1469,10 +1488,10 @@ extrapolate to roughly this by end of term:
 | 50 | ~15 | 30% |
 | 90 | ~12 | 13% |
 | 150 | ~10 | 7% |
-| 340 | ~8 | 2% |
+| 850 | ~8 | <1% |
 
 The fraction collapses; the absolute number barely moves. That is the honest result
-and it is the interesting one: **a lecture hall of 340 is socially smaller than a
+and it is the interesting one: **a lecture hall of 850 is socially smaller than a
 seminar of 18.** One integer per venue produces that, and it is why §4.6 should show
 room sizes next to workload hours — a course set is also a choice about how many
 people you can possibly know.
@@ -1501,7 +1520,7 @@ you took the Thursday section instead of the Friday one.
   and the engine promotes a background NPC into it. No randomness needed at the
   narrative layer, and no invented people.
 - **A reason to attend section that isn't the assignment.** The 18-person section is
-  where the fraction actually moves; the 340-person lecture is not.
+  where the fraction actually moves; the 850-person lecture is not.
 - **Authored intimacy, for free.** Expos 20 has **14** people — you can genuinely
   know all of them, and the prototype's player did, and they became the essay group
   that recurs for ten weeks. Psych 15 has **90** — you never will. That difference

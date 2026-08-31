@@ -397,6 +397,34 @@ export const Term = z
   .strict()
 export type Term = z.infer<typeof Term>
 
+/**
+ * A date expressed relative to the term, not pinned absolutely — the same reason `Session`
+ * carries no date (see `fitSessions.ts`): a holiday shifting which real day a course's Nth
+ * weekly meeting falls on must not silently invalidate an authored due date.
+ *
+ * `week` is the term week: 1-indexed, Monday-anchored, counted from the Monday on or before
+ * the term's `firstDay` (so week 1 always contains the first day of classes, even when that
+ * day is a Tuesday). Exactly one of `session`/`day` says which day of that week:
+ *
+ * - `session` picks the Nth of the course's OWN real meetings that week — holiday-proof, so
+ *   if Monday is a holiday, "week 5, session 1" is whichever day actually met that week, not
+ *   literally Monday. Use this for anything tied to the course's own meeting pattern.
+ * - `day` names an explicit weekday, for a date that isn't one of the course's own meetings
+ *   at all — an evening exam outside the lecture pattern, a final-project deadline that
+ *   falls in reading period.
+ */
+export const CourseWeek = z
+  .object({
+    week: z.number().int().positive(),
+    session: z.number().int().positive().optional(),
+    day: Weekday.optional(),
+  })
+  .strict()
+  .refine((w) => (w.session == null) !== (w.day == null), {
+    message: 'a CourseWeek needs exactly one of `session` or `day`, not both and not neither',
+  })
+export type CourseWeek = z.infer<typeof CourseWeek>
+
 export const AssignmentKind = z.enum(['pset', 'exam', 'final', 'project', 'essay'])
 export type AssignmentKind = z.infer<typeof AssignmentKind>
 
@@ -405,19 +433,10 @@ export const Assignment = z
     id: z.string().min(1),
     title: z.string().min(1).optional(),
     kind: AssignmentKind,
-    assigned: z
-      .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/)
-      .optional(),
-    due: z
-      .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/)
-      .optional(),
+    assigned: CourseWeek.optional(),
+    due: CourseWeek.optional(),
     /** Exams and finals happen on a `date`, often outside normal class time. */
-    date: z
-      .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/)
-      .optional(),
+    date: CourseWeek.optional(),
     time: z.string().optional(),
     estHours: z.number().positive().optional(),
     weight: z.number().min(0).max(1),
@@ -430,18 +449,11 @@ export const Assignment = z
       .strict()
       .optional(),
     stages: z
-      .array(
-        z
-          .object({ id: z.string().min(1), due: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) })
-          .strict(),
-      )
+      .array(z.object({ id: z.string().min(1), due: CourseWeek }).strict())
       .default([]),
     /** The one authored "abandon sunk work at a discount" mechanic (§4.1). */
     resettable: z
-      .object({
-        carryover: z.number().min(0).max(1),
-        before: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-      })
+      .object({ carryover: z.number().min(0).max(1), before: CourseWeek })
       .strict()
       .optional(),
     /** Player-facing guidance text — same job as `CourseHint.notes`. */

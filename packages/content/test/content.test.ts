@@ -48,6 +48,25 @@ describe('the content loads', () => {
       }
     }
   })
+
+  it('sums assignment weights to 1.0, or documents why it falls short', () => {
+    // A gap that isn't explained in an assignment `notes` line is an authoring slip, not a
+    // real ungraded component — see GAME_DESIGN §4.1. Expos 20's ~10% shortfall is the
+    // documented case (the engagement grade has no discrete assignment); anything else
+    // must sum to 1 within floating-point tolerance.
+    const documentedShortfall = new Set(['expos20'])
+    for (const course of content.courses) {
+      const total = course.assignments.reduce((sum, a) => sum + a.weight, 0)
+      if (documentedShortfall.has(course.courseCode)) {
+        assert.ok(total < 1, `${course.courseCode} was expected to fall short of 1.0, got ${total}`)
+      } else {
+        assert.ok(
+          Math.abs(total - 1) < 0.001,
+          `${course.courseCode} assignment weights sum to ${total}, not 1.0`,
+        )
+      }
+    }
+  })
 })
 
 describe('every preset is a legal build', () => {

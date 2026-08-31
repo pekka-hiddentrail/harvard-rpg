@@ -6,8 +6,8 @@
 # CS50 lecture is a fixed, single slot for everyone in the course (MW 9:00-10:30) --
 # a real, published time, not one of the three canonical 50/75-min blocks. CS50 sections
 # are a separate, real, concrete choice -- see the four time windows below.
-# Attendance flexible: 650 people, and every lecture is recorded.
-- { id: "050", section: "001", courseCode: cs50, type: lecture, pattern: MW, time: "09:00-10:30", days: [Mon, Wed], size: 650, occupied: 0, attendance: flexible, demand: 7, instructor: "Dr. Moor" }
+# Attendance flexible: 850 people, and every lecture is recorded.
+- { id: "050", section: "001", courseCode: cs50, type: lecture, pattern: MW, time: "09:00-10:30", days: [Mon, Wed], size: 850, occupied: 0, attendance: flexible, demand: 7, instructor: "Dr. Moor" }
 
 # CS50 sections are 2h45m (165 min) -- CS50's own extended lab/section format, not one of
 # the three canonical 50/75-min lecture blocks, hence no `pattern`. Attendance mandatory:

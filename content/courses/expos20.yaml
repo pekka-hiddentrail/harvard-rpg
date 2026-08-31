@@ -75,41 +75,45 @@ assignments:
   # `stages` carries the response paper / draft / workshop checkpoints along the way
   # (kind `essay` rolls 4 letters per stage per GAME_DESIGN §4.4). The ~10% engagement
   # component isn't modeled here -- there's no discrete assignment for class participation.
+  # `assigned`/`due`/stage `due` are `{ week, session }` -- the Nth of the course's own TTh
+  # meetings that term week (see `CourseWeek`, packages/engine/src/schema.ts), except each
+  # essay's final revision, which lands past the regular TTh pattern into a reading-period
+  # date and so uses an explicit `day` instead (essay3's revision).
   - id: essay1
     title: "Essay One -- close reading"
     kind: essay
-    assigned: 2026-09-01
-    due: 2026-10-01
+    assigned: { week: 1, session: 1 }
+    due: { week: 5, session: 2 }
     weight: 0.25
     dependsOnSessions: [1, 2, 3]
     notes:
       - "Sources: the primary text only. Skill tested: close reading -- extracting an
          argument from a single source."
     stages:
-      - { id: response, due: 2026-09-10 }
-      - { id: draft, due: 2026-09-17 }
-      - { id: workshop, due: 2026-09-24 }
-      - { id: revision, due: 2026-10-01 }
+      - { id: response, due: { week: 2, session: 2 } }
+      - { id: draft, due: { week: 3, session: 2 } }
+      - { id: workshop, due: { week: 4, session: 2 } }
+      - { id: revision, due: { week: 5, session: 2 } }
   - id: essay2
     title: "Essay Two -- theoretical lens"
     kind: essay
-    assigned: 2026-10-06
-    due: 2026-10-29
+    assigned: { week: 6, session: 1 }
+    due: { week: 9, session: 2 }
     weight: 0.30
     dependsOnSessions: [11]
     notes:
       - "Sources: the primary text plus one theoretical/critical lens. Skill tested:
          applying a framework to a text, not just describing it."
     stages:
-      - { id: response, due: 2026-10-08 }
-      - { id: draft, due: 2026-10-15 }
-      - { id: workshop, due: 2026-10-22 }
-      - { id: revision, due: 2026-10-29 }
+      - { id: response, due: { week: 6, session: 2 } }
+      - { id: draft, due: { week: 7, session: 2 } }
+      - { id: workshop, due: { week: 8, session: 2 } }
+      - { id: revision, due: { week: 9, session: 2 } }
   - id: essay3
     title: "Essay Three -- independent research"
     kind: essay
-    assigned: 2026-11-03
-    due: 2026-12-09
+    assigned: { week: 10, session: 1 }
+    due: { week: 15, day: "Wed" }
     weight: 0.35
     dependsOnSessions: [19]
     notes:
@@ -117,13 +121,13 @@ assignments:
          Skill tested: independent research -- synthesizing multiple outside sources
          into an original argument."
     stages:
-      - { id: proposal, due: 2026-11-05 }
-      - { id: outline, due: 2026-11-12 }
-      - { id: draft, due: 2026-11-19 }
-      # Was Nov 24, but that's now inside the unified Thanksgiving-week closure -- moved
-      # to Dec 1 (session 25, "Peer workshop"), the next real class meeting.
-      - { id: workshop, due: 2026-12-01 }
-      - { id: revision, due: 2026-12-09 }
+      - { id: proposal, due: { week: 10, session: 2 } }
+      - { id: outline, due: { week: 11, session: 2 } }
+      - { id: draft, due: { week: 12, session: 2 } }
+      # Was week 13's session, but that whole week is now inside the unified Thanksgiving
+      # closure -- moved to week 14 session 1 ("Peer workshop"), the next real class meeting.
+      - { id: workshop, due: { week: 14, session: 1 } }
+      - { id: revision, due: { week: 15, day: "Wed" } }
 # Every real section of Expos 20 shares the skeleton above (units, weights, meeting
 # pattern/range) but picks its own theme and instructor. The real, concrete pool of
 # actual sections -- each with its own real time slot, capacity and instructor -- lives

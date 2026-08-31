@@ -1,5 +1,5 @@
 # CS50 — Fall 2026. Week topics and order are Malan's own published CS50 outline (stable
-# across on-campus/edX/summer versions). `demands: {code: 2, math: 1}`, `difficulty: 7`
+# across on-campus/edX/summer versions). `demands: {code: 2, math: 1}`, `demand: 7`
 # and the `~12h/week` workload hint reuse the exact numbers GAME_DESIGN.md §4.1 already
 # uses in its illustrative example — this file makes that example real and committed.
 #
@@ -24,7 +24,7 @@ meetings:
   # extended lecture time). Sections are a separate, real, concrete choice -- see the
   # real section instances in `content/sections.yaml`, not authored here.
   # Attendance flexible: 340 people, and every lecture is recorded.
-  - { type: lecture, days: [Mon, Wed], time: "09:00-10:30", size: 340, attendance: flexible }
+  - { type: lecture, days: [Mon, Wed], time: "09:00-10:30", size: 850, attendance: flexible }
 officeHours:
   # Large, informal debugging halls: students join the queue and a TF comes to their table.
   - { type: officeHour, length: free, booked: false, days: [Thu], time: "19:00-23:00", location: "Annenberg Hall", demand: 6 }
@@ -58,23 +58,29 @@ sessions:
   - { n: 22, topic: "AI: machine learning, transformer architecture" }
   - { n: 23, topic: "The End: wrap-up, final project presentations" }
 assignments:
-  - { id: ps0, title: "Problem Set 0 -- Scratch", kind: pset, assigned: 2026-09-02, due: 2026-09-14, estHours: 6, weight: 0.05, dependsOnSessions: [1, 2] }
-  - { id: ps1, title: "Problem Set 1 -- C", kind: pset, assigned: 2026-09-14, due: 2026-09-21, estHours: 8, weight: 0.05, dependsOnSessions: [3, 4] }
-  - { id: ps2, title: "Problem Set 2 -- Arrays", kind: pset, assigned: 2026-09-21, due: 2026-09-28, estHours: 8, weight: 0.05, dependsOnSessions: [5, 6] }
-  - { id: ps3, title: "Problem Set 3 -- Algorithms", kind: pset, assigned: 2026-09-28, due: 2026-10-05, estHours: 9, weight: 0.05, dependsOnSessions: [7, 8] }
-  - { id: ps4, title: "Problem Set 4 -- Memory", kind: pset, assigned: 2026-10-05, due: 2026-10-14, estHours: 9, weight: 0.05, dependsOnSessions: [9, 10] }
-  - { id: ps5, title: "Problem Set 5 -- Data Structures", kind: pset, assigned: 2026-10-14, due: 2026-10-21, estHours: 9, weight: 0.05, dependsOnSessions: [11, 12] }
-  - { id: ps6, title: "Problem Set 6 -- Python", kind: pset, assigned: 2026-10-21, due: 2026-10-28, estHours: 7, weight: 0.05, dependsOnSessions: [13, 14] }
-  - { id: ps7, title: "Problem Set 7 -- SQL", kind: pset, assigned: 2026-10-28, due: 2026-11-04, estHours: 7, weight: 0.05, dependsOnSessions: [15, 16] }
-  - { id: ps8, title: "Problem Set 8 -- Web and Flask", kind: pset, assigned: 2026-11-04, due: 2026-11-16, estHours: 9, weight: 0.05, dependsOnSessions: [17, 18, 19, 20] }
-  - { id: ps9, title: "Problem Set 9 -- AI", kind: pset, assigned: 2026-11-16, due: 2026-11-30, estHours: 7, weight: 0.05, dependsOnSessions: [21, 22] }
-  # No exams in real CS50 -- the final project stands in for a final exam.
+  # `assigned`/`due` are `{ week, session }` — the Nth of the course's own MW meetings that
+  # term week, not a hand-typed calendar date (see `CourseWeek` in packages/engine/src/schema.ts).
+  # This is holiday-proof: if a Monday falls on a holiday, "week N, session 1" is whichever
+  # day actually met, not literally Monday.
+  - { id: ps0, title: "Problem Set 0 -- Scratch", kind: pset, assigned: { week: 1, session: 1 }, due: { week: 3, session: 1 }, estHours: 6, weight: 0.05, dependsOnSessions: [1, 2] }
+  - { id: ps1, title: "Problem Set 1 -- C", kind: pset, assigned: { week: 3, session: 1 }, due: { week: 4, session: 1 }, estHours: 8, weight: 0.05, dependsOnSessions: [3, 4] }
+  - { id: ps2, title: "Problem Set 2 -- Arrays", kind: pset, assigned: { week: 4, session: 1 }, due: { week: 5, session: 1 }, estHours: 8, weight: 0.05, dependsOnSessions: [5, 6] }
+  - { id: ps3, title: "Problem Set 3 -- Algorithms", kind: pset, assigned: { week: 5, session: 1 }, due: { week: 6, session: 1 }, estHours: 9, weight: 0.05, dependsOnSessions: [7, 8] }
+  - { id: ps4, title: "Problem Set 4 -- Memory", kind: pset, assigned: { week: 6, session: 1 }, due: { week: 7, session: 1 }, estHours: 9, weight: 0.05, dependsOnSessions: [9, 10] }
+  - { id: ps5, title: "Problem Set 5 -- Data Structures", kind: pset, assigned: { week: 7, session: 1 }, due: { week: 8, session: 2 }, estHours: 9, weight: 0.05, dependsOnSessions: [11, 12] }
+  - { id: ps6, title: "Problem Set 6 -- Python", kind: pset, assigned: { week: 8, session: 2 }, due: { week: 9, session: 2 }, estHours: 7, weight: 0.05, dependsOnSessions: [13, 14] }
+  - { id: ps7, title: "Problem Set 7 -- SQL", kind: pset, assigned: { week: 9, session: 2 }, due: { week: 10, session: 2 }, estHours: 7, weight: 0.05, dependsOnSessions: [15, 16] }
+  - { id: ps8, title: "Problem Set 8 -- Web and Flask", kind: pset, assigned: { week: 10, session: 2 }, due: { week: 12, session: 1 }, estHours: 9, weight: 0.05, dependsOnSessions: [17, 18, 19, 20] }
+  - { id: ps9, title: "Problem Set 9 -- AI", kind: pset, assigned: { week: 12, session: 1 }, due: { week: 14, session: 1 }, estHours: 7, weight: 0.05, dependsOnSessions: [21, 22] }
+  # No exams in real CS50 -- the final project stands in for a final exam. Its dates fall
+  # outside the MW lecture pattern (proposal/assignment on a Sunday, due in reading period
+  # past the term's `lastDay`), so they use `day` rather than `session`.
   - id: final_project
     title: "Final Project"
     kind: project
-    assigned: 2026-10-25
-    due: 2026-12-07
+    assigned: { week: 8, day: "Sun" }
+    due: { week: 15, day: "Mon" }
     weight: 0.50
     brackets: { moderate: 15, narrow: 20 }
     stages:
-      - { id: proposal, due: 2026-11-15 }
+      - { id: proposal, due: { week: 11, day: "Sun" } }
