@@ -19,6 +19,11 @@ describe('representativeSectionHours', () => {
   it('is 0 for a course with no section-type slots', () => {
     assert.equal(representativeSectionHours('no-such-course', content.slots), 0)
   })
+
+  it("includes seminar slots, not just section/lab -- Expos 20's real slots are all `type: seminar`", () => {
+    const hours = representativeSectionHours('expos20', content.slots)
+    assert.ok(Math.abs(hours - 1.25) < 1e-9)
+  })
 })
 
 describe('effortScore, joined against real sections', () => {

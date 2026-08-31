@@ -51,12 +51,15 @@ function assignmentWeeks(a: Assignment): number[] {
  * `estHours` authored on its essays) contributes nothing here yet — a known content gap,
  * not a silent zero pretending to be a real answer.
  */
+function totalCourseworkHours(assignments: readonly Assignment[]): number {
+  return assignments.filter((a) => a.estHours != null).reduce((sum, a) => sum + a.estHours!, 0)
+}
+
 export function courseworkHoursPerWeek(assignments: readonly Assignment[]): number {
   const withHours = assignments.filter((a) => a.estHours != null)
   if (withHours.length === 0) return 0
   const weeks = weekSpan(withHours.flatMap(assignmentWeeks))
-  const total = withHours.reduce((sum, a) => sum + a.estHours!, 0)
-  return weeks === 0 ? 0 : total / weeks
+  return weeks === 0 ? 0 : totalCourseworkHours(assignments) / weeks
 }
 
 /**
@@ -73,12 +76,15 @@ function sitHours(assignment: Assignment): number {
   return assignment.time ? parseHourRange(assignment.time) : DEFAULT_EXAM_SIT_HOURS
 }
 
+function totalExamSitHours(syllabus: Syllabus): number {
+  return syllabus.assignments.reduce((sum, a) => sum + sitHours(a), 0)
+}
+
 export function examSitHoursPerWeek(syllabus: Syllabus): number {
   const exams = syllabus.assignments.filter((a) => a.kind === 'exam' || a.kind === 'final')
   if (exams.length === 0) return 0
   const weeks = courseSpanWeeks(syllabus)
-  const total = exams.reduce((sum, a) => sum + sitHours(a), 0)
-  return weeks === 0 ? 0 : total / weeks
+  return weeks === 0 ? 0 : totalExamSitHours(syllabus) / weeks
 }
 
 /** The raw weekly-hours estimate a "workload hint" is actually reporting. */
@@ -119,6 +125,13 @@ function courseSpanWeeks(syllabus: Syllabus): number {
  * `weight` share of the course's non-pset hour pool — not authored per item. An explicit
  * `assignment.brackets` override always wins (e.g. a genuine editorial exception); this
  * only fills the gap when none is set.
+ *
+ * Built from each component's own *raw total*, not `rawWeeklyHours() * courseSpanWeeks()`
+ * — `courseworkHoursPerWeek` and `examSitHoursPerWeek` are rates over their own natural
+ * spans (a course's psets, say, might all land inside week 1-14 of a 15-week course), and
+ * multiplying that rate back out by a *different*, longer span silently inflates the pool
+ * by exactly the mismatch between the two spans. Only `meetings` legitimately scales by
+ * the full course span, since a lecture actually recurs every one of those weeks.
  */
 export function deriveBrackets(
   syllabus: Syllabus,
@@ -127,7 +140,9 @@ export function deriveBrackets(
 ): { moderate: number; narrow: number } {
   if (assignment.brackets) return assignment.brackets
 
-  const totalHours = rawWeeklyHours(syllabus, extraMeetingHours) * courseSpanWeeks(syllabus)
+  const totalMeetingHours =
+    (meetingHoursPerWeek(syllabus.meetings) + extraMeetingHours) * courseSpanWeeks(syllabus)
+  const totalHours = totalMeetingHours + totalExamSitHours(syllabus) + totalCourseworkHours(syllabus.assignments)
   const psetHours = syllabus.assignments
     .filter((a) => a.kind === 'pset' && a.estHours != null)
     .reduce((sum, a) => sum + a.estHours!, 0)

@@ -117,6 +117,21 @@ describe('deriveBrackets', () => {
     assert.ok(moderate < narrow)
     assert.equal(moderate, Math.round(narrow * 0.625))
   })
+
+  it('does not inflate the pool when the pset span and the full course span differ', () => {
+    // Regression: this used to multiply a *rate* (rawWeeklyHours, computed over the
+    // psets' own 14-week span) by the *full* 15-week course span (which the final
+    // project's week-15 due date extends it to) -- silently overcounting coursework
+    // hours by one week's worth. Using each component's own raw total instead:
+    //   totalMeetingHours = (3 + 2.75) * 15 = 86.25   (course span, meetings recur weekly)
+    //   totalExamSitHours = 0                          (no exam/final kind here)
+    //   totalCourseworkHours = 79                      (raw pset total, no span involved)
+    //   totalHours = 165.25, milestonePool = 165.25 - 79(psetHours) = 86.25
+    //   narrow = round(86.25 * (0.5/0.5)) = 86, moderate = round(86 * 0.625) = 54
+    const { moderate, narrow } = deriveBrackets(cs50, cs50FinalProject, 2.75)
+    assert.equal(narrow, 86)
+    assert.equal(moderate, 54)
+  })
 })
 
 describe('drawCount', () => {

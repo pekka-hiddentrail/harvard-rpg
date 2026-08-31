@@ -59,6 +59,12 @@ describe('effectiveHoursMultiplier — the CS50 code/math worked example', () =>
   it('is 1 for a course with no demands at all', () => {
     assert.equal(effectiveHoursMultiplier({}, zeroLevels()), 1)
   })
+
+  it('returns Infinity rather than throwing for a closed course, so a shopping-week preview looping over every candidate can still render a row for it', () => {
+    const levels = { ...zeroLevels(), math: -2 }
+    // gap = 3 - (-2) = 5, not survivable
+    assert.equal(effectiveHoursMultiplier({ math: 3 }, levels), Infinity)
+  })
 })
 
 describe('effectiveHours', () => {

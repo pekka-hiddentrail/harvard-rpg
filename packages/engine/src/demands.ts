@@ -54,6 +54,12 @@ export function isCourseOpen(demands: Partial<Record<SubjectTag, number>>, level
  *
  * This is a working assumption, not a locked rule: nothing authors the real per-tag
  * hour split yet, so demand-level ratio stands in for it until content says otherwise.
+ *
+ * Returns `Infinity` rather than throwing when the course isn't survivable (any one
+ * demanded tag's gap has reached +5) — a shopping-week preview that loops over every
+ * candidate course needs to render *some* row for a closed course, not crash the whole
+ * table. Check `isCourseOpen()` first if a closed course should read as "not survivable"
+ * rather than as an enormous number.
  */
 export function effectiveHoursMultiplier(
   demands: Partial<Record<SubjectTag, number>>,
@@ -62,6 +68,7 @@ export function effectiveHoursMultiplier(
   const entries = Object.entries(demands) as [SubjectTag, number][]
   const totalDemand = entries.reduce((sum, [, level]) => sum + level, 0)
   if (totalDemand === 0) return 1
+  if (!isCourseOpen(demands, levels)) return Infinity
   return entries.reduce((mult, [tag, courseLevel]) => {
     const weight = courseLevel / totalDemand
     const gap = demandGap(courseLevel, levels[tag])
@@ -94,6 +101,10 @@ export function weightedAverageGap(
  * and, multiplicatively, whatever the §4.3 missed-attendance cost inflation comes to for
  * this specific assignment (1 when nothing was missed). Two independent penalties stack
  * by multiplying, same as any other pair of multipliers in this game.
+ *
+ * `Infinity` propagates through from `effectiveHoursMultiplier` for a closed course —
+ * check `isCourseOpen()` first if that should render as "not survivable" rather than a
+ * huge number.
  */
 export function effectiveHours(
   estHours: number,
