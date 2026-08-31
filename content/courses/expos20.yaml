@@ -1,0 +1,135 @@
+# Expos 20 — Fall 2026. The universal skeleton here (TR meetings, ~14 weeks, three units
+# each following response paper -> draft -> workshop -> conference -> revision, grading
+# weighted roughly 25/30/35 across the three essays plus ~10% engagement) is real,
+# published Harvard Writing Program policy, not invented. Expos 20 explicitly has no
+# fixed syllabus or topic list across sections — each section picks its own theme and
+# texts — so the specific theme/instructor below (Dr. Marlow, she/her, the professor of
+# the default section, "Invention and Its Discontents") is authored for this section,
+# the same way a real instructor would pick one. It is NOT a claim about any real,
+# historical Harvard section.
+#
+# No prior file in this repo established these essay dates or an instructor named
+# Marlow — this is fresh content, not a continuation of something already committed.
+#
+# The real pool of currently-offered section themes (with real one-line blurbs), each
+# now with its own real time/instructor/capacity, lives in `content/sections.yaml` as
+# `CourseSlot` entries with `courseCode: expos20` — "Invention and Its Discontents" is that
+# pool's default (Section 204), and is NOT on the real theme list, authored the same way
+# any section head picks their own.
+id: "020"
+courseCode: "expos20"
+title: "Expos 20: Invention and Its Discontents"
+demand: 6
+workloadHint: "~8-10h/week, unevenly distributed around draft/revision weeks"
+demands:
+  writing: 3
+  reading: 2
+meetings:
+  # TTh, 75 minutes -- real Expos 20 section size is capped small; 14 matches the
+  # number GAME_DESIGN.md already uses for this course ("Expos 20 has 14 people"). The
+  # specific slot (09:00/10:30/12:00/13:30/15:00/16:30, or an evening slot) is a
+  # registration-time fact for whichever section is picked below, not authored here.
+  # Attendance mandatory: every Expos 20 meeting is a small seminar, not a lecture.
+  - { type: seminar, days: [Tue, Thu], pattern: TTh, size: 14, attendance: mandatory }
+officeHours:
+  # Private essay conferences booked from the preceptor's digital sign-up sheet.
+  - { type: officeHour, length: "20 minutes", booked: true, days: [Tue], time: "09:00-16:00", location: "Preceptor's office, One Bow Street", demand: 5 }
+sessions:
+  # 26 real TTh meetings. Dates are computed by `fitSessions` from this course's meeting
+  # pattern (Tue/Thu) against the shared `content/calendar/fall2026.yaml` term -- not
+  # authored per session, so the Thanksgiving-week closure (the whole week, unlike the
+  # Thu-only exception this file used to hand-derive) lives in exactly one place.
+  #
+  # "Individual conferences" (sessions 9, 17, 26) aren't a shared class meeting: each
+  # student books a 15-minute slot sometime that week with their own section's instructor
+  # (Marlow for the default section, someone else for any other pick from `sections:`
+  # below) -- the date marks the start of that week, not a single fixed meeting.
+  - { n: 1, topic: "Prologue -- syllabus, Elements of Academic Argument" }
+  - { n: 2, topic: "Unit I: introducing the primary text" }
+  - { n: 3, topic: "Close reading strategies" }
+  - { n: 4, topic: "Response Paper due; discussion" }
+  - { n: 5, topic: "Building a thesis from close reading" }
+  - { n: 6, topic: "Draft due; discussion" }
+  - { n: 7, topic: "Peer workshop, round 1" }
+  - { n: 8, topic: "Peer workshop, round 2" }
+  - { n: 9, topic: "Individual conferences this week (15-min slots)" }
+  - { n: 10, topic: "Unit I Revision due" }
+  - { n: 11, topic: "Unit II: a new theoretical lens" }
+  - { n: 12, topic: "Response Paper due; discussion" }
+  - { n: 13, topic: "Working the lens against the text" }
+  - { n: 14, topic: "Draft due; discussion" }
+  - { n: 15, topic: "Peer workshop, round 1" }
+  - { n: 16, topic: "Peer workshop, round 2" }
+  - { n: 17, topic: "Individual conferences this week (15-min slots)" }
+  - { n: 18, topic: "Unit II Revision due" }
+  - { n: 19, topic: "Unit III: research and sourcing guide" }
+  - { n: 20, topic: "Response Paper (research proposal) due" }
+  - { n: 21, topic: "Locating and evaluating sources" }
+  - { n: 22, topic: "Annotated outline due" }
+  - { n: 23, topic: "Independent research, peer check-ins" }
+  - { n: 24, topic: "Draft due; discussion" }
+  - { n: 25, topic: "Peer workshop" }
+  - { n: 26, topic: "Individual conferences this week (15-min slots); course wrap-up" }
+assignments:
+  # Each unit modeled as one `essay` assignment: `weight` is the graded revision, and
+  # `stages` carries the response paper / draft / workshop checkpoints along the way
+  # (kind `essay` rolls 4 letters per stage per GAME_DESIGN §4.4). The ~10% engagement
+  # component isn't modeled here -- there's no discrete assignment for class participation.
+  # `assigned`/`due`/stage `due` are `{ week, session }` -- the Nth of the course's own TTh
+  # meetings that term week (see `CourseWeek`, packages/engine/src/schema.ts), except each
+  # essay's final revision, which lands past the regular TTh pattern into a reading-period
+  # date and so uses an explicit `day` instead (essay3's revision).
+  - id: essay1
+    title: "Essay One -- close reading"
+    kind: essay
+    assigned: { week: 1, session: 1 }
+    due: { week: 5, session: 2 }
+    weight: 0.25
+    dependsOnSessions: [1, 2, 3]
+    notes:
+      - "Sources: the primary text only. Skill tested: close reading -- extracting an
+         argument from a single source."
+    stages:
+      - { id: response, due: { week: 2, session: 2 } }
+      - { id: draft, due: { week: 3, session: 2 } }
+      - { id: workshop, due: { week: 4, session: 2 } }
+      - { id: revision, due: { week: 5, session: 2 } }
+  - id: essay2
+    title: "Essay Two -- theoretical lens"
+    kind: essay
+    assigned: { week: 6, session: 1 }
+    due: { week: 9, session: 2 }
+    weight: 0.30
+    dependsOnSessions: [11]
+    notes:
+      - "Sources: the primary text plus one theoretical/critical lens. Skill tested:
+         applying a framework to a text, not just describing it."
+    stages:
+      - { id: response, due: { week: 6, session: 2 } }
+      - { id: draft, due: { week: 7, session: 2 } }
+      - { id: workshop, due: { week: 8, session: 2 } }
+      - { id: revision, due: { week: 9, session: 2 } }
+  - id: essay3
+    title: "Essay Three -- independent research"
+    kind: essay
+    assigned: { week: 10, session: 1 }
+    due: { week: 15, day: "Wed" }
+    weight: 0.35
+    dependsOnSessions: [19]
+    notes:
+      - "Sources: 1 primary + 4-6 secondary sources, at least 2 of them peer-reviewed.
+         Skill tested: independent research -- synthesizing multiple outside sources
+         into an original argument."
+    stages:
+      - { id: proposal, due: { week: 10, session: 2 } }
+      - { id: outline, due: { week: 11, session: 2 } }
+      - { id: draft, due: { week: 12, session: 2 } }
+      # Was week 13's session, but that whole week is now inside the unified Thanksgiving
+      # closure -- moved to week 14 session 1 ("Peer workshop"), the next real class meeting.
+      - { id: workshop, due: { week: 14, session: 1 } }
+      - { id: revision, due: { week: 15, day: "Wed" } }
+# Every real section of Expos 20 shares the skeleton above (units, weights, meeting
+# pattern/range) but picks its own theme and instructor. The real, concrete pool of
+# actual sections -- each with its own real time slot, capacity and instructor -- lives
+# in `content/sections.yaml` as `CourseSlot` entries with `courseCode: expos20`, alongside
+# CS50's real sections, not duplicated here.

@@ -28,6 +28,45 @@ describe('the content loads', () => {
     // including across a checkout with different line endings.
     assert.equal(loadContent(root).hash, content.hash)
   })
+
+  it('links every section slot to one course by both id and code', () => {
+    const courses = new Map(content.courses.map((course) => [course.id, course]))
+    const keys = new Set<string>()
+    for (const slot of content.slots) {
+      assert.equal(courses.get(slot.id)?.courseCode, slot.courseCode)
+      const key = `${slot.id}${slot.section}`
+      assert.ok(!keys.has(key), `duplicate course slot identifier ${key}`)
+      keys.add(key)
+    }
+  })
+
+  it('gives every course office hours at one less than its normal demand', () => {
+    for (const course of content.courses) {
+      assert.ok(course.officeHours.length > 0, `${course.courseCode} has no office hours`)
+      for (const officeHour of course.officeHours) {
+        assert.equal(officeHour.demand, course.demand - 1)
+      }
+    }
+  })
+
+  it('sums assignment weights to 1.0, or documents why it falls short', () => {
+    // A gap that isn't explained in an assignment `notes` line is an authoring slip, not a
+    // real ungraded component — see GAME_DESIGN §4.1. Expos 20's ~10% shortfall is the
+    // documented case (the engagement grade has no discrete assignment); anything else
+    // must sum to 1 within floating-point tolerance.
+    const documentedShortfall = new Set(['expos20'])
+    for (const course of content.courses) {
+      const total = course.assignments.reduce((sum, a) => sum + a.weight, 0)
+      if (documentedShortfall.has(course.courseCode)) {
+        assert.ok(total < 1, `${course.courseCode} was expected to fall short of 1.0, got ${total}`)
+      } else {
+        assert.ok(
+          Math.abs(total - 1) < 0.001,
+          `${course.courseCode} assignment weights sum to ${total}, not 1.0`,
+        )
+      }
+    }
+  })
 })
 
 describe('every preset is a legal build', () => {

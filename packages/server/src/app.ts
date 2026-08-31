@@ -12,11 +12,13 @@ import {
   STRATEGIES,
   Save,
   bandOf,
+  fitSessions,
   formatLong,
   hasErrors,
   parseDate,
   priceTrait,
   replay,
+  resolveAssignmentDates,
   resolveDay,
   toCreationBlock,
   validateBuild,
@@ -205,6 +207,26 @@ export function buildApp({ content, dbFile }: ServerOptions): {
           log: s.log,
         }
       })(),
+    }
+  })
+
+  /** The course catalogue (Tier 2). Full syllabi — sessions and assignments included —
+   * so a browse/shopping-week screen can render without a second round trip. Real,
+   * concrete section slots (the shopping-cart pool) ride along too. Session and
+   * assignment dates are computed here from the course's meeting pattern and the shared
+   * term calendar (`fitSessions` / `resolveAssignmentDates`), never authored as absolute
+   * dates — a holiday shifting which real day a course meets must not silently invalidate
+   * a hand-typed due date (see `CourseWeek` in `packages/engine/src/schema.ts`). */
+  app.get('/api/courses', () => {
+    const term = content.terms[0]
+    return {
+      contentHash: content.hash,
+      courses: content.courses.map((c) => ({
+        ...c,
+        sessions: term ? fitSessions(c, term) : c.sessions,
+        assignments: term ? resolveAssignmentDates(c, term) : c.assignments,
+      })),
+      slots: content.slots,
     }
   })
 

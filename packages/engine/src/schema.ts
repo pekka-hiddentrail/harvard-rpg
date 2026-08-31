@@ -251,6 +251,258 @@ export const TrackPack = z
   .strict()
 export type TrackPack = z.infer<typeof TrackPack>
 
+// ── syllabus: the academic spine (Tier 2, GAME_DESIGN §4.1) ─────────────────────────
+export const Weekday = z.enum(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
+export type Weekday = z.infer<typeof Weekday>
+
+/** Harvard's three real class-meeting patterns. MWF meets three times a week at 50
+ * minutes each; TTh and MW meet twice a week at 75 minutes each. */
+export const MeetingPattern = z.enum(['MWF', 'TTh', 'MW'])
+export type MeetingPattern = z.infer<typeof MeetingPattern>
+
+/** Real, closed facts about the block schedule — not authored per course. */
+export const BLOCK_MINUTES: Record<MeetingPattern, number> = { MWF: 50, TTh: 75, MW: 75 }
+export const BLOCK_STARTS = ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30'] as const
+export const BLOCK_NIGHT_STARTS = ['18:00', '19:30'] as const
+
+/**
+ * Whether attendance is actually expected. Real rule of thumb: sections, labs and
+ * seminars are always `mandatory` (so are language classes and every Gen Ed course,
+ * regardless of meeting type — Gen Ed isn't modeled as its own flag since no current
+ * course needs it, but a future one should still mark its lecture `mandatory`); a large,
+ * recorded lecture is typically `flexible`.
+ */
+export const Attendance = z.enum(['mandatory', 'flexible'])
+export type Attendance = z.infer<typeof Attendance>
+
+/** Registrar identifiers are strings so leading zeroes remain significant. */
+export const CourseId = z.string().regex(/^\d{3}$/, 'course id must be exactly three digits')
+export type CourseId = z.infer<typeof CourseId>
+
+export const SectionId = z.string().regex(/^\d{3}$/, 'section id must be exactly three digits')
+export type SectionId = z.infer<typeof SectionId>
+
+/** Stable human-readable code used in authored content and URLs, such as `cs50`. */
+export const CourseCode = z
+  .string()
+  .regex(
+    /^[a-z][a-z0-9]*$/,
+    'course code must start with a letter and contain only lowercase letters and digits',
+  )
+export type CourseCode = z.infer<typeof CourseCode>
+
+export const Meeting = z
+  .object({
+    type: z.enum(['lecture', 'section', 'lab', 'seminar']),
+    days: z.array(Weekday).min(1),
+    /**
+     * One of the three real block patterns, when this meeting is a canonical class
+     * slot — absent for ad hoc arrangements (e.g. a TF-scheduled discussion section).
+     * Deliberately no specific start time: which of `BLOCK_STARTS`/`BLOCK_NIGHT_STARTS`
+     * a given section lands on is a registration-time fact (the shopping cart, not built
+     * yet), so content declares the pattern/range and never pins one slot.
+     */
+    pattern: MeetingPattern.optional(),
+    /**
+     * A concrete, always-published time (e.g. `"09:00-10:30"`), for the rare meeting
+     * that really does run at one fixed slot for everyone — a big shared lecture, not a
+     * small section. Distinct from `pattern`: a lecture like CS50's doesn't necessarily
+     * even fit one of the three canonical block durations.
+     */
+    time: z.string().min(1).optional(),
+    size: z.number().int().positive(),
+    attendance: Attendance,
+    /** True when this meeting is the small, section-sized half of the course. */
+    sections: z.boolean().default(false),
+  })
+  .strict()
+export type Meeting = z.infer<typeof Meeting>
+
+/**
+ * A real, concrete, schedulable section instance — the "shopping cart" pool a student
+ * actually picks from. Distinct from `Meeting`: a `Meeting` on a `Syllabus` names the
+ * pattern/range shared by every section of a course; a `CourseSlot` is one specific,
+ * capacity-tracked offering of it (GAME_DESIGN's shopping week, §4).
+ */
+export const CourseSlot = z
+  .object({
+    /** The course half of this slot's six-digit `(id, section)` identity. */
+    id: CourseId,
+    /** The concrete instance half of this slot's six-digit `(id, section)` identity. */
+    section: SectionId,
+    courseCode: CourseCode,
+    type: z.enum(['lecture', 'section', 'lab', 'seminar']),
+    pattern: MeetingPattern.optional(),
+    /** The one real time this instance runs, e.g. `"09:00-11:45"`. */
+    time: z.string().min(1),
+    days: z.array(Weekday).min(1),
+    size: z.number().int().positive(),
+    attendance: Attendance,
+    demand: z.number().int().min(1).max(10),
+    /** Seats already taken. Seeded content, not derived — shopping week may move it. */
+    occupied: z.number().int().nonnegative().default(0),
+    /**
+     * Present only for courses taught as many theme-varying sections (Expos 20). A
+     * player's actual section is drawn from the pool of slots that have these set.
+     */
+    theme: z.string().min(1).optional(),
+    blurb: z.string().min(1).optional(),
+    instructor: z.string().min(1).optional(),
+  })
+  .strict()
+  .refine((s) => s.occupied <= s.size, { message: 'occupied cannot exceed size' })
+export type CourseSlot = z.infer<typeof CourseSlot>
+
+/** The complete shopping-cart pool; composite slot identifiers must be unique. */
+export const CourseSlotList = z.array(CourseSlot).superRefine((slots, ctx) => {
+  const seen = new Set<string>()
+  for (const [index, slot] of slots.entries()) {
+    const key = `${slot.id}${slot.section}`
+    if (seen.has(key)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [index, 'section'],
+        message: `duplicate course slot identifier \`${key}\``,
+      })
+    }
+    seen.add(key)
+  }
+})
+export type CourseSlotList = z.infer<typeof CourseSlotList>
+
+/**
+ * No `date` here on purpose. A session's real date is a function of the course's
+ * `meetings` pattern and the shared term calendar (`Term`, below) — computed once by
+ * `fitSessions`, not hand-typed per course and re-derived against holidays three times.
+ */
+export const Session = z
+  .object({
+    n: z.number().int().positive(),
+    topic: z.string().min(1),
+  })
+  .strict()
+export type Session = z.infer<typeof Session>
+
+/**
+ * The one shared term calendar every course's `meetings` is fit against — term bounds
+ * and holiday closures declared once, not re-derived by hand in every syllabus.
+ */
+export const Term = z
+  .object({
+    id: z.string().min(1),
+    firstDay: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    lastDay: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    holidays: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).default([]),
+  })
+  .strict()
+export type Term = z.infer<typeof Term>
+
+/**
+ * A date expressed relative to the term, not pinned absolutely — the same reason `Session`
+ * carries no date (see `fitSessions.ts`): a holiday shifting which real day a course's Nth
+ * weekly meeting falls on must not silently invalidate an authored due date.
+ *
+ * `week` is the term week: 1-indexed, Monday-anchored, counted from the Monday on or before
+ * the term's `firstDay` (so week 1 always contains the first day of classes, even when that
+ * day is a Tuesday). Exactly one of `session`/`day` says which day of that week:
+ *
+ * - `session` picks the Nth of the course's OWN real meetings that week — holiday-proof, so
+ *   if Monday is a holiday, "week 5, session 1" is whichever day actually met that week, not
+ *   literally Monday. Use this for anything tied to the course's own meeting pattern.
+ * - `day` names an explicit weekday, for a date that isn't one of the course's own meetings
+ *   at all — an evening exam outside the lecture pattern, a final-project deadline that
+ *   falls in reading period.
+ */
+export const CourseWeek = z
+  .object({
+    week: z.number().int().positive(),
+    session: z.number().int().positive().optional(),
+    day: Weekday.optional(),
+  })
+  .strict()
+  .refine((w) => (w.session == null) !== (w.day == null), {
+    message: 'a CourseWeek needs exactly one of `session` or `day`, not both and not neither',
+  })
+export type CourseWeek = z.infer<typeof CourseWeek>
+
+export const AssignmentKind = z.enum(['pset', 'exam', 'final', 'project', 'essay'])
+export type AssignmentKind = z.infer<typeof AssignmentKind>
+
+export const Assignment = z
+  .object({
+    id: z.string().min(1),
+    title: z.string().min(1).optional(),
+    kind: AssignmentKind,
+    assigned: CourseWeek.optional(),
+    due: CourseWeek.optional(),
+    /** Exams and finals happen on a `date`, often outside normal class time. */
+    date: CourseWeek.optional(),
+    time: z.string().optional(),
+    estHours: z.number().positive().optional(),
+    weight: z.number().min(0).max(1),
+    dependsOnSessions: z.array(z.number().int().positive()).default([]),
+    /** Range shorthand kept as strings, e.g. `"1-12"`, so authors don't hand-expand them. */
+    coversSessions: z.array(z.string()).default([]),
+    /** Per-item override of the default 10/16 hour thresholds (§4.4). */
+    brackets: z
+      .object({ moderate: z.number().positive(), narrow: z.number().positive() })
+      .strict()
+      .optional(),
+    stages: z
+      .array(z.object({ id: z.string().min(1), due: CourseWeek }).strict())
+      .default([]),
+    /** The one authored "abandon sunk work at a discount" mechanic (§4.1). */
+    resettable: z
+      .object({ carryover: z.number().min(0).max(1), before: CourseWeek })
+      .strict()
+      .optional(),
+    /** Player-facing guidance text — same job as `CourseHint.notes`. */
+    notes: z.array(z.string()).default([]),
+  })
+  .strict()
+  .refine((a) => (a.kind === 'exam' || a.kind === 'final' ? !!a.date : !!a.due), {
+    message: 'exam/final assignments need a `date`; pset/project/essay assignments need a `due` date',
+  })
+export type Assignment = z.infer<typeof Assignment>
+
+export const OfficeHourLength = z
+  .string()
+  .regex(/^(?:free|[1-9]\d* minutes?)$/, 'office-hour length must be `free` or a duration such as `20 minutes`')
+export type OfficeHourLength = z.infer<typeof OfficeHourLength>
+
+/** One published opportunity to get help outside the course's regular meetings. */
+export const OfficeHour = z
+  .object({
+    type: z.literal('officeHour'),
+    length: OfficeHourLength,
+    /** Whether a student must reserve a specific appointment rather than drop in. */
+    booked: z.boolean(),
+    days: z.array(Weekday).min(1),
+    time: z.string().min(1),
+    location: z.string().min(1),
+    demand: z.number().int().min(1).max(10),
+  })
+  .strict()
+export type OfficeHour = z.infer<typeof OfficeHour>
+
+export const Syllabus = z
+  .object({
+    id: CourseId,
+    courseCode: CourseCode,
+    title: z.string().min(1),
+    /** Overall workload weight — what shopping week compares (§4.1). */
+    demand: z.number().int().min(1).max(10),
+    workloadHint: z.string().min(1),
+    /** r11 — what the course asks of you, per subject tag. */
+    demands: z.record(SubjectTag, z.number().int().nonnegative()),
+    meetings: z.array(Meeting).min(1),
+    officeHours: z.array(OfficeHour).min(1),
+    sessions: z.array(Session).min(1),
+    assignments: z.array(Assignment).default([]),
+  })
+  .strict()
+export type Syllabus = z.infer<typeof Syllabus>
+
 /**
  * The immutable creation block. Seed material, not an action — the event log describes a
  * character *playing*, so there is nothing in it before the character (ARCHITECTURE §4).

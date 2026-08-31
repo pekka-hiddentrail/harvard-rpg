@@ -5,13 +5,18 @@ import { parse } from 'yaml'
 import {
   ActivityPack,
   BAND_COUNT,
+  CourseSlotList,
   Preset,
   Rules,
+  Syllabus,
+  Term,
   TraitPack,
+  fitSessions,
   indexActivities,
   indexTraits,
   type Activity,
   type ActivityIndex,
+  type CourseSlot,
   type Trait,
   type TraitIndex,
 } from '@harvard/engine'
@@ -35,6 +40,12 @@ export type Content = {
   activities: Activity[]
   activityIndex: ActivityIndex
   presets: Preset[]
+  /** Real, authored course syllabi (Tier 2, GAME_DESIGN §4.1). */
+  courses: Syllabus[]
+  /** The real, concrete, capacity-tracked section-slot pool (the shopping cart). */
+  slots: CourseSlot[]
+  /** Shared term calendars every course's `meetings` is fit against (`fitSessions`). */
+  terms: Term[]
   /** sha256 over every content file, sorted by path. Pinned into each save. */
   hash: string
 }
@@ -101,6 +112,38 @@ export function loadContent(root: string): Content {
     return parsed.data
   })
 
+  const courses = listYaml(join(root, 'courses')).map((p) => {
+    const parsed = Syllabus.safeParse(parse(take(p)))
+    if (!parsed.success) {
+      throw new Error(`${p} is not a valid course syllabus:\n${describe(parsed.error)}`)
+    }
+    return parsed.data
+  })
+  assertUniqueCourses(courses)
+
+  const slotsPath = join(root, 'sections.yaml')
+  const slotsParsed = CourseSlotList.safeParse(parse(take(slotsPath)))
+  if (!slotsParsed.success) {
+    throw new Error(`sections.yaml is not a valid section-slot list:\n${describe(slotsParsed.error)}`)
+  }
+  const slots = slotsParsed.data
+  assertCourseSlotsResolve(courses, slots)
+
+  const terms = listYaml(join(root, 'calendar')).map((p) => {
+    const parsed = Term.safeParse(parse(take(p)))
+    if (!parsed.success) {
+      throw new Error(`${p} is not a valid term calendar:\n${describe(parsed.error)}`)
+    }
+    return parsed.data
+  })
+
+  // Fails at boot, not at first render, if a course's session count drifts from its
+  // meeting pattern × the shared term's real dates (a miscounted holiday, e.g.).
+  const primaryTerm = terms[0]
+  if (primaryTerm) {
+    for (const course of courses) fitSessions(course, primaryTerm)
+  }
+
   // Sorted by path so the hash does not depend on directory-read order.
   const h = createHash('sha256')
   for (const f of [...files].sort((a, b) => a.path.localeCompare(b.path))) {
@@ -118,6 +161,9 @@ export function loadContent(root: string): Content {
     activities,
     activityIndex,
     presets,
+    courses,
+    slots,
+    terms,
     hash: h.digest('hex').slice(0, 16),
   }
 }
@@ -156,6 +202,38 @@ function assertActivitiesUsable(activities: readonly Activity[]): void {
 
 const describe = (e: { issues: { path: (string | number)[]; message: string }[] }) =>
   e.issues.map((i) => `  ${i.path.join('.') || '(root)'}: ${i.message}`).join('\n')
+
+/** Course IDs and codes are both stable identifiers, so neither may be ambiguous. */
+function assertUniqueCourses(courses: readonly Syllabus[]): void {
+  const ids = new Set<string>()
+  const codes = new Set<string>()
+  for (const course of courses) {
+    if (ids.has(course.id)) throw new Error(`duplicate course id \`${course.id}\``)
+    if (codes.has(course.courseCode)) {
+      throw new Error(`duplicate course code \`${course.courseCode}\``)
+    }
+    ids.add(course.id)
+    codes.add(course.courseCode)
+  }
+}
+
+/** A slot's numeric ID and readable code must identify the same authored syllabus. */
+function assertCourseSlotsResolve(
+  courses: readonly Syllabus[],
+  slots: readonly CourseSlot[],
+): void {
+  const byId = new Map(courses.map((course) => [course.id, course]))
+  for (const slot of slots) {
+    const key = `${slot.id}${slot.section}`
+    const course = byId.get(slot.id)
+    if (!course) throw new Error(`course slot \`${key}\` points at unknown course id \`${slot.id}\``)
+    if (course.courseCode !== slot.courseCode) {
+      throw new Error(
+        `course slot \`${key}\` uses code \`${slot.courseCode}\`; course \`${slot.id}\` uses \`${course.courseCode}\``,
+      )
+    }
+  }
+}
 
 /** Ids are append-only and globally unique across packs — presets and saves cite them. */
 function assertUniqueIds(traits: readonly Trait[]): void {

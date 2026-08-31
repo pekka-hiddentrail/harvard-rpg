@@ -76,5 +76,20 @@ export function nextDay({ y, m, d }: CalDate): CalDate {
   return { y: y + 1, m: 1, d: 1 }
 }
 
+export function prevDay({ y, m, d }: CalDate): CalDate {
+  if (d > 1) return { y, m, d: d - 1 }
+  if (m > 1) return { y, m: m - 1, d: daysInMonth(y, m - 1) }
+  return { y: y - 1, m: 12, d: daysInMonth(y - 1, 12) }
+}
+
+/** Steps `n` days forward (or back, for negative `n`) one day at a time — no epoch math,
+ * same "done by hand" rule as the rest of this module. */
+export function addDays(dt: CalDate, n: number): CalDate {
+  let cur = dt
+  if (n >= 0) for (let i = 0; i < n; i++) cur = nextDay(cur)
+  else for (let i = 0; i < -n; i++) cur = prevDay(cur)
+  return cur
+}
+
 export const toISO = ({ y, m, d }: CalDate): string =>
   `${String(y).padStart(4, '0')}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`

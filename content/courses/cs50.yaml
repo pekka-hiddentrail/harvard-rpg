@@ -1,0 +1,86 @@
+# CS50 — Fall 2026. Week topics and order are Malan's own published CS50 outline (stable
+# across on-campus/edX/summer versions). `demands: {code: 2, math: 1}`, `demand: 7`
+# and the `~12h/week` workload hint reuse the exact numbers GAME_DESIGN.md §4.1 already
+# uses in its illustrative example — this file makes that example real and committed.
+#
+# Real CS50 has NO midterm exam — grading is problem sets + a final project (no exams).
+# GAME_DESIGN's inline example included a `kind: exam` midterm only to demonstrate that
+# mechanic; it is not reproduced here, since this file claims to be the real course.
+#
+# Also real, for later narrative use (not a schema field — no place to put it yet): CS50's
+# academic-honesty policy explicitly permits CS50's own "Duck" AI tool but forbids
+# ChatGPT, GitHub Copilot, or any other outside AI code-completion tool.
+id: "050"
+courseCode: "cs50"
+title: "CS50: Introduction to Computer Science"
+demand: 7
+workloadHint: "~12h/week"
+demands:
+  code: 2
+  math: 1
+meetings:
+  # Real CS50 lecture: MW 9:00-10:30, always -- a fixed, published slot for everyone in
+  # the course (not one of the three canonical 50/75-min blocks; CS50 gets its own
+  # extended lecture time). Sections are a separate, real, concrete choice -- see the
+  # real section instances in `content/sections.yaml`, not authored here.
+  # Attendance flexible: 340 people, and every lecture is recorded.
+  - { type: lecture, days: [Mon, Wed], time: "09:00-10:30", size: 850, attendance: flexible }
+officeHours:
+  # Large, informal debugging halls: students join the queue and a TF comes to their table.
+  - { type: officeHour, length: free, booked: false, days: [Thu], time: "19:00-23:00", location: "Annenberg Hall", demand: 6 }
+  - { type: officeHour, length: free, booked: false, days: [Fri], time: "14:00-17:00", location: "Smith Campus Center", demand: 6 }
+  - { type: officeHour, length: free, booked: false, days: [Sat], time: "13:00-17:00", location: "Cabot Science Library", demand: 6 }
+sessions:
+  # 23 real MW meetings. Dates are computed by `fitSessions` from this course's meeting
+  # pattern (Mon/Wed) against the shared `content/calendar/fall2026.yaml` term -- not
+  # authored per session. Week topics and order are Malan's own published outline.
+  - { n: 1, topic: "Scratch: computational thinking, algorithms, pseudocode" }
+  - { n: 2, topic: "Scratch: functions, variables, conditionals, loops, events" }
+  - { n: 3, topic: "C: source vs. machine code, compiling, types" }
+  - { n: 4, topic: "C: conditionals, loops, integer overflow, floating-point imprecision" }
+  - { n: 5, topic: "Arrays: preprocessing, compiling, assembling, linking; debugging" }
+  - { n: 6, topic: "Arrays: strings, command-line arguments, intro cryptography" }
+  - { n: 7, topic: "Algorithms: linear/binary search; bubble, selection, merge sort" }
+  - { n: 8, topic: "Algorithms: Big-O/Omega/Theta notation, recursion" }
+  - { n: 9, topic: "Memory: pointers, segmentation faults" }
+  - { n: 10, topic: "Memory: dynamic allocation, stack vs. heap, buffer overflow, file I/O" }
+  - { n: 11, topic: "Data Structures: abstract data types, queues, stacks, linked lists" }
+  - { n: 12, topic: "Data Structures: trees, binary search trees, hash tables, tries" }
+  - { n: 13, topic: "Python: functions, variables, conditionals, loops" }
+  - { n: 14, topic: "Python: modules and packages" }
+  - { n: 15, topic: "SQL: tables, types, statements, constraints, indexes" }
+  - { n: 16, topic: "SQL: transactions, race conditions, SQL injection" }
+  - { n: 17, topic: "Web: internet basics, HTTP, tags/attributes, CSS selectors" }
+  - { n: 18, topic: "Web: JavaScript variables, conditionals, loops, events" }
+  - { n: 19, topic: "Flask: routes, decorators, requests/responses" }
+  - { n: 20, topic: "Flask: sessions, cookies" }
+  - { n: 21, topic: "AI: LLMs, prompt engineering, decision trees, minimax" }
+  - { n: 22, topic: "AI: machine learning, transformer architecture" }
+  - { n: 23, topic: "The End: wrap-up, final project presentations" }
+assignments:
+  # `assigned`/`due` are `{ week, session }` — the Nth of the course's own MW meetings that
+  # term week, not a hand-typed calendar date (see `CourseWeek` in packages/engine/src/schema.ts).
+  # This is holiday-proof: if a Monday falls on a holiday, "week N, session 1" is whichever
+  # day actually met, not literally Monday.
+  - { id: ps0, title: "Problem Set 0 -- Scratch", kind: pset, assigned: { week: 1, session: 1 }, due: { week: 3, session: 1 }, estHours: 6, weight: 0.05, dependsOnSessions: [1, 2] }
+  - { id: ps1, title: "Problem Set 1 -- C", kind: pset, assigned: { week: 3, session: 1 }, due: { week: 4, session: 1 }, estHours: 8, weight: 0.05, dependsOnSessions: [3, 4] }
+  - { id: ps2, title: "Problem Set 2 -- Arrays", kind: pset, assigned: { week: 4, session: 1 }, due: { week: 5, session: 1 }, estHours: 8, weight: 0.05, dependsOnSessions: [5, 6] }
+  - { id: ps3, title: "Problem Set 3 -- Algorithms", kind: pset, assigned: { week: 5, session: 1 }, due: { week: 6, session: 1 }, estHours: 9, weight: 0.05, dependsOnSessions: [7, 8] }
+  - { id: ps4, title: "Problem Set 4 -- Memory", kind: pset, assigned: { week: 6, session: 1 }, due: { week: 7, session: 1 }, estHours: 9, weight: 0.05, dependsOnSessions: [9, 10] }
+  - { id: ps5, title: "Problem Set 5 -- Data Structures", kind: pset, assigned: { week: 7, session: 1 }, due: { week: 8, session: 2 }, estHours: 9, weight: 0.05, dependsOnSessions: [11, 12] }
+  - { id: ps6, title: "Problem Set 6 -- Python", kind: pset, assigned: { week: 8, session: 2 }, due: { week: 9, session: 2 }, estHours: 7, weight: 0.05, dependsOnSessions: [13, 14] }
+  - { id: ps7, title: "Problem Set 7 -- SQL", kind: pset, assigned: { week: 9, session: 2 }, due: { week: 10, session: 2 }, estHours: 7, weight: 0.05, dependsOnSessions: [15, 16] }
+  - { id: ps8, title: "Problem Set 8 -- Web and Flask", kind: pset, assigned: { week: 10, session: 2 }, due: { week: 12, session: 1 }, estHours: 9, weight: 0.05, dependsOnSessions: [17, 18, 19, 20] }
+  - { id: ps9, title: "Problem Set 9 -- AI", kind: pset, assigned: { week: 12, session: 1 }, due: { week: 14, session: 1 }, estHours: 7, weight: 0.05, dependsOnSessions: [21, 22] }
+  # No exams in real CS50 -- the final project stands in for a final exam. Its dates fall
+  # outside the MW lecture pattern (proposal/assignment on a Sunday, due in reading period
+  # past the term's `lastDay`), so they use `day` rather than `session`.
+  - id: final_project
+    title: "Final Project"
+    kind: project
+    assigned: { week: 8, day: "Sun" }
+    due: { week: 15, day: "Mon" }
+    weight: 0.50
+    brackets: { moderate: 15, narrow: 20 }
+    stages:
+      - { id: proposal, due: { week: 11, day: "Sun" } }

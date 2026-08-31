@@ -61,7 +61,7 @@ function BrowserApp() {
   }
 
   if (view === 'courseRegistration') {
-    return <CourseRegistrationScreen onBack={() => setView('timeline')} />
+    return <CourseRegistrationScreen identity={identity} onBack={() => setView('timeline')} />
   }
 
   if (view === 'timeline') {

@@ -1,0 +1,106 @@
+# econ_honors_advanced.yaml — Economics, Honors: Advanced Course Track (14 courses = Basic's
+# 11 + 3). Eligible for cum honors only — see econ_honors_thesis.yaml for the summa/magna/cum
+# thesis path. Same either/or note applies: no group-level branching in the schema, so this
+# is its own track file built on top of Basic.
+id: econ_honors_advanced
+name: "Economics (Honors — Advanced Course Track)"
+field: economics
+honorsEligible: true
+thesisRequired: false
+declareBy:
+  year: 2
+  term: fall
+diploma: "Economics"
+
+requirements:
+  - id: intro-calculus
+    label: "Introductory calculus"
+    kind: course
+    need: 1
+    from: [math1a]
+    min: 0
+    max: 1
+    # Same waiver as the Basic track.
+
+  - id: principles
+    label: "Principles of micro/macro"
+    kind: sequence
+    need: 2
+    sequence: [ec10a, ec10b]
+    # Same as the Basic track.
+
+  - id: statistics
+    label: "Statistics"
+    kind: set
+    need: 1
+    from:
+      - econ20
+      - stat100
+      - stat102
+      - stat104
+      - stat109
+      - stat109a
+      - stat110
+      - apmth101
+      - math18b
+      - math19b
+      - math154
+    # Same options as the Basic track.
+
+  - id: multivariable-calc
+    label: "Multivariable calculus"
+    kind: set
+    need: 1
+    from: [math18a, math21a, higher_multivariable_calc]
+    # Added on top of Basic for both honors paths. No placement exemption.
+
+  - id: intermediate-micro
+    label: "Intermediate microeconomic theory"
+    kind: set
+    need: 1
+    from: [econ1010a, econ1011a]
+    # Same as the Basic track. Must earn B- or higher.
+
+  - id: intermediate-macro
+    label: "Intermediate macroeconomic theory"
+    kind: set
+    need: 1
+    from: [econ1010b, econ1011b]
+    # Same as the Basic track. Must earn B- or higher.
+
+  - id: sophomore-tutorial
+    label: "Sophomore tutorial"
+    kind: course
+    need: 1
+    from: [econ970]
+    # Same as the Basic track.
+
+  - id: econometrics
+    label: "Econometrics"
+    kind: set
+    need: 1
+    from: [econ1123, econ1126]
+    # Same as the Basic track.
+
+  - id: electives
+    label: "Additional electives"
+    kind: set
+    need: 3
+    from: [econ_elective_1, econ_elective_2, econ_elective_3, econ_elective_4]
+    # Same as the Basic track.
+
+  - id: advanced-electives
+    label: "Advanced electives"
+    kind: set
+    need: 2
+    from: [econ_advanced_elective_a, econ_advanced_elective_b, econ_advanced_elective_c]
+    # Two additional courses beyond Basic and beyond the regular electives above. One of
+    # the two must have intermediate theory (1010/1011) as a prerequisite — the schema has
+    # no course-to-course prerequisite field, so this is noted here rather than enforced.
+
+  - id: honors-exam
+    label: "Honors exam"
+    kind: course
+    need: 1
+    from: [econ_honors_exam]
+    # Same exam requirement as the Thesis Track.

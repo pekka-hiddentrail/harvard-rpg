@@ -1,0 +1,20 @@
+# Fall 2026 — the one shared term calendar every course's `meetings` pattern is fit
+# against (see `fitSessions` in packages/engine/src/calendar/fitSessions.ts), instead of
+# each course re-deriving its own holiday exceptions by hand.
+#
+# `lastDay` is the last day of classes (real ~13-14 week terms for Math21b/CS50/Expos
+# 20); reading period and finals follow, still handled per-assignment for now.
+# Holidays are real Harvard-observed closures: Labor Day (Mon Sep 7), Columbus Day (Mon
+# Oct 12), and Thanksgiving week (Mon Nov 23 - Fri Nov 27, the whole week, applied
+# uniformly across every course here).
+id: fall2026
+firstDay: 2026-09-01
+lastDay: 2026-12-04
+holidays:
+  - 2026-09-07
+  - 2026-10-12
+  - 2026-11-23
+  - 2026-11-24
+  - 2026-11-25
+  - 2026-11-26
+  - 2026-11-27
