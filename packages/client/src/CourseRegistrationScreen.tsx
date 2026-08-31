@@ -35,28 +35,41 @@ type Assignment = {
   stages: Stage[]
 }
 
+type OfficeHour = {
+  type: 'officeHour'
+  length: string
+  booked: boolean
+  days: string[]
+  time: string
+  location: string
+  demand: number
+}
+
 type Course = {
   id: string
+  courseCode: string
   title: string
-  difficulty: number
+  demand: number
   workloadHint: string
   demands: Record<string, number>
   meetings: Meeting[]
+  officeHours: OfficeHour[]
   sessions: Session[]
   assignments: Assignment[]
 }
 
 type CourseSlot = {
-  id: string | null
-  course: string
+  id: string
+  section: string
+  courseCode: string
   type: string
   pattern: 'MWF' | 'TTh' | 'MW' | null
   time: string
   days: string[]
   size: number
   attendance: 'mandatory' | 'flexible'
+  demand: number
   occupied: number
-  room: string | null
   theme: string | null
   blurb: string | null
   instructor: string | null
@@ -87,7 +100,7 @@ const capitalize = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1)
 const attendanceSummary = (course: Course, slots: CourseSlot[]): string => {
   const byType = new Map<string, 'mandatory' | 'flexible'>()
   for (const m of course.meetings) byType.set(m.type, m.attendance)
-  for (const s of slots) if (s.course === course.id) byType.set(s.type, s.attendance)
+  for (const s of slots) if (s.id === course.id) byType.set(s.type, s.attendance)
   return [...byType.entries()].map(([type, attendance]) => `${capitalize(type)} ${attendance}`).join(', ')
 }
 
@@ -95,7 +108,7 @@ const attendanceSummary = (course: Course, slots: CourseSlot[]): string => {
  * Only courses with theme-bearing slots (Expos 20) vary this way; a course whose slots
  * have no `theme` (CS50's sections) just isn't offered a pick here. */
 const pickSection = (course: Course, slots: CourseSlot[], seed: string): CourseSlot | null => {
-  const pool = slots.filter((s) => s.course === course.id && s.theme)
+  const pool = slots.filter((s) => s.id === course.id && s.theme)
   if (pool.length === 0) return null
   const rng = createRng(`${seed}:${course.id}`)
   return pool[pickIndex(rng, pool.length)]!
@@ -161,9 +174,9 @@ export function CourseRegistrationScreen({ identity, onBack }: CourseRegistratio
                       onClick={() => setSelectedId(c.id)}
                     >
                       <span className="course-title">{section ? `${c.title.split(':')[0]}: ${section.theme}` : c.title}</span>
-                      {section && <span className="course-instructor">Section {section.id} · {section.instructor} · {section.days.join('/')} {section.time}</span>}
+                      {section && <span className="course-instructor">Section {section.section} · {section.instructor} · {section.days.join('/')} {section.time}</span>}
                       <span className="course-summary">
-                        difficulty {c.difficulty} · {c.workloadHint}
+                        demand {c.demand} · {c.workloadHint}
                       </span>
                       <span className="course-demands">
                         {Object.entries(c.demands).map(([tag, level]) => (
@@ -183,7 +196,7 @@ export function CourseRegistrationScreen({ identity, onBack }: CourseRegistratio
                   return section ? (
                     <>
                       <h2>{selected.title.split(':')[0]}: {section.theme}</h2>
-                      <p className="course-instructor">Section {section.id} · {section.instructor} · {section.days.join('/')} {section.time}</p>
+                      <p className="course-instructor">Section {section.section} · {section.instructor} · {section.days.join('/')} {section.time}</p>
                       <p className="course-blurb">"{section.blurb}"</p>
                     </>
                   ) : (
@@ -194,6 +207,19 @@ export function CourseRegistrationScreen({ identity, onBack }: CourseRegistratio
                   {meetingsLabel(selected.meetings)} — exact slot chosen at registration
                 </p>
                 <p className="course-attendance">{attendanceSummary(selected, slots)}</p>
+
+                <h3>Office hours</h3>
+                <ul className="course-slots">
+                  {selected.officeHours.map((officeHour) => (
+                    <li key={`${officeHour.days.join('-')}-${officeHour.time}-${officeHour.location}`}>
+                      <span className="slot-time">
+                        {officeHour.days.join('/')} {officeHour.time} · {officeHour.location} ·{' '}
+                        {officeHour.length === 'free' ? 'open drop-in' : `${officeHour.length} slots`}
+                        {officeHour.booked ? ' · booking required' : ''}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
 
                 <h3>Assignments</h3>
                 <ul className="course-assignments">
@@ -224,7 +250,7 @@ export function CourseRegistrationScreen({ identity, onBack }: CourseRegistratio
                   ))}
                 </ol>
 
-                {slots.filter((s) => s.course === selected.id).length > 0 && (
+                {slots.filter((s) => s.id === selected.id).length > 0 && (
                   <>
                     <h3>Section slots</h3>
                     {/* Occupancy is a registration-time concern, not a browsing one --
@@ -232,11 +258,11 @@ export function CourseRegistrationScreen({ identity, onBack }: CourseRegistratio
                         happens after committing to the course, not here. */}
                     <ul className="course-slots">
                       {slots
-                        .filter((s) => s.course === selected.id)
-                        .map((s, i) => (
-                          <li key={i}>
+                        .filter((s) => s.id === selected.id)
+                        .map((s) => (
+                          <li key={`${s.id}${s.section}`}>
                             <span className="slot-time">
-                              {s.id ? `${s.id} · ` : ''}{s.days.join('/')} {s.time}{s.room ? ` · ${s.room}` : ''}
+                              {s.section} · {s.days.join('/')} {s.time}
                             </span>
                           </li>
                         ))}
@@ -251,4 +277,3 @@ export function CourseRegistrationScreen({ identity, onBack }: CourseRegistratio
     </main>
   )
 }
-

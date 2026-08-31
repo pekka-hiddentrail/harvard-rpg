@@ -10,9 +10,10 @@
 # Also real, for later narrative use (not a schema field — no place to put it yet): CS50's
 # academic-honesty policy explicitly permits CS50's own "Duck" AI tool but forbids
 # ChatGPT, GitHub Copilot, or any other outside AI code-completion tool.
-id: cs50
+id: "050"
+courseCode: "cs50"
 title: "CS50: Introduction to Computer Science"
-difficulty: 7
+demand: 7
 workloadHint: "~12h/week"
 demands:
   code: 2
@@ -21,9 +22,14 @@ meetings:
   # Real CS50 lecture: MW 9:00-10:30, always -- a fixed, published slot for everyone in
   # the course (not one of the three canonical 50/75-min blocks; CS50 gets its own
   # extended lecture time). Sections are a separate, real, concrete choice -- see the
-  # four real section instances in `content/sections.yaml`, not authored here.
+  # real section instances in `content/sections.yaml`, not authored here.
   # Attendance flexible: 340 people, and every lecture is recorded.
   - { type: lecture, days: [Mon, Wed], time: "09:00-10:30", size: 340, attendance: flexible }
+officeHours:
+  # Large, informal debugging halls: students join the queue and a TF comes to their table.
+  - { type: officeHour, length: free, booked: false, days: [Thu], time: "19:00-23:00", location: "Annenberg Hall", demand: 6 }
+  - { type: officeHour, length: free, booked: false, days: [Fri], time: "14:00-17:00", location: "Smith Campus Center", demand: 6 }
+  - { type: officeHour, length: free, booked: false, days: [Sat], time: "13:00-17:00", location: "Cabot Science Library", demand: 6 }
 sessions:
   # 23 real MW meetings. Dates are computed by `fitSessions` from this course's meeting
   # pattern (Mon/Wed) against the shared `content/calendar/fall2026.yaml` term -- not

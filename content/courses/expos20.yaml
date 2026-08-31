@@ -13,12 +13,13 @@
 #
 # The real pool of currently-offered section themes (with real one-line blurbs), each
 # now with its own real time/instructor/capacity, lives in `content/sections.yaml` as
-# `CourseSlot` entries with `course: expos20` — "Invention and Its Discontents" is that
+# `CourseSlot` entries with `courseCode: expos20` — "Invention and Its Discontents" is that
 # pool's default (Section 204), and is NOT on the real theme list, authored the same way
 # any section head picks their own.
-id: expos20
+id: "020"
+courseCode: "expos20"
 title: "Expos 20: Invention and Its Discontents"
-difficulty: 6
+demand: 6
 workloadHint: "~8-10h/week, unevenly distributed around draft/revision weeks"
 demands:
   writing: 3
@@ -30,6 +31,9 @@ meetings:
   # registration-time fact for whichever section is picked below, not authored here.
   # Attendance mandatory: every Expos 20 meeting is a small seminar, not a lecture.
   - { type: seminar, days: [Tue, Thu], pattern: TTh, size: 14, attendance: mandatory }
+officeHours:
+  # Private essay conferences booked from the preceptor's digital sign-up sheet.
+  - { type: officeHour, length: "20 minutes", booked: true, days: [Tue], time: "09:00-16:00", location: "Preceptor's office, One Bow Street", demand: 5 }
 sessions:
   # 26 real TTh meetings. Dates are computed by `fitSessions` from this course's meeting
   # pattern (Tue/Thu) against the shared `content/calendar/fall2026.yaml` term -- not
@@ -123,5 +127,5 @@ assignments:
 # Every real section of Expos 20 shares the skeleton above (units, weights, meeting
 # pattern/range) but picks its own theme and instructor. The real, concrete pool of
 # actual sections -- each with its own real time slot, capacity and instructor -- lives
-# in `content/sections.yaml` as `CourseSlot` entries with `course: expos20`, alongside
+# in `content/sections.yaml` as `CourseSlot` entries with `courseCode: expos20`, alongside
 # CS50's real sections, not duplicated here.

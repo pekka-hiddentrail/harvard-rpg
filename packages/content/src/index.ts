@@ -5,7 +5,7 @@ import { parse } from 'yaml'
 import {
   ActivityPack,
   BAND_COUNT,
-  CourseSlot,
+  CourseSlotList,
   Preset,
   Rules,
   Syllabus,
@@ -16,6 +16,7 @@ import {
   indexTraits,
   type Activity,
   type ActivityIndex,
+  type CourseSlot,
   type Trait,
   type TraitIndex,
 } from '@harvard/engine'
@@ -118,13 +119,15 @@ export function loadContent(root: string): Content {
     }
     return parsed.data
   })
+  assertUniqueCourses(courses)
 
   const slotsPath = join(root, 'sections.yaml')
-  const slotsParsed = CourseSlot.array().safeParse(parse(take(slotsPath)))
+  const slotsParsed = CourseSlotList.safeParse(parse(take(slotsPath)))
   if (!slotsParsed.success) {
     throw new Error(`sections.yaml is not a valid section-slot list:\n${describe(slotsParsed.error)}`)
   }
   const slots = slotsParsed.data
+  assertCourseSlotsResolve(courses, slots)
 
   const terms = listYaml(join(root, 'calendar')).map((p) => {
     const parsed = Term.safeParse(parse(take(p)))
@@ -199,6 +202,38 @@ function assertActivitiesUsable(activities: readonly Activity[]): void {
 
 const describe = (e: { issues: { path: (string | number)[]; message: string }[] }) =>
   e.issues.map((i) => `  ${i.path.join('.') || '(root)'}: ${i.message}`).join('\n')
+
+/** Course IDs and codes are both stable identifiers, so neither may be ambiguous. */
+function assertUniqueCourses(courses: readonly Syllabus[]): void {
+  const ids = new Set<string>()
+  const codes = new Set<string>()
+  for (const course of courses) {
+    if (ids.has(course.id)) throw new Error(`duplicate course id \`${course.id}\``)
+    if (codes.has(course.courseCode)) {
+      throw new Error(`duplicate course code \`${course.courseCode}\``)
+    }
+    ids.add(course.id)
+    codes.add(course.courseCode)
+  }
+}
+
+/** A slot's numeric ID and readable code must identify the same authored syllabus. */
+function assertCourseSlotsResolve(
+  courses: readonly Syllabus[],
+  slots: readonly CourseSlot[],
+): void {
+  const byId = new Map(courses.map((course) => [course.id, course]))
+  for (const slot of slots) {
+    const key = `${slot.id}${slot.section}`
+    const course = byId.get(slot.id)
+    if (!course) throw new Error(`course slot \`${key}\` points at unknown course id \`${slot.id}\``)
+    if (course.courseCode !== slot.courseCode) {
+      throw new Error(
+        `course slot \`${key}\` uses code \`${slot.courseCode}\`; course \`${slot.id}\` uses \`${course.courseCode}\``,
+      )
+    }
+  }
+}
 
 /** Ids are append-only and globally unique across packs — presets and saves cite them. */
 function assertUniqueIds(traits: readonly Trait[]): void {

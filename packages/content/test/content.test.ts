@@ -28,6 +28,26 @@ describe('the content loads', () => {
     // including across a checkout with different line endings.
     assert.equal(loadContent(root).hash, content.hash)
   })
+
+  it('links every section slot to one course by both id and code', () => {
+    const courses = new Map(content.courses.map((course) => [course.id, course]))
+    const keys = new Set<string>()
+    for (const slot of content.slots) {
+      assert.equal(courses.get(slot.id)?.courseCode, slot.courseCode)
+      const key = `${slot.id}${slot.section}`
+      assert.ok(!keys.has(key), `duplicate course slot identifier ${key}`)
+      keys.add(key)
+    }
+  })
+
+  it('gives every course office hours at one less than its normal demand', () => {
+    for (const course of content.courses) {
+      assert.ok(course.officeHours.length > 0, `${course.courseCode} has no office hours`)
+      for (const officeHour of course.officeHours) {
+        assert.equal(officeHour.demand, course.demand - 1)
+      }
+    }
+  })
 })
 
 describe('every preset is a legal build', () => {

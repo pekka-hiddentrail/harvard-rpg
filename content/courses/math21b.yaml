@@ -7,9 +7,10 @@
 # stated pattern. Exact 2026 midterm dates are not published; the Thursday-evening slot IS
 # published, so Oct 8 and Nov 5 are placed on real Thursdays following that pattern, not
 # guessed at random.
-id: math21b
+id: "021"
+courseCode: "math21b"
 title: "Math 21b: Linear Algebra and Differential Equations"
-difficulty: 7
+demand: 7
 workloadHint: "~10-12h/week"
 demands:
   math: 3
@@ -19,6 +20,9 @@ meetings:
   # (the shopping cart, not built yet), so this names the pattern/range, not one time.
   # Attendance flexible: a large lecture course like this is recorded, same as CS50.
   - { type: lecture, days: [Mon, Wed, Fri], pattern: MWF, size: 90, attendance: flexible }
+officeHours:
+  # Shared, drop-in problem-set help at tables marked for Math 21b.
+  - { type: officeHour, length: free, booked: false, days: [Sun, Mon, Tue, Wed, Thu], time: "19:30-22:30", location: "Math Question Center, Science Center", demand: 6 }
 sessions:
   # 36 real MWF meetings. Dates are computed by `fitSessions` from this course's meeting
   # pattern (Mon/Wed/Fri) against the shared `content/calendar/fall2026.yaml` term --

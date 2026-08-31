@@ -275,6 +275,22 @@ export const BLOCK_NIGHT_STARTS = ['18:00', '19:30'] as const
 export const Attendance = z.enum(['mandatory', 'flexible'])
 export type Attendance = z.infer<typeof Attendance>
 
+/** Registrar identifiers are strings so leading zeroes remain significant. */
+export const CourseId = z.string().regex(/^\d{3}$/, 'course id must be exactly three digits')
+export type CourseId = z.infer<typeof CourseId>
+
+export const SectionId = z.string().regex(/^\d{3}$/, 'section id must be exactly three digits')
+export type SectionId = z.infer<typeof SectionId>
+
+/** Stable human-readable code used in authored content and URLs, such as `cs50`. */
+export const CourseCode = z
+  .string()
+  .regex(
+    /^[a-z][a-z0-9]*$/,
+    'course code must start with a letter and contain only lowercase letters and digits',
+  )
+export type CourseCode = z.infer<typeof CourseCode>
+
 export const Meeting = z
   .object({
     type: z.enum(['lecture', 'section', 'lab', 'seminar']),
@@ -310,10 +326,11 @@ export type Meeting = z.infer<typeof Meeting>
  */
 export const CourseSlot = z
   .object({
-    /** Only needed when a course has more than one real slot for the same type/time —
-     * Expos 20's numbered sections and CS50's parallel groups use it. */
-    id: z.string().min(1).optional(),
-    course: z.string().min(1),
+    /** The course half of this slot's six-digit `(id, section)` identity. */
+    id: CourseId,
+    /** The concrete instance half of this slot's six-digit `(id, section)` identity. */
+    section: SectionId,
+    courseCode: CourseCode,
     type: z.enum(['lecture', 'section', 'lab', 'seminar']),
     pattern: MeetingPattern.optional(),
     /** The one real time this instance runs, e.g. `"09:00-11:45"`. */
@@ -321,14 +338,9 @@ export const CourseSlot = z
     days: z.array(Weekday).min(1),
     size: z.number().int().positive(),
     attendance: Attendance,
+    demand: z.number().int().min(1).max(10),
     /** Seats already taken. Seeded content, not derived — shopping week may move it. */
     occupied: z.number().int().nonnegative().default(0),
-    /**
-     * Which of the several parallel groups meeting at the same day/time this is (e.g.
-     * a big course's Tuesday-9am window splits into a handful of same-time, different-
-     * room sections). Authored, not a claim about any real room assignment.
-     */
-    room: z.string().min(1).optional(),
     /**
      * Present only for courses taught as many theme-varying sections (Expos 20). A
      * player's actual section is drawn from the pool of slots that have these set.
@@ -340,6 +352,23 @@ export const CourseSlot = z
   .strict()
   .refine((s) => s.occupied <= s.size, { message: 'occupied cannot exceed size' })
 export type CourseSlot = z.infer<typeof CourseSlot>
+
+/** The complete shopping-cart pool; composite slot identifiers must be unique. */
+export const CourseSlotList = z.array(CourseSlot).superRefine((slots, ctx) => {
+  const seen = new Set<string>()
+  for (const [index, slot] of slots.entries()) {
+    const key = `${slot.id}${slot.section}`
+    if (seen.has(key)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [index, 'section'],
+        message: `duplicate course slot identifier \`${key}\``,
+      })
+    }
+    seen.add(key)
+  }
+})
+export type CourseSlotList = z.infer<typeof CourseSlotList>
 
 /**
  * No `date` here on purpose. A session's real date is a function of the course's
@@ -424,16 +453,38 @@ export const Assignment = z
   })
 export type Assignment = z.infer<typeof Assignment>
 
+export const OfficeHourLength = z
+  .string()
+  .regex(/^(?:free|[1-9]\d* minutes?)$/, 'office-hour length must be `free` or a duration such as `20 minutes`')
+export type OfficeHourLength = z.infer<typeof OfficeHourLength>
+
+/** One published opportunity to get help outside the course's regular meetings. */
+export const OfficeHour = z
+  .object({
+    type: z.literal('officeHour'),
+    length: OfficeHourLength,
+    /** Whether a student must reserve a specific appointment rather than drop in. */
+    booked: z.boolean(),
+    days: z.array(Weekday).min(1),
+    time: z.string().min(1),
+    location: z.string().min(1),
+    demand: z.number().int().min(1).max(10),
+  })
+  .strict()
+export type OfficeHour = z.infer<typeof OfficeHour>
+
 export const Syllabus = z
   .object({
-    id: z.string().min(1),
+    id: CourseId,
+    courseCode: CourseCode,
     title: z.string().min(1),
     /** Overall workload weight — what shopping week compares (§4.1). */
-    difficulty: z.number().int().min(1).max(10),
+    demand: z.number().int().min(1).max(10),
     workloadHint: z.string().min(1),
     /** r11 — what the course asks of you, per subject tag. */
     demands: z.record(SubjectTag, z.number().int().nonnegative()),
     meetings: z.array(Meeting).min(1),
+    officeHours: z.array(OfficeHour).min(1),
     sessions: z.array(Session).min(1),
     assignments: z.array(Assignment).default([]),
   })
