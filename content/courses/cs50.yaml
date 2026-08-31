@@ -23,7 +23,7 @@ meetings:
   # the course (not one of the three canonical 50/75-min blocks; CS50 gets its own
   # extended lecture time). Sections are a separate, real, concrete choice -- see the
   # real section instances in `content/sections.yaml`, not authored here.
-  # Attendance flexible: 340 people, and every lecture is recorded.
+  # Attendance flexible: 850 people, and every lecture is recorded.
   - { type: lecture, days: [Mon, Wed], time: "09:00-10:30", size: 850, attendance: flexible }
 officeHours:
   # Large, informal debugging halls: students join the queue and a TF comes to their table.

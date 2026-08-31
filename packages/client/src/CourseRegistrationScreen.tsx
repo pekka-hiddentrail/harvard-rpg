@@ -250,25 +250,9 @@ export function CourseRegistrationScreen({ identity, onBack }: CourseRegistratio
                   ))}
                 </ol>
 
-                {slots.filter((s) => s.id === selected.id).length > 0 && (
-                  <>
-                    <h3>Section slots</h3>
-                    {/* Occupancy is a registration-time concern, not a browsing one --
-                        it belongs to a not-yet-built "choose your section" step that
-                        happens after committing to the course, not here. */}
-                    <ul className="course-slots">
-                      {slots
-                        .filter((s) => s.id === selected.id)
-                        .map((s) => (
-                          <li key={`${s.id}${s.section}`}>
-                            <span className="slot-time">
-                              {s.section} · {s.days.join('/')} {s.time}
-                            </span>
-                          </li>
-                        ))}
-                    </ul>
-                  </>
-                )}
+                {/* Section slots are a cart concern, not a browsing one: which sections
+                    exist only matters once you've committed to the course. That step
+                    doesn't exist yet — see CourseSlot in packages/engine/src/schema.ts. */}
               </article>
             )}
           </div>
