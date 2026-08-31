@@ -108,3 +108,9 @@ tagWeights:
   reading: 0.9
   discussion: 0.8
   lab: 0.8
+
+# Shopping week (§4.6). A soft line, not a hard block: going over is allowed, the
+# game just names it. 28 is anchored on a realistic ~4-course semester (roughly
+# CS50 + Math21b + Expos 20's own effort scores, 20 total, plus room for one more).
+academics:
+  semesterEffortCap: 28

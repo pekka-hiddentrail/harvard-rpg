@@ -157,6 +157,15 @@ export const Rules = z
       })
       .strict(),
     tagWeights: z.record(SubjectTag, z.number().positive()),
+    academics: z
+      .object({
+        /**
+         * A soft warning line at shopping week (§4.6), not a hard block — going over
+         * is allowed, the game just says so. GAME_DESIGN §4.6.
+         */
+        semesterEffortCap: z.number().int().positive(),
+      })
+      .strict(),
   })
   .strict()
   .refine((r) => SUBJECT_TAGS.every((t) => r.subjectTags.includes(t)), {

@@ -61,6 +61,7 @@ const rules = Rules.parse({
     discussion: 0.8,
     lab: 0.8,
   },
+  academics: { semesterEffortCap: 28 },
 })
 
 const trait = (over: Partial<TraitT> & { id: string; cost: number }): TraitT =>

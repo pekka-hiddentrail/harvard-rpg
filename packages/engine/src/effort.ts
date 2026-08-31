@@ -1,0 +1,152 @@
+import { BLOCK_MINUTES, type Assignment, type AssignmentKind, type Meeting, type Syllabus } from './schema'
+
+/**
+ * `effort` and `workloadHint` are derived, not authored — the only per-course field a
+ * human still has to hand-pick is `demands` (real subject content). This is what keeps
+ * ~120 future courses from being 120 hand-tuned guesses (GAME_DESIGN §4.1, §4.6).
+ *
+ * Known gap: this only counts a course's own `meetings` (the shared pattern every
+ * section follows), not a specific section's length from `content/sections.yaml` — a
+ * section is a registration-time fact, and joining the two is a content-loader concern,
+ * not an engine one (ARCHITECTURE §11.1's engine/content boundary). Pass
+ * `extraMeetingHours` to add a representative section length once a caller has one.
+ */
+
+function meetingHours(meeting: Meeting): number {
+  const days = meeting.days.length
+  if (meeting.pattern) return (BLOCK_MINUTES[meeting.pattern] / 60) * days
+  if (meeting.time) return parseHourRange(meeting.time) * days
+  return 0
+}
+
+function parseHourRange(time: string): number {
+  const match = /^(\d{2}):(\d{2})-(\d{2}):(\d{2})$/.exec(time)
+  if (!match) return 0
+  const [, h1, m1, h2, m2] = match.map(Number)
+  return (h2! * 60 + m2! - (h1! * 60 + m1!)) / 60
+}
+
+export function meetingHoursPerWeek(meetings: readonly Meeting[]): number {
+  return meetings.reduce((sum, m) => sum + meetingHours(m), 0)
+}
+
+/** The one continuous span of term-weeks a set of weeks falls within. */
+function weekSpan(weeks: readonly number[]): number {
+  if (weeks.length === 0) return 0
+  return Math.max(...weeks) - Math.min(...weeks) + 1
+}
+
+function assignmentWeeks(a: Assignment): number[] {
+  const own = [a.assigned?.week, a.due?.week, a.date?.week].filter((w): w is number => w != null)
+  const stageWeeks = a.stages.map((s) => s.due.week)
+  return [...own, ...stageWeeks]
+}
+
+/**
+ * Total hours ÷ the weeks they're spread over — not an average per item, which only
+ * happens to work when items land roughly weekly. Uses whichever assignments carry an
+ * `estHours` (normally psets); a course with none (an essay-only syllabus with no
+ * `estHours` authored on its essays) contributes nothing here yet — a known content gap,
+ * not a silent zero pretending to be a real answer.
+ */
+export function courseworkHoursPerWeek(assignments: readonly Assignment[]): number {
+  const withHours = assignments.filter((a) => a.estHours != null)
+  if (withHours.length === 0) return 0
+  const weeks = weekSpan(withHours.flatMap(assignmentWeeks))
+  const total = withHours.reduce((sum, a) => sum + a.estHours!, 0)
+  return weeks === 0 ? 0 : total / weeks
+}
+
+/** The raw weekly-hours estimate a "workload hint" is actually reporting. */
+export function rawWeeklyHours(syllabus: Syllabus, extraMeetingHours = 0): number {
+  return meetingHoursPerWeek(syllabus.meetings) + extraMeetingHours + courseworkHoursPerWeek(syllabus.assignments)
+}
+
+function sumDemands(demands: Syllabus['demands']): number {
+  return Object.values(demands).reduce((sum, level) => sum + level, 0)
+}
+
+/**
+ * The `effort` score (replaces the hand-authored `demand` scalar): raw weekly hours
+ * blended with how much this course actually asks of a subject, halved. Two courses with
+ * the same raw hours aren't equally demanding if one asks far more of you per tag.
+ */
+export function effortScore(syllabus: Syllabus, extraMeetingHours = 0): number {
+  return Math.round((rawWeeklyHours(syllabus, extraMeetingHours) + sumDemands(syllabus.demands)) / 2)
+}
+
+// ── bracket width (§4.4) ──────────────────────────────────────────────────────────────
+
+const MODERATE_FRACTION = 0.625 // calibrated to reproduce the original 10/16 default
+
+const MILESTONE_KINDS: readonly AssignmentKind[] = ['exam', 'final', 'project', 'essay']
+
+function courseSpanWeeks(syllabus: Syllabus): number {
+  return weekSpan(syllabus.assignments.flatMap(assignmentWeeks))
+}
+
+/**
+ * The moderate/narrow hour thresholds for one milestone-graded item, derived from its
+ * `weight` share of the course's non-pset hour pool — not authored per item. An explicit
+ * `assignment.brackets` override always wins (e.g. a genuine editorial exception); this
+ * only fills the gap when none is set.
+ */
+export function deriveBrackets(
+  syllabus: Syllabus,
+  assignment: Assignment,
+  extraMeetingHours = 0,
+): { moderate: number; narrow: number } {
+  if (assignment.brackets) return assignment.brackets
+
+  const totalHours = rawWeeklyHours(syllabus, extraMeetingHours) * courseSpanWeeks(syllabus)
+  const psetHours = syllabus.assignments
+    .filter((a) => a.kind === 'pset' && a.estHours != null)
+    .reduce((sum, a) => sum + a.estHours!, 0)
+  const milestonePool = totalHours - psetHours
+
+  const weightTotal = syllabus.assignments
+    .filter((a) => MILESTONE_KINDS.includes(a.kind))
+    .reduce((sum, a) => sum + a.weight, 0)
+
+  const narrow = weightTotal === 0 ? 0 : Math.round(milestonePool * (assignment.weight / weightTotal))
+  const moderate = Math.round(narrow * MODERATE_FRACTION)
+  return { moderate, narrow }
+}
+
+// ── draw counts (§4.4) ────────────────────────────────────────────────────────────────
+
+const DRAW_COUNT: Partial<Record<AssignmentKind, number>> = {
+  exam: 8,
+  final: 10,
+  project: 12,
+}
+
+/** Essay stages draw more as the course progresses: 4, 5, 6, ... capped at 8. */
+const ESSAY_DRAW_BASE = 3
+const ESSAY_DRAW_CAP = 8
+
+/**
+ * How many values are drawn for this assignment's hidden roll. `pset` returns
+ * `undefined` — psets never draw, they grade on completion (§4.1).
+ */
+export function drawCount(syllabus: Syllabus, assignment: Assignment): number | undefined {
+  if (assignment.kind === 'essay') {
+    const essays = syllabus.assignments
+      .filter((a) => a.kind === 'essay')
+      .sort((a, b) => (assignmentWeeks(a)[0] ?? 0) - (assignmentWeeks(b)[0] ?? 0))
+    const position = essays.findIndex((a) => a.id === assignment.id) + 1
+    return Math.min(ESSAY_DRAW_BASE + position, ESSAY_DRAW_CAP)
+  }
+  return DRAW_COUNT[assignment.kind]
+}
+
+// ── semester effort cap (§4.6) ───────────────────────────────────────────────────────
+
+/** A soft warning, not a hard block — shopping week names it, never refuses it. */
+export function checkSemesterEffort(
+  effortScores: readonly number[],
+  cap: number,
+): { total: number; cap: number; over: boolean; overBy: number } {
+  const total = effortScores.reduce((sum, e) => sum + e, 0)
+  return { total, cap, over: total > cap, overBy: Math.max(0, total - cap) }
+}
