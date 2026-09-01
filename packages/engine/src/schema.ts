@@ -721,7 +721,41 @@ export const PlanDay = z
   .strict()
 export type PlanDay = z.infer<typeof PlanDay>
 
-export const Action = z.discriminatedUnion('type', [PlanDay])
+/**
+ * Filing a course on your study card (§4.6). The Tier 2 actions, and the first two that
+ * aren't a day.
+ *
+ * Both name their `term`, so a save that runs past one term folds into the right enrolment
+ * instead of accumulating every course the character ever took into one list.
+ *
+ * `section` is a `CourseSlot.section`, not a slot id — the id is a content-file detail, the
+ * section label ("A", "12") is the thing a player picked and the thing a schedule prints.
+ * Optional because most courses have exactly one shape and nothing to choose.
+ *
+ * Add *and* drop, rather than one action carrying a whole course set, because that is what
+ * add/drop is: a course you file in September and drop in October has to leave a trace in
+ * the log, and a set-replacing action would erase the fact that you were ever in it.
+ */
+export const EnrolCourse = z
+  .object({
+    type: z.literal('enrol_course'),
+    term: z.string().min(1),
+    courseCode: z.string().min(1),
+    section: z.string().min(1).optional(),
+  })
+  .strict()
+export type EnrolCourse = z.infer<typeof EnrolCourse>
+
+export const DropCourse = z
+  .object({
+    type: z.literal('drop_course'),
+    term: z.string().min(1),
+    courseCode: z.string().min(1),
+  })
+  .strict()
+export type DropCourse = z.infer<typeof DropCourse>
+
+export const Action = z.discriminatedUnion('type', [PlanDay, EnrolCourse, DropCourse])
 export type Action = z.infer<typeof Action>
 
 /**

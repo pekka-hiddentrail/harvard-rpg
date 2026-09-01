@@ -13,6 +13,13 @@ import { nextDay, parseDate, toISO } from './dates.ts'
  * Pure, total, and cheap: ~180 days × a few actions is a few hundred entries.
  */
 
+/** One filed course, per term. `section` is absent when the course had nothing to choose. */
+export type Enrolment = {
+  term: string
+  courseCode: string
+  section?: string | undefined
+}
+
 export type GameState = {
   /** 1-based. Day 1 is `rules.day.firstDay`. */
   day: number
@@ -21,11 +28,21 @@ export type GameState = {
   body: Body
   /** Banked study hours per subject tag. What Tier 2 points at assessments. */
   hoursBySubject: Record<SubjectTag, number>
+  /**
+   * What's on the study card right now, in the order it was filed — the fold of every
+   * `enrol_course` and `drop_course` (§4.6). Flat across terms rather than keyed by one,
+   * so `enrolledIn` is the only place that has to know which term is being asked about.
+   */
+  enrolled: Enrolment[]
   /** One line per resolved day, in order (§3.4). */
   log: string[]
   /** The resolved days themselves, so a client can render the last one. */
   days: DayResult[]
 }
+
+/** The courses filed for one term. */
+export const enrolledIn = (state: GameState, term: string): Enrolment[] =>
+  state.enrolled.filter((e) => e.term === term)
 
 const zero = (): Record<SubjectTag, number> =>
   Object.fromEntries(SUBJECT_TAGS.map((t) => [t, 0])) as Record<SubjectTag, number>
@@ -40,6 +57,7 @@ export function replay(
     date: rules.firstDay,
     body: startingBody(rules),
     hoursBySubject: zero(),
+    enrolled: [],
     log: [],
     days: [],
   }
@@ -59,6 +77,33 @@ export function replay(
         state.date = toISO(nextDay(parseDate(action.date)))
         state.log.push(result.log)
         state.days.push(result)
+        break
+      }
+
+      // Idempotent on purpose, both of them. Replay must be total — it folds a log that is
+      // already committed, so it has no reply channel and cannot refuse anything. Filing a
+      // course twice updates the section rather than listing it twice (which is what
+      // switching sections *is*), and dropping one you aren't in is a no-op. Whether either
+      // was a sensible thing to ask for is the API's question, asked before the action was
+      // ever appended (§4.6: the effort cap warns, `isCourseOpen` refuses).
+      case 'enrol_course': {
+        const existing = state.enrolled.findIndex(
+          (e) => e.term === action.term && e.courseCode === action.courseCode,
+        )
+        const entry: Enrolment = {
+          term: action.term,
+          courseCode: action.courseCode,
+          ...(action.section === undefined ? {} : { section: action.section }),
+        }
+        if (existing === -1) state.enrolled.push(entry)
+        else state.enrolled[existing] = entry
+        break
+      }
+
+      case 'drop_course': {
+        state.enrolled = state.enrolled.filter(
+          (e) => !(e.term === action.term && e.courseCode === action.courseCode),
+        )
         break
       }
     }

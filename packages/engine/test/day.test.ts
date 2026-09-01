@@ -7,6 +7,7 @@ import {
   HALF_COUNT,
   NIGHT_BAND,
   bandOf,
+  enrolledIn,
   firstHalfOf,
   hasErrors,
   indexActivities,
@@ -16,6 +17,7 @@ import {
   resolveDay,
   startingBody,
   validatePlan,
+  type Action,
   type Body,
   type DayProblem,
   type Placement,
@@ -490,6 +492,86 @@ describe('replay', () => {
     assert.equal(s.date, RULES.firstDay)
     assert.equal(s.day, 1)
     assert.deepEqual(s.body, startingBody(RULES))
+    assert.deepEqual(s.enrolled, [])
+  })
+})
+
+describe('replay: enrolment (§4.6)', () => {
+  const enrol = (courseCode: string, section?: string) => ({
+    type: 'enrol_course' as const,
+    term: 'fall2026',
+    courseCode,
+    ...(section === undefined ? {} : { section }),
+  })
+  const drop = (courseCode: string) => ({
+    type: 'drop_course' as const,
+    term: 'fall2026',
+    courseCode,
+  })
+  const run = (actions: Action[]) => replay(actions, ACTS, RULES)
+
+  it('files courses in the order they were added, carrying the chosen section', () => {
+    const s = run([enrol('cs50', '12'), enrol('math21b'), enrol('expos20', 'A')])
+    assert.deepEqual(s.enrolled, [
+      { term: 'fall2026', courseCode: 'cs50', section: '12' },
+      { term: 'fall2026', courseCode: 'math21b' },
+      { term: 'fall2026', courseCode: 'expos20', section: 'A' },
+    ])
+  })
+
+  it('drops a course without disturbing the rest of the card', () => {
+    const s = run([enrol('cs50'), enrol('math21b'), enrol('expos20'), drop('math21b')])
+    assert.deepEqual(s.enrolled.map((e) => e.courseCode), ['cs50', 'expos20'])
+  })
+
+  it('leaves the card alone when you drop something you were never in', () => {
+    // Replay folds an already-committed log, so it has nobody to complain to. Whether the
+    // drop made sense was the API's question, asked before the action was appended.
+    const s = run([enrol('cs50'), drop('chem17')])
+    assert.deepEqual(s.enrolled.map((e) => e.courseCode), ['cs50'])
+  })
+
+  it('treats re-enrolling as switching sections, not as a second copy of the course', () => {
+    const s = run([enrol('cs50', '12'), enrol('cs50', '4')])
+    assert.deepEqual(s.enrolled, [{ term: 'fall2026', courseCode: 'cs50', section: '4' }])
+  })
+
+  it('keeps a re-added course in its original position on the card', () => {
+    const s = run([enrol('cs50'), enrol('math21b'), enrol('cs50', '12')])
+    assert.deepEqual(s.enrolled.map((e) => e.courseCode), ['cs50', 'math21b'])
+  })
+
+  it('lets a dropped course be re-added, at the end', () => {
+    const s = run([enrol('cs50'), enrol('math21b'), drop('cs50'), enrol('cs50', '12')])
+    assert.deepEqual(s.enrolled, [
+      { term: 'fall2026', courseCode: 'math21b' },
+      { term: 'fall2026', courseCode: 'cs50', section: '12' },
+    ])
+  })
+
+  it('keeps terms separate, so a drop in one term leaves the other standing', () => {
+    const s = run([
+      enrol('cs50'),
+      { type: 'enrol_course', term: 'spring2027', courseCode: 'cs50' },
+      drop('cs50'),
+    ])
+    assert.deepEqual(s.enrolled, [{ term: 'spring2027', courseCode: 'cs50' }])
+    assert.deepEqual(enrolledIn(s, 'fall2026'), [])
+    assert.deepEqual(enrolledIn(s, 'spring2027'), [{ term: 'spring2027', courseCode: 'cs50' }])
+  })
+
+  it('is still a fold: same actions, same enrolment, and days are unaffected', () => {
+    const actions: Action[] = [
+      enrol('cs50', '12'),
+      { type: 'plan_day', date: '2027-08-30', placements: [p(firstHalfOf(9), 4, 'bed')] },
+      drop('cs50'),
+      enrol('chem17'),
+    ]
+    const s = run(actions)
+    assert.deepEqual(s.enrolled, [{ term: 'fall2026', courseCode: 'chem17' }])
+    assert.equal(s.day, 2, 'enrolling is not a day and does not advance the clock')
+    assert.equal(s.log.length, 1)
+    assert.deepEqual(run(actions), s)
   })
 })
 

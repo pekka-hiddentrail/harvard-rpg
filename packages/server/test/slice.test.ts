@@ -413,3 +413,282 @@ describe('the day routes leak nothing', () => {
     }
   })
 })
+
+// ── shopping week (Tier 2, §4.6) ─────────────────────────────────────────────────────
+
+/**
+ * A build that is *bad with numbers* — math −2, which puts Math 21b's `math: 3` ask at a gap
+ * of +5 and closes it. This is r11's own worked example, and it is the only way to reach the
+ * not-survivable branch from real content: no trait grants worse than −2 and no course asks
+ * more than 3, so +5 is exactly the extreme the catalogue can currently produce.
+ */
+const badWithNumbersBuild = () => {
+  const preset = content.presets.find((p) => p.id === 'pekka')
+  assert.ok(preset)
+  const { id: _id, name: _name, ...build } = preset
+  return {
+    ...build,
+    traits: [
+      ...build.traits.filter((t) => t.id !== 'long_mathematics'),
+      { id: 'bad_with_numbers' },
+      // Two more to spend the budget exactly, which `validateBuild` insists on.
+      { id: 'prep_school_writer' },
+      { id: 'lab_hands' },
+    ],
+  }
+}
+
+const newGameFrom = async (payload: object): Promise<string> => {
+  const created = await app.inject({ method: 'POST', url: '/api/game/new', payload })
+  assert.equal(created.statusCode, 201, created.body)
+  return created.json().gameId as string
+}
+
+const shopping = async (id: string) => {
+  const res = await app.inject({ method: 'GET', url: `/api/game/${id}/shopping` })
+  assert.equal(res.statusCode, 200, res.body)
+  return res.json()
+}
+
+type PricedRow = {
+  courseCode: string
+  effort: number
+  open: boolean
+  drivingTag: string | null
+  baseWeeklyHours: number
+  personalWeeklyHours: number
+  gaps: { tag: string; courseLevel: number; playerLevel: number; gap: number; multiplier?: number | null }[]
+  sections?: { section: string }[]
+}
+
+const courseIn = (body: { courses: PricedRow[] }, code: string): PricedRow => {
+  const found = body.courses.find((c) => c.courseCode === code)
+  assert.ok(found, `${code} missing from the shopping payload`)
+  return found
+}
+
+describe('GET /api/game/:id/shopping', () => {
+  it('prices every course for this player, and says why it costs what it costs', async () => {
+    const body = await shopping(await newGame())
+    assert.equal(body.contentHash, content.hash)
+    assert.equal(body.term, content.terms[0]?.id)
+    assert.equal(body.cap, content.rules.academics.semesterEffortCap)
+    assert.equal(body.courses.length, content.courses.length)
+
+    // Pekka is code 0 against CS50's `code: 2` ask and math 2 against its `math: 1`, so the
+    // course costs him more than its base — and the reason is `code`, not `math`.
+    const cs50 = courseIn(body, 'cs50')
+    assert.ok(cs50.personalWeeklyHours > cs50.baseWeeklyHours)
+    assert.equal(cs50.drivingTag, 'code')
+    assert.equal(cs50.open, true)
+    const code = cs50.gaps.find((g) => g.tag === 'code')
+    assert.equal(code?.gap, 2)
+    assert.equal(code?.multiplier, 1.7)
+    // Being *ahead* on math reads as a discount on that share, not as a penalty.
+    assert.equal(cs50.gaps.find((g) => g.tag === 'math')?.gap, -1)
+  })
+
+  it('starts with an empty card and a summary that complains about nothing', async () => {
+    const body = await shopping(await newGame())
+    assert.deepEqual(body.enrolled, [])
+    assert.equal(body.summary.effortTotal, 0)
+    assert.equal(body.summary.over, false)
+    assert.deepEqual(body.summary.closed, [])
+  })
+
+  it('carries the real section pool for courses that have one', async () => {
+    const body = await shopping(await newGame())
+    assert.ok(courseIn(body, 'expos20').sections!.length > 1, 'Expos 20 is many sections')
+    // A course with no slot pool gets an empty list, not a missing key.
+    assert.deepEqual(courseIn(body, 'chem17').sections, [])
+  })
+
+  it('closes a course with its reason attached, never as a bare refusal', async () => {
+    const body = await shopping(await newGameFrom(badWithNumbersBuild()))
+    const math21b = courseIn(body, 'math21b')
+    assert.equal(math21b.open, false)
+    assert.equal(math21b.drivingTag, 'math')
+    // r11's mockup, field for field: "wants math 3, you −2, gap +5".
+    const math = math21b.gaps.find((g) => g.tag === 'math')
+    assert.equal(math?.courseLevel, 3)
+    assert.equal(math?.playerLevel, -2)
+    assert.equal(math?.gap, 5)
+    // No multiplier at a closed gap — the course is shut, not merely expensive. (JSON drops
+    // the `undefined`, so the key is simply absent.)
+    assert.equal(math?.multiplier ?? null, null)
+  })
+
+  it('404s on a save that does not exist', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/game/nope/shopping' })
+    assert.equal(res.statusCode, 404)
+  })
+})
+
+describe('POST /api/game/:id/shopping/preview', () => {
+  // `await`ed rather than returned bare: fastify's `inject` is overloaded to be either a
+  // promise or a chainable builder, and only awaiting it narrows to a `Response`.
+  const preview = async (id: string, courseCodes: string[]) =>
+    await app.inject({ method: 'POST', url: `/api/game/${id}/shopping/preview`, payload: { courseCodes } })
+
+  it('totals a tentative cart without filing anything', async () => {
+    const id = await newGame()
+    const res = await preview(id, ['cs50', 'expos20', 'chem17'])
+    assert.equal(res.statusCode, 200, res.body)
+    const body = res.json()
+    assert.equal(body.courses.length, 3)
+
+    // The total is the sum of the rows on the same screen — addable by hand, which is the
+    // property r11's "an argument they can check" actually rests on.
+    const sum = body.courses.reduce((n: number, c: PricedRow) => n + c.effort, 0)
+    assert.equal(body.summary.effortTotal, sum)
+
+    // ...and nothing was committed.
+    assert.deepEqual((await shopping(id)).enrolled, [])
+  })
+
+  it('warns above the semester effort cap and still refuses nothing', async () => {
+    const id = await newGame()
+    // Four of the heaviest courses in the catalogue, against a cap of 28.
+    const res = await preview(id, ['chem17', 'chem27', 'ls1a', 'ps11'])
+    assert.equal(res.statusCode, 200, 'over the cap is a warning, not an error')
+    const { summary } = res.json()
+    assert.ok(summary.effortTotal > content.rules.academics.semesterEffortCap)
+    assert.equal(summary.over, true)
+    assert.equal(summary.overBy, summary.effortTotal - content.rules.academics.semesterEffortCap)
+  })
+
+  it('names a closed course in the cart separately from being over the cap', async () => {
+    const id = await newGameFrom(badWithNumbersBuild())
+    const res = await preview(id, ['cs50', 'math21b'])
+    assert.equal(res.statusCode, 200)
+    const { summary } = res.json()
+    assert.deepEqual(summary.closed, ['math21b'])
+    assert.equal(summary.over, false, 'two courses is not too many; one of them is just shut')
+  })
+
+  it('totals an empty cart rather than erroring on it', async () => {
+    const res = await preview(await newGame(), [])
+    assert.equal(res.statusCode, 200)
+    assert.equal(res.json().summary.effortTotal, 0)
+  })
+
+  it('404s on a course code that is not in the catalogue', async () => {
+    const res = await preview(await newGame(), ['cs50', 'not_a_course'])
+    assert.equal(res.statusCode, 404)
+    assert.match(res.json().error, /not_a_course/)
+  })
+})
+
+describe('POST /api/game/:id/shopping/enrol and /drop', () => {
+  // `payload: object` rather than `unknown`: `inject` is overloaded, and an `unknown` payload
+  // makes it resolve to the chainable-builder overload instead of the promise one.
+  const enrol = async (id: string, payload: object) =>
+    await app.inject({ method: 'POST', url: `/api/game/${id}/shopping/enrol`, payload })
+  const drop = async (id: string, courseCode: string) =>
+    await app.inject({ method: 'POST', url: `/api/game/${id}/shopping/drop`, payload: { courseCode } })
+  const term = content.terms[0]?.id
+
+  it('files a course into the save, and the save is the log', async () => {
+    const id = await newGame()
+    const res = await enrol(id, { courseCode: 'chem17' })
+    assert.equal(res.statusCode, 200, res.body)
+    const body = res.json()
+    assert.deepEqual(body.enrolled, [{ term, courseCode: 'chem17' }])
+    assert.equal(body.actionCount, 1)
+
+    // Reloaded from SQLite and replayed, it is still there — enrolment is derived from the
+    // action log, never stored as a field of its own (ARCHITECTURE §3).
+    const reloaded = await shopping(id)
+    assert.deepEqual(reloaded.enrolled, [{ term, courseCode: 'chem17' }])
+    assert.equal(reloaded.summary.effortTotal, courseIn(reloaded, 'chem17').effort)
+  })
+
+  it('accumulates a card and drops off it', async () => {
+    const id = await newGame()
+    await enrol(id, { courseCode: 'chem17' })
+    await enrol(id, { courseCode: 'gened1046' })
+    const after = (await drop(id, 'chem17')).json()
+    assert.deepEqual(after.enrolled.map((e: { courseCode: string }) => e.courseCode), ['gened1046'])
+    // Three actions, not one: the drop is a fact in the history, not an erasure of the enrol.
+    assert.equal(after.actionCount, 3)
+  })
+
+  it('goes over the effort cap when asked to, and says so in a 200', async () => {
+    const id = await newGame()
+    for (const courseCode of ['chem17', 'chem27', 'ls1a', 'ps11']) {
+      assert.equal((await enrol(id, { courseCode })).statusCode, 200, courseCode)
+    }
+    const { summary } = await shopping(id)
+    assert.equal(summary.over, true, 'the cap is a line, not a wall (§4.6)')
+    assert.ok(summary.overBy > 0)
+  })
+
+  it('refuses a not-survivable course, with the gap that closed it', async () => {
+    const id = await newGameFrom(badWithNumbersBuild())
+    const res = await enrol(id, { courseCode: 'math21b' })
+    assert.equal(res.statusCode, 422)
+    const body = res.json()
+    assert.match(body.error, /not survivable/)
+    assert.equal(body.drivingTag, 'math')
+    assert.equal(body.gaps.find((g: { tag: string }) => g.tag === 'math').gap, 5)
+    // Refused means nothing was written.
+    assert.deepEqual((await shopping(id)).enrolled, [])
+  })
+
+  it('needs a section when the course is taught as many, and takes the one you picked', async () => {
+    const id = await newGame()
+    const missing = await enrol(id, { courseCode: 'expos20' })
+    assert.equal(missing.statusCode, 422)
+    assert.match(missing.json().error, /needs a section/)
+    assert.ok(missing.json().sections.length > 1, 'and it lists which ones exist')
+
+    const section = content.slots.find((s) => s.courseCode === 'expos20')?.section
+    assert.ok(section)
+    const filed = await enrol(id, { courseCode: 'expos20', section })
+    assert.equal(filed.statusCode, 200, filed.body)
+    assert.deepEqual(filed.json().enrolled, [{ term, courseCode: 'expos20', section }])
+  })
+
+  it('switches sections rather than filing the course twice', async () => {
+    const id = await newGame()
+    const [first, second] = content.slots.filter((s) => s.courseCode === 'expos20')
+    assert.ok(first && second)
+    await enrol(id, { courseCode: 'expos20', section: first.section })
+    const res = await enrol(id, { courseCode: 'expos20', section: second.section })
+    assert.equal(res.statusCode, 200)
+    assert.deepEqual(res.json().enrolled, [{ term, courseCode: 'expos20', section: second.section }])
+  })
+
+  it('refuses a section that does not exist', async () => {
+    const res = await enrol(await newGame(), { courseCode: 'expos20', section: '999' })
+    assert.equal(res.statusCode, 422)
+    assert.match(res.json().error, /no section 999/)
+  })
+
+  it('refuses to drop a course that was never filed', async () => {
+    const id = await newGame()
+    const res = await drop(id, 'chem17')
+    assert.equal(res.statusCode, 422)
+    assert.match(res.json().error, /not enrolled/)
+    // And appended nothing: a no-op in the log would be a lie about what happened.
+    assert.equal((await shopping(id)).enrolled.length, 0)
+  })
+
+  it('404s an unknown course and 400s a malformed body', async () => {
+    const id = await newGame()
+    assert.equal((await enrol(id, { courseCode: 'not_a_course' })).statusCode, 404)
+    assert.equal((await enrol(id, { nope: true })).statusCode, 400)
+    assert.equal((await enrol(id, { courseCode: 'cs50', extra: 1 })).statusCode, 400)
+  })
+
+  it('leaks no seed and no outcome', async () => {
+    const id = await newGame()
+    const filed = await enrol(id, { courseCode: 'chem17' })
+    const priced = await app.inject({ method: 'GET', url: `/api/game/${id}/shopping` })
+    for (const res of [filed, priced]) {
+      assert.equal(/"seed"/.test(res.body), false)
+      // §4.4: price, never outcome. No grade, no letter, no card anywhere in a price.
+      assert.equal(/"grade"|"letter"|"cards"/.test(res.body), false)
+    }
+  })
+})

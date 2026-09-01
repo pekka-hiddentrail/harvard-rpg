@@ -6,6 +6,8 @@ import { representativeSectionHours, type Content } from '@harvard/content'
 import {
   BANDS,
   BuildRequest,
+  DropCourse,
+  EnrolCourse,
   HALVES_PER_BAND,
   HALF_COUNT,
   PlanDay,
@@ -15,17 +17,21 @@ import {
   effectiveDemand,
   effectiveOfficeHourDemand,
   effectiveWorkloadHint,
+  enrolledIn,
   fitSessions,
   formatLong,
   hasErrors,
   parseDate,
+  previewCourse,
   priceTrait,
   replay,
   resolveAssignmentDates,
   resolveDay,
+  summarizeCart,
   toCreationBlock,
   validateBuild,
   type Activity,
+  type Levels,
   type Placement,
 } from '@harvard/engine'
 import { z } from 'zod'
@@ -169,25 +175,7 @@ export function buildApp({ content, dbFile }: ServerOptions): {
 
     const save = Save.parse(JSON.parse(row.json))
     const stale = save.contentHash !== content.hash
-
-    // Levels are DERIVED, never stored (§8). Recomputed from the build on every read, which
-    // is also how a content change announces itself instead of hiding.
-    const revalidated = validateBuild(
-      {
-        hometown: save.creation.hometown,
-        schoolType: save.creation.schoolType,
-        program: save.creation.program,
-        ...(save.creation.targetTrack === undefined
-          ? {}
-          : { targetTrack: save.creation.targetTrack }),
-        traits: save.creation.traits.map((t) => ({
-          id: t.id,
-          ...(t.language === undefined ? {} : { language: t.language }),
-        })),
-      },
-      content.index,
-      content.rules,
-    )
+    const revalidated = revalidate(save)
 
     return {
       view: 'character',
@@ -342,11 +330,241 @@ export function buildApp({ content, dbFile }: ServerOptions): {
     }
   })
 
+  // ── shopping week (Tier 2, §4.6) ───────────────────────────────────────────────────
+
+  /**
+   * Pricing lives here rather than beside the catalogue in `/api/courses` on purpose, and the
+   * split is the point: `/api/courses` answers "what is this course", which is the same for
+   * everybody and depends on nothing but content; this answers "what would it cost *you*",
+   * which needs a save. A client joins the two on `courseCode`.
+   *
+   * Everything served here is a price, never an outcome (§4.4) — hours, gaps, multipliers, and
+   * no predicted grade anywhere. A closed course is served *with its gap rows*, because §9.3's
+   * job is to report why rather than to refuse.
+   */
+  const shoppingTerm = content.terms[0]
+
+  /** Slots are the concrete, capacity-tracked instances a player actually files into. */
+  const sectionsOf = (courseCode: string) =>
+    content.slots.filter((s) => s.courseCode === courseCode)
+
+  const courseByCode = new Map(content.courses.map((c) => [c.courseCode, c]))
+
+  /** Every course, or a named subset, priced against this save's derived levels. */
+  function priceCourses(save: Save, codes?: readonly string[]) {
+    const levels = revalidate(save)
+    if (!levels.ok) return null
+    const wanted =
+      codes === undefined
+        ? content.courses
+        : codes.map((c) => courseByCode.get(c)).filter((c) => c !== undefined)
+    return wanted.map((c) =>
+      previewCourse(c, levels.levels, representativeSectionHours(c.courseCode, content.slots)),
+    )
+  }
+
+  app.get('/api/game/:id/shopping', (req, reply) => {
+    const found = load(req.params as { id: string })
+    if (!found) return reply.code(404).send({ error: 'no such save' })
+    const levels = revalidate(found.save)
+    if (!levels.ok) return reply.code(409).send({ problems: levels.problems })
+
+    const state = replay(found.save.actions, content.activityIndex, content.rules.day)
+    const term = shoppingTerm?.id ?? null
+    const enrolled = term === null ? [] : enrolledIn(state, term)
+    const priced = priceCourses(found.save) ?? []
+    const byCode = new Map(priced.map((p) => [p.courseCode, p]))
+
+    return {
+      contentHash: content.hash,
+      term,
+      levels: levels.levels,
+      /** The soft line, sent so the client can render it without knowing the rule (§4). */
+      cap: content.rules.academics.semesterEffortCap,
+      courses: priced.map((p) => ({ ...p, sections: sectionsOf(p.courseCode) })),
+      enrolled,
+      // The card as it stands. `summarizeCart` over the same previews the rows came from, so
+      // the total and the rows on one screen cannot disagree.
+      summary: summarizeCart(
+        enrolled.map((e) => byCode.get(e.courseCode)).filter((p) => p !== undefined),
+        content.rules.academics.semesterEffortCap,
+      ),
+    }
+  })
+
+  const CartBody = z.object({ courseCodes: z.array(z.string().min(1)) }).strict()
+
+  /**
+   * Price a tentative cart — the add/drop loop's live total, before anything is filed. The
+   * shopping-week counterpart to `/day/preview`: the client holds a list of course codes,
+   * posts it on every change, and renders what comes back. It sums nothing itself.
+   */
+  app.post('/api/game/:id/shopping/preview', (req, reply) => {
+    const found = load(req.params as { id: string })
+    if (!found) return reply.code(404).send({ error: 'no such save' })
+    const parsed = CartBody.safeParse(req.body)
+    if (!parsed.success) return reply.code(400).send({ problems: flatten(parsed.error) })
+
+    const priced = priceCourses(found.save, parsed.data.courseCodes)
+    if (!priced) return reply.code(409).send({ error: 'build no longer validates' })
+
+    const unknown = parsed.data.courseCodes.filter((c) => !courseByCode.has(c))
+    if (unknown.length > 0) return reply.code(404).send({ error: `no such course: ${unknown.join(', ')}` })
+
+    return {
+      courses: priced,
+      summary: summarizeCart(priced, content.rules.academics.semesterEffortCap),
+    }
+  })
+
+  const EnrolBody = z
+    .object({ courseCode: z.string().min(1), section: z.string().min(1).optional() })
+    .strict()
+
+  /**
+   * File one course. Two things refuse here and nothing else does:
+   *
+   * - a **not-survivable** course (§4.5's +5 gap), which is closed rather than expensive —
+   *   and the refusal carries the gap rows, so the client shows the reason, not a red box;
+   * - a **section that doesn't exist or is full**, which is a fact about the world.
+   *
+   * The semester effort cap explicitly does *not* refuse (§4.6: "a line, not a wall"). Going
+   * over is a legal, and sometimes correct, decision — the response says so and files it
+   * anyway. This is the one place that rule is enforceable, so it is worth being loud: an
+   * `over: true` in a 200 body is the design working, not an error that leaked.
+   */
+  app.post('/api/game/:id/shopping/enrol', (req, reply) => {
+    const found = load(req.params as { id: string })
+    if (!found) return reply.code(404).send({ error: 'no such save' })
+    if (!shoppingTerm) return reply.code(409).send({ error: 'no term in content to enrol into' })
+    const parsed = EnrolBody.safeParse(req.body)
+    if (!parsed.success) return reply.code(400).send({ problems: flatten(parsed.error) })
+
+    const course = courseByCode.get(parsed.data.courseCode)
+    if (!course) return reply.code(404).send({ error: `no such course: ${parsed.data.courseCode}` })
+
+    const levels = revalidate(found.save)
+    if (!levels.ok) return reply.code(409).send({ problems: levels.problems })
+    const preview = previewCourse(
+      course,
+      levels.levels,
+      representativeSectionHours(course.courseCode, content.slots),
+    )
+    if (!preview.open) {
+      return reply.code(422).send({
+        error: 'not survivable',
+        courseCode: course.courseCode,
+        gaps: preview.gaps,
+        drivingTag: preview.drivingTag,
+      })
+    }
+
+    const sections = sectionsOf(course.courseCode)
+    if (parsed.data.section !== undefined) {
+      const slot = sections.find((s) => s.section === parsed.data.section)
+      if (!slot) {
+        return reply.code(422).send({ error: `no section ${parsed.data.section} of ${course.courseCode}` })
+      }
+      // Never fires on today's content (no seeded slot is full), which is exactly why it is
+      // written now: `occupied` is authored and shopping week is meant to move it, so the
+      // first full section must not be the thing that discovers this check is missing.
+      if (slot.occupied >= slot.size) {
+        return reply.code(422).send({ error: `section ${slot.section} of ${course.courseCode} is full` })
+      }
+    } else if (sections.length > 1) {
+      return reply.code(422).send({
+        error: `${course.courseCode} needs a section`,
+        sections: sections.map((s) => s.section),
+      })
+    }
+
+    const action = EnrolCourse.parse({
+      type: 'enrol_course',
+      term: shoppingTerm.id,
+      courseCode: course.courseCode,
+      ...(parsed.data.section === undefined ? {} : { section: parsed.data.section }),
+    })
+    return commit(found.save, action, shoppingTerm.id, levels.levels)
+  })
+
+  const DropBody = z.object({ courseCode: z.string().min(1) }).strict()
+
+  app.post('/api/game/:id/shopping/drop', (req, reply) => {
+    const found = load(req.params as { id: string })
+    if (!found) return reply.code(404).send({ error: 'no such save' })
+    if (!shoppingTerm) return reply.code(409).send({ error: 'no term in content to drop from' })
+    const parsed = DropBody.safeParse(req.body)
+    if (!parsed.success) return reply.code(400).send({ problems: flatten(parsed.error) })
+
+    const before = replay(found.save.actions, content.activityIndex, content.rules.day)
+    // Replay is idempotent about this, so the fold would survive it — but a drop for a course
+    // that was never filed is a client that has lost track of the card, and swallowing it
+    // would append a no-op action to a log that is supposed to be a history of what happened.
+    if (!enrolledIn(before, shoppingTerm.id).some((e) => e.courseCode === parsed.data.courseCode)) {
+      return reply.code(422).send({ error: `not enrolled in ${parsed.data.courseCode}` })
+    }
+
+    const levels = revalidate(found.save)
+    if (!levels.ok) return reply.code(409).send({ problems: levels.problems })
+
+    const action = DropCourse.parse({
+      type: 'drop_course',
+      term: shoppingTerm.id,
+      courseCode: parsed.data.courseCode,
+    })
+    return commit(found.save, action, shoppingTerm.id, levels.levels)
+  })
+
+  /** Append one enrolment action and answer with the card as it now stands. */
+  function commit(save: Save, action: EnrolCourse | DropCourse, term: string, levels: Levels) {
+    const next = Save.parse({ ...save, actions: [...save.actions, action] })
+    db.prepare('UPDATE saves SET json = ? WHERE id = ?').run(JSON.stringify(next), next.id)
+
+    const after = replay(next.actions, content.activityIndex, content.rules.day)
+    const enrolled = enrolledIn(after, term)
+    const priced = enrolled
+      .map((e) => courseByCode.get(e.courseCode))
+      .filter((c) => c !== undefined)
+      .map((c) => previewCourse(c, levels, representativeSectionHours(c.courseCode, content.slots)))
+
+    return {
+      enrolled,
+      courses: priced,
+      summary: summarizeCart(priced, content.rules.academics.semesterEffortCap),
+      actionCount: next.actions.length,
+    }
+  }
+
   function load({ id }: { id: string }): { save: Save } | null {
     const row = db.prepare('SELECT json FROM saves WHERE id = ?').get(id) as
       | { json: string }
       | undefined
     return row ? { save: Save.parse(JSON.parse(row.json)) } : null
+  }
+
+  /**
+   * Levels are DERIVED, never stored (§8). Recomputed from the build on every read, which is
+   * also how a content change announces itself instead of hiding — and why both the character
+   * sheet and shopping week go through here rather than each keeping their own copy: two
+   * screens disagreeing about what level you are on `math` is exactly the drift §8 forbids.
+   */
+  function revalidate(save: Save) {
+    return validateBuild(
+      {
+        hometown: save.creation.hometown,
+        schoolType: save.creation.schoolType,
+        program: save.creation.program,
+        ...(save.creation.targetTrack === undefined
+          ? {}
+          : { targetTrack: save.creation.targetTrack }),
+        traits: save.creation.traits.map((t) => ({
+          id: t.id,
+          ...(t.language === undefined ? {} : { language: t.language }),
+        })),
+      },
+      content.index,
+      content.rules,
+    )
   }
 
   return { app, db }
