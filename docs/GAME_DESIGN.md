@@ -619,8 +619,11 @@ course's own pattern — an evening exam, a reading-period deadline). See `Cours
 ```yaml
 id: cs50
 title: Introduction to Computer Science
-demand: 7                            # r15 — derived at runtime, not hand-picked (§4.6)
-workload_hint: "~12h/week"          # r15 — also derived; shown here as what it evaluates to
+demand: 7                            # r15 — derived at runtime, not hand-picked (§4.6);
+workload_hint: "~12h/week"          # r15 — also derived. Both optional, and shown here as
+                                     # what they evaluate to. A stub omits both, and omits
+                                     # each office hour's `demand` too (one below the
+                                     # course's, so authoring it says nothing new).
 demands:                             # r11 — what the course asks of you, per tag
   code: 2
   math: 1
@@ -675,10 +678,19 @@ dial, and the right one.
 single difficulty number because multi-tag courses are the interesting ones: CS 50 is where a
 `math` handicap ambushes someone who thought they were only signing up to program.
 
-The tag set is **closed at seven** — `math` · `stats` · `code` · `writing` · `reading` ·
-`lab` · `discussion` — and closed on purpose. Every course stub carries them, so adding an
-eighth means revisiting all ~120 stubs; whereas the other two tag namespaces (§7.4) can grow
-freely. `demand` survives alongside `demands` and keeps its old job: overall workload
+The tag set is **closed at thirteen** — `math` · `stats` · `code` · `writing` · `reading` ·
+`lab` · `discussion` · `proof` · `visual` · `language` · `fieldwork` · `memorization` ·
+`ethics` — and closed on purpose. Every course stub carries them, so adding a fourteenth
+means revisiting all ~160 stubs; whereas the other two tag namespaces (§7.4) can grow freely.
+
+It was seven until the real course set arrived and the seven visibly could not describe it:
+Gen Ed 1046 "Race and Social Justice" wants `ethics` and `discussion`, Chem 17 wants `lab`
+and `memorization`, and under the original seven both would have been mis-annotated as
+`reading` and shrugged at. The widening is the exception that proves the rule about *when* a
+closed set can be reopened: before the ~160 stubs were authored, when the migration cost was
+six strings rather than six strings times a hundred and sixty files. The `language` tag
+forced a matching rename in the other namespace — the kind tag formerly called `language` is
+now `multilingual`, because §7.8 forbids one string serving both. `demand` survives alongside `demands` and keeps its old job: overall workload
 weight, which is what shopping week compares. `demands` is about *whose* workload it is.
 
 **Milestone reset.** The prototype allowed one genuinely interesting move: after a
@@ -1129,6 +1141,22 @@ for the other. `demands` (the tag-level map) remains the one number per course t
 needs a human, because it's the only one that's actually about subject content rather
 than workload arithmetic.
 
+The ~160-course stub set turned that from a principle into a schema change: `demand`,
+`workload_hint` and each office hour's `demand` are all **optional**, resolved by
+`effectiveDemand` / `effectiveWorkloadHint` / `effectiveOfficeHourDemand` when the
+catalogue is served. An authored value still wins — a published figure, or a genuine
+exception — and the content tests check the authored ones against the derivation, which is
+where a number that has drifted away from its course shows up. A course with no assignments
+at all says so out loud rather than quoting a total that silently omits every pset it will
+turn out to have — the hint reads *"~5.8h/week in class, coursework TBD"* instead of
+*"~5.8h/week"* — which is what made it obvious that deriving from contact time alone wasn't
+enough: with no coursework to price, 138 of the 160 stubs came out at demand 3, and a
+catalogue where nothing is heavier than anything else can't be shopped. So the import
+generates an assignment skeleton too (ARCHITECTURE §3.1), budgeting each course whatever is
+left of ~12 h/week after its own contact time. The derived spread is now 6–9 and it comes
+from `demands`, which is the intended answer: the workload arithmetic is arithmetic, and the
+human's judgement is the tag map.
+
 There is also a **semester effort cap** (`rules.academics.semesterEffortCap`, 28) —
 a *soft* warning, not a hard block, on the sum of `effort` across a player's enrolled
 courses. It's a line, not a wall: shopping week names it, it never refuses a course set
@@ -1250,9 +1278,10 @@ minutes: each one wants a cost, tag effects, `requires`/`excludes`, a `contagiou
 Affinity weight, and a line of prose for the creation screen. Two mitigations, both real. The
 vocabulary is not invented — §7.4's table is lifted from the prototype's own `Students` sheet,
 so most of the personality and strengths traits already have names and are already in use on
-~115 NPCs. And **subject tags are the cheap part**: seven tags (`math`, `stats`, `code`,
-`writing`, `reading`, `lab`, `discussion`) annotated onto subjects once, which the course
-stubs can carry from the start at almost no marginal cost.
+~115 NPCs. And **subject tags are the cheap part**: thirteen tags (`math`, `stats`, `code`,
+`writing`, `reading`, `lab`, `discussion`, `proof`, `visual`, `language`, `fieldwork`,
+`memorization`, `ethics`) annotated onto subjects once, which the course stubs can carry from
+the start at almost no marginal cost.
 
 **r11 adds one field to that annotation and it is worth being honest about the cost.**
 `demands: {tag: level}` (§4.1) is not just a tag list — it is a tag list *with a number
@@ -1714,7 +1743,7 @@ rather than prose:
 | `personality` | earnest overachiever, slightly anxious · highly organized, mentor type · curious generalist, hard to pin down · pragmatic, career-focused · laid-back, surprisingly sharp · quietly intense, works best alone · guarded at first, loyal once trusted · warm and inclusive, campus connector · restless creative, easily bored · outgoing, thrives in group settings · observant, writerly |
 | `strengths` | entrepreneurship/business · historical research · lab sciences · athletics (varsity) · finance/social ease · programming · writerly observation |
 | `background` | school type (public · public magnet · boarding · international) **×** place |
-| `language` | native/fluent languages |
+| `multilingual` | native/fluent languages |
 
 **Weights must be uneven, with a few rare high-value tags.** This is the finding, and
 it's decisive. In the prototype the two deepest relationships in ten weeks were both
@@ -1741,7 +1770,7 @@ Mandarin* — neither of them grew up doing this in their first language. So:
 | Tier | Example | Weight | Rarity |
 |---|---|---|---|
 | **Exact trait** | `speaks Swedish` × `speaks Swedish` | large | rare |
-| **Kind tag** | `speaks Swedish` × `speaks Mandarin` → both `language` | small | common |
+| **Kind tag** | `speaks Swedish` × `speaks Mandarin` → both `multilingual` | small | common |
 
 This is not a nicety; it repairs a flaw in the paragraph above. Exact matching alone makes
 Affinity **sparse** — across ~115 NPCs the player has one or two real matches and everyone
@@ -1756,10 +1785,10 @@ The invariant that keeps this honest, and it is machine-checkable:
 > rare language, and the prototype's central finding is quietly overturned by arithmetic.
 
 Which in practice means kind-tag contributions have **strong diminishing returns** — the
-second `language`-tag acquaintance is worth much less than the first — rather than a flat
+second `multilingual`-tag acquaintance is worth much less than the first — rather than a flat
 per-tag bonus.
 
-Some kinds worth having, all already present in the content: `language` · `international` ·
+Some kinds worth having, all already present in the content: `multilingual` · `international` ·
 `athletic` · `conviction` · `creative` · `service` (the prototype's military reserve, and
 Phillips Brooks House volunteering) · `first-gen`. `international student` × `international
 student` from different countries is the second case that sells the mechanic — two people who
@@ -1799,13 +1828,15 @@ So: three namespaces, with deliberately different growth properties.
 
 | Namespace | Lives on | Read by | Player has it | Grows? |
 |---|---|---|---|---|
-| **Subject tags** — the closed seven (§4.1) | courses' `demands`; traits' `affects` | hour cost, levels, requirements, the §7.8 invariant | through effects only | **closed** |
+| **Subject tags** — the closed thirteen (§4.1) | courses' `demands`; traits' `affects` | hour cost, levels, requirements, the §7.8 invariant | through effects only | **closed** |
 | **Kind tags** | traits' `tags` | Affinity, both tiers | yes, symmetric | open — new packs may add |
 | **Dispositions** | NPC records | Warmth ramp, teaching, introductions | **no** | small, closed-ish |
 
-The closed/open split is practical. An eighth subject tag means revisiting ~120 course stubs,
-so that set wants to be right now; a new kind tag costs nothing, because rarity is derived
-from the pool and a new tag simply starts rare.
+The closed/open split is practical. A fourteenth subject tag means revisiting ~160 course
+stubs, so that set wants to be right now; a new kind tag costs nothing, because rarity is
+derived from the pool and a new tag simply starts rare. That asymmetry is also why the 7 → 13
+widening (§4.1) resolved its collision with the kind tag `language` by renaming the *kind*
+tag to `multilingual`: the cheap namespace absorbs the churn.
 
 ### 7.5 The romance track
 
@@ -2111,9 +2142,9 @@ Four rules make this an economy rather than a shopping list:
 
   > **Two tag namespaces, and they must never be merged.** A trait's `affects:` are
   > **subject tags** — `math`, `writing`, `code` — the curriculum surface it modifies. A
-  > trait's `tags:` are **kind tags** — `language`, `athletic`, `international` — what sort
+  > trait's `tags:` are **kind tags** — `multilingual`, `athletic`, `international` — what sort
   > of fact it is, used by Affinity's kind tier (§7.4). `speaks Swedish` has kind tag
-  > `language` and affects nothing academic; `bad with numbers` affects `math` and has no kind
+  > `multilingual` and affects nothing academic; `bad with numbers` affects `math` and has no kind
   > tag at all. They are different fields with different vocabularies, and a schema that lets
   > one string serve both will eventually let a trait grant Affinity for being bad at
   > calculus.
@@ -2459,8 +2490,8 @@ was created under. **Starting subject levels are not stored here** — r10 made 
 from traits (§7.8), so they are computed at boot from the build and the tag table, and only
 their *movement* through banked hours is state.
 
-**Levels** (r11) — seven numbers, one per subject tag (§4.1), each the derived start plus its
-accumulated movement. Seven is worth stating as a number because these levels are now read by
+**Levels** (r11) — thirteen numbers, one per subject tag (§4.1), each the derived start plus its
+accumulated movement. The count is worth stating because these levels are now read by
 two different systems that must agree: the demand gap against a course, and the partner gap
 against a person (§4.5). Nothing else in state is allowed to hold a per-subject competence
 number, or the two gaps will eventually disagree about how good you are at statistics.

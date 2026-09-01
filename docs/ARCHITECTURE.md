@@ -195,7 +195,7 @@ harvard-rpg/
 │   │   │                        #   contagious, bonding  (§7.8, §7.4)
 │   │   ├── rules.yaml           # creation budget, refund cap, the r11 cost schedule
 │   │   │                        #   (shape → levels), the demand-gap multiplier
-│   │   │                        #   table, and the seven closed subject tags
+│   │   │                        #   table, and the thirteen closed subject tags
 │   │   ├── presets/*.yaml       # character presets, incl. Pekka (§7.8 of design)
 │   │   ├── venues/*.yaml        # buildings, with `size` and `known` rosters
 │   │   └── prompts/             # world bible + per-route system prompts
@@ -279,6 +279,42 @@ syllabus can change the outcome of an existing save. So:
 
 This is worth getting right early. It's cheap to add now and genuinely painful to
 retrofit once there are saves worth keeping.
+
+**The spreadsheet is not content.** The catalogue was authored in
+`packages/user/harvard_course_schema.xlsx` — one row per course, a column per subject tag —
+and `npm run import:courses` (`scripts/import-courses.ts`) turns it into one YAML file per course under
+`content/courses/`. The import is a script, run by hand, and deliberately not a loader step:
+the content hash covers the YAML, and a hash that depended on a binary nobody can diff would
+make "which content was this save played under?" unanswerable. The script is safe to re-run
+— it overwrites the files it generated (identified by a marker comment on line 1) and never
+touches one it didn't, so transcribing a real syllabus into a stub is a one-way door that a
+rerun can't undo.
+
+Three things the import does rather than passing the sheet through verbatim, each because
+the sheet's convenient form is wrong *as content*: it drops zero-valued tags (a `0` in
+`demands` is inert in the level arithmetic but reads as a real prerequisite to
+`isCourseOpen`); it drops `demand`, `workloadHint` and office-hour `demand`, all three of
+which derive; and it renames the meeting type `language` to `drill`, because a subject tag
+already owns that string (§7.8).
+
+The import also **generates what the sheet doesn't carry**: a session spine and an assignment
+skeleton. The spine is sized by the engine's own `realMeetingDates` — the same function
+`fitSessions` validates against, imported rather than reimplemented, because a script that
+counted meetings its own way would just be a second opinion for `fitSessions` to throw at.
+Topics are the literal string `TBD`; the count is real. The assignment skeleton is a weekly
+item (problem set, lab report, quiz or reading response, named from the course's own tags)
+plus two large items, laid out over the weeks the course *actually* meets rather than `1..14`
+— Fall 2026's Thanksgiving week has no meetings at all, so a due date of `{ week: 13,
+session: 1 }` would resolve for no course and throw for several.
+
+Generating that skeleton is not cosmetic. `demand` and `workloadHint` derive from `estHours`,
+so a course with no assignments prices at its contact time alone: before the skeleton existed,
+138 of the 160 imported courses derived to demand 3 and the catalogue had no heavy courses in
+it. The skeleton gives each one a coursework budget of what's left of ~12 h/week after its own
+contact time — the figure the three hand-transcribed syllabi already quote — which puts the
+spread back where §4.6 wants it, on `demands`. It is still a placeholder, and it is still
+wrong in the direction of flattering the light courses: a Gen Ed lecture does not really ask
+twelve hours a week. Transcribing a real syllabus replaces it.
 
 ### 3.2 Content validation at boot
 
@@ -1235,7 +1271,10 @@ What's built and where to find it:
   grading pool *and* every demanded tag's level ledger, independently, in the same call.
 - **Effort and brackets** (`effort.ts`): `effort`/`workloadHint` derived from `meetings`
   + `estHours` + `demands` rather than hand-authored (the ~120-course problem this
-  solves is `GAME_DESIGN.md` §4.6's own framing); `deriveBrackets`, the per-item
+  solves is `GAME_DESIGN.md` §4.6's own framing), reachable as `effectiveDemand`,
+  `effectiveWorkloadHint` and `effectiveOfficeHourDemand` — the three accessors every
+  reader goes through, so the API and the content tests cannot disagree about a course's
+  demand; `deriveBrackets`, the per-item
   moderate/narrow thresholds, weight-derived rather than authored; essay draw-count
   escalation; the soft semester effort cap.
 - **The draw** (`grading.ts`): three bands (not the four a mid-session proposal
@@ -1398,6 +1437,17 @@ inflated-but-internally-consistent bracket still produces plausible-looking play
   hand-authored.** Revision 15. The only per-course number a human still picks is `demands`
   itself — everything else is arithmetic over data the content already has to carry anyway,
   which is what makes ~120 future courses tractable rather than 120 hand-tuned guesses.
+  Followed through on 1 September 2026, when the ~160-course stub set arrived and the
+  principle had to become a schema change rather than a stated intention: `demand`,
+  `workloadHint` and each office hour's `demand` are now *optional*, resolved by
+  `effectiveDemand` / `effectiveWorkloadHint` / `effectiveOfficeHourDemand` at the
+  `/api/courses` boundary alongside the session and assignment dates — all four being the
+  same kind of thing, computed from content rather than stored in it. An authored value
+  still wins, so a published figure or a genuine exception stays sayable; the content test
+  checks the ones that *are* authored against the derivation, which is where drift shows up.
+  Office-hour `demand` is the clearest case: the standing rule is one below the course's
+  own, so an authored copy carried no information a subtraction couldn't supply, and a stub
+  whose course demand is itself derived could not have known the number to write down.
 - **Levels move via hours banked, never via passing a course.** Revision 15. The design
   explored a discrete "passing a course bumps the level" rule first and rejected it: it
   would decouple a stat from the actual behavior (studying) the design wants to reward,
