@@ -2,7 +2,7 @@ import { randomBytes, randomUUID } from 'node:crypto'
 import cors from '@fastify/cors'
 import Database from 'better-sqlite3'
 import Fastify, { type FastifyInstance } from 'fastify'
-import type { Content } from '@harvard/content'
+import { representativeSectionHours, type Content } from '@harvard/content'
 import {
   BANDS,
   BuildRequest,
@@ -12,6 +12,9 @@ import {
   STRATEGIES,
   Save,
   bandOf,
+  effectiveDemand,
+  effectiveOfficeHourDemand,
+  effectiveWorkloadHint,
   fitSessions,
   formatLong,
   hasErrors,
@@ -221,11 +224,27 @@ export function buildApp({ content, dbFile }: ServerOptions): {
     const term = content.terms[0]
     return {
       contentHash: content.hash,
-      courses: content.courses.map((c) => ({
-        ...c,
-        sessions: term ? fitSessions(c, term) : c.sessions,
-        assignments: term ? resolveAssignmentDates(c, term) : c.assignments,
-      })),
+      courses: content.courses.map((c) => {
+        // A course's own `meetings` names only the pattern every section shares; the real
+        // length of the section a student would land in lives in sections.yaml. Joining the
+        // two is what makes a derived `demand` right for a course like CS50, whose 2h45m
+        // section is most of its contact time (see `representativeSectionHours`).
+        const sectionHours = representativeSectionHours(c.courseCode, content.slots)
+        return {
+          ...c,
+          // Derived unless the syllabus pinned one — see `effectiveDemand`. Resolved here,
+          // beside the session and assignment dates, because all four are the same kind of
+          // thing: computed from content, never stored in it.
+          demand: effectiveDemand(c, sectionHours),
+          workloadHint: effectiveWorkloadHint(c, sectionHours),
+          officeHours: c.officeHours.map((oh) => ({
+            ...oh,
+            demand: effectiveOfficeHourDemand(c, oh, sectionHours),
+          })),
+          sessions: term ? fitSessions(c, term) : c.sessions,
+          assignments: term ? resolveAssignmentDates(c, term) : c.assignments,
+        }
+      }),
       slots: content.slots,
     }
   })

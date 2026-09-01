@@ -41,7 +41,7 @@ traits:
     name: NORDIC
     blurb: Long winters, flat hierarchies, and a language almost nobody here speaks.
     cost: -3
-    kinds: [language, international]
+    kinds: [multilingual, international]
     grantsLanguageFrom: [Finnish, Swedish, Norwegian, Danish]
     structural: true
     why: Grants a rare language — a kind-tag price, which needs the NPC pool (Tier 3).
@@ -50,7 +50,7 @@ traits:
     name: EAST ASIAN
     blurb: A schooling system that asked more of you than this one will.
     cost: -3
-    kinds: [language, international]
+    kinds: [multilingual, international]
     grantsLanguageFrom: [Mandarin, Korean, Japanese, Cantonese]
     structural: true
     why: Grants a rare language — a kind-tag price, which needs the NPC pool (Tier 3).
@@ -59,7 +59,7 @@ traits:
     name: SOUTH ASIAN
     blurb: You have been explaining where you are from your whole life.
     cost: -2
-    kinds: [language, international]
+    kinds: [multilingual, international]
     grantsLanguageFrom: [Hindi, Urdu, Tamil, Bengali]
     structural: true
     why: Grants a rare language — a kind-tag price, which needs the NPC pool (Tier 3).

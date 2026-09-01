@@ -1,4 +1,11 @@
-import { BLOCK_MINUTES, type Assignment, type AssignmentKind, type Meeting, type Syllabus } from './schema'
+import {
+  BLOCK_MINUTES,
+  type Assignment,
+  type AssignmentKind,
+  type Meeting,
+  type OfficeHour,
+  type Syllabus,
+} from './schema'
 
 /**
  * `effort` and `workloadHint` are derived, not authored — the only per-course field a
@@ -108,6 +115,54 @@ function sumDemands(demands: Syllabus['demands']): number {
  */
 export function effortScore(syllabus: Syllabus, extraMeetingHours = 0): number {
   return Math.round((rawWeeklyHours(syllabus, extraMeetingHours) + sumDemands(syllabus.demands)) / 2)
+}
+
+// ── the two derived, display-facing fields (§4.1, §4.6) ──────────────────────────────
+
+/** `demand` is a 1-10 scale; a derived score outside it is clamped, never rejected. */
+const clampDemand = (score: number) => Math.max(1, Math.min(10, score))
+
+/**
+ * The `demand` a course actually presents. Authored when a human pinned one — a real
+ * published figure, or a known exception — and derived from `effortScore` otherwise.
+ *
+ * Both callers must go through here rather than reading `syllabus.demand`: the API serves
+ * it to the catalogue and the content tests assert the office-hour invariant against it,
+ * and those two disagreeing about a course's demand is exactly the drift this prevents.
+ */
+export function effectiveDemand(syllabus: Syllabus, extraMeetingHours = 0): number {
+  return syllabus.demand ?? clampDemand(effortScore(syllabus, extraMeetingHours))
+}
+
+/**
+ * How contested a course's office hours are: one below the course's own demand, which is
+ * the standing rule the content tests have always enforced. Derived rather than authored
+ * for the same reason `demand` is — the rule makes an authored copy of it redundant, and a
+ * course whose own demand derives cannot know the number to write down anyway.
+ *
+ * Floors at 1 so a demand-1 course still yields a legal value instead of a 0 the schema
+ * would reject. An authored `demand` wins, so a genuine exception stays sayable.
+ */
+export function effectiveOfficeHourDemand(
+  syllabus: Syllabus,
+  officeHour: OfficeHour,
+  extraMeetingHours = 0,
+): number {
+  return officeHour.demand ?? Math.max(1, effectiveDemand(syllabus, extraMeetingHours) - 1)
+}
+
+const round1 = (n: number) => Math.round(n * 10) / 10
+
+/**
+ * The workload string the catalogue shows. A stub with no assignments yet can only be
+ * honest about what it knows — contact time — so it says that outright instead of quoting
+ * a total that silently omits every pset the course will turn out to have.
+ */
+export function effectiveWorkloadHint(syllabus: Syllabus, extraMeetingHours = 0): string {
+  if (syllabus.workloadHint) return syllabus.workloadHint
+  const hours = round1(rawWeeklyHours(syllabus, extraMeetingHours))
+  if (syllabus.assignments.length === 0) return `~${hours}h/week in class, coursework TBD`
+  return `~${hours}h/week`
 }
 
 // ── bracket width (§4.4) ──────────────────────────────────────────────────────────────

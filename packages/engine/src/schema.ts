@@ -9,7 +9,18 @@ import { z } from 'zod'
  * precisely so that the engine keeps that property (ARCHITECTURE §2).
  */
 
-// ── subject tags: the closed seven (GAME_DESIGN §4.1) ───────────────────────────────
+// ── subject tags: the closed thirteen (GAME_DESIGN §4.1) ────────────────────────────
+/**
+ * Widened from seven to thirteen once the real ~160-course stub set showed the original
+ * seven could not describe it: a Gen Ed asks for `ethics` and `discussion`, organic
+ * chemistry asks for `lab` and `memorization`, and neither had anywhere to say so.
+ *
+ * Still **closed**, and for the same reason as before (§4.1) — every course stub carries
+ * these, so a fourteenth means revisiting all of them. The widening happened deliberately
+ * *before* the stubs were authored, which is the only cheap moment for it.
+ *
+ * `math` stays first: `app.ts` seeds the bot's standing routine from `subjectTags[0]`.
+ */
 export const SUBJECT_TAGS = [
   'math',
   'stats',
@@ -18,12 +29,18 @@ export const SUBJECT_TAGS = [
   'reading',
   'lab',
   'discussion',
+  'proof',
+  'visual',
+  'language',
+  'fieldwork',
+  'memorization',
+  'ethics',
 ] as const
 
 export const SubjectTag = z.enum(SUBJECT_TAGS)
 export type SubjectTag = z.infer<typeof SubjectTag>
 
-/** A level per subject tag. Seven numbers, and nothing else in state may hold one. */
+/** A level per subject tag. Thirteen numbers, and nothing else in state may hold one. */
 export type Levels = Record<SubjectTag, number>
 
 export const zeroLevels = (): Levels =>
@@ -169,7 +186,7 @@ export const Rules = z
   })
   .strict()
   .refine((r) => SUBJECT_TAGS.every((t) => r.subjectTags.includes(t)), {
-    message: 'rules.subjectTags must list all seven subject tags',
+    message: `rules.subjectTags must list every subject tag (all ${SUBJECT_TAGS.length} of them)`,
   })
 export type Rules = z.infer<typeof Rules>
 
@@ -264,24 +281,56 @@ export type TrackPack = z.infer<typeof TrackPack>
 export const Weekday = z.enum(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
 export type Weekday = z.infer<typeof Weekday>
 
-/** Harvard's three real class-meeting patterns. MWF meets three times a week at 50
- * minutes each; TTh and MW meet twice a week at 75 minutes each. */
-export const MeetingPattern = z.enum(['MWF', 'TTh', 'MW'])
+/**
+ * The weekly shapes a course meeting comes in. The first three are Harvard's real *block*
+ * patterns, which is what `BLOCK_STARTS` grids against: MWF meets three times a week at 50
+ * minutes each; TTh and MW meet twice a week at 75 minutes each.
+ *
+ * The last three are the off-block shapes the real ~160-course catalogue turned out to
+ * need, and they are deliberately not block slots: a `Th` science lab, a `W` junior
+ * tutorial, and the `MTWThF` daily elementary language class all run longer (or shorter)
+ * than any block, at times the registrar publishes per course rather than off the grid.
+ * They live here rather than as hand-written `time` ranges because what's actually known
+ * about them is *which day and roughly how long* — inventing a start time per course would
+ * look more precise than the data is (see `time` on `Meeting`).
+ */
+export const MeetingPattern = z.enum(['MWF', 'TTh', 'MW', 'Th', 'W', 'MTWThF'])
 export type MeetingPattern = z.infer<typeof MeetingPattern>
 
-/** Real, closed facts about the block schedule — not authored per course. */
-export const BLOCK_MINUTES: Record<MeetingPattern, number> = { MWF: 50, TTh: 75, MW: 75 }
+/**
+ * Real, closed facts about the block schedule — not authored per course. Minutes are **per
+ * meeting day**: `meetingHours` multiplies by `days.length`, so `MTWThF` is 5 h/week and
+ * `Th` is 3 h.
+ */
+export const BLOCK_MINUTES: Record<MeetingPattern, number> = {
+  MWF: 50,
+  TTh: 75,
+  MW: 75,
+  /** A science lab section: one long afternoon, the standard three hours. */
+  Th: 180,
+  /** A tutorial — junior/sophomore tutorials and Econ 970 meet once a week for two hours. */
+  W: 120,
+  /** Elementary language: an hour a day, five days a week. */
+  MTWThF: 60,
+}
 export const BLOCK_STARTS = ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30'] as const
 export const BLOCK_NIGHT_STARTS = ['18:00', '19:30'] as const
 
 /**
  * Whether attendance is actually expected. Real rule of thumb: sections, labs and
- * seminars are always `mandatory` (so are language classes and every Gen Ed course,
- * regardless of meeting type — Gen Ed isn't modeled as its own flag since no current
- * course needs it, but a future one should still mark its lecture `mandatory`); a large,
- * recorded lecture is typically `flexible`.
+ * tutorials are `mandatory` (so are language classes and every Gen Ed course, regardless
+ * of meeting type — Gen Ed isn't modeled as its own flag since no current course needs it,
+ * but a future one should still mark its lecture `mandatory`); a large, recorded lecture is
+ * typically `flexible`.
+ *
+ * `expected` is the middle case, and the most common one in the real catalogue — a
+ * 20-person seminar or a 50-person lecture where nobody takes attendance but everybody
+ * notices. It carries no mechanical cost yet; §4.3's missed-attendance inflation is where
+ * it will land, and the point of recording it now is that the distinction is a fact about
+ * the course, not a rule about the player, so it belongs in content whether or not a rule
+ * reads it yet.
  */
-export const Attendance = z.enum(['mandatory', 'flexible'])
+export const Attendance = z.enum(['mandatory', 'expected', 'flexible'])
 export type Attendance = z.infer<typeof Attendance>
 
 /** Registrar identifiers are strings so leading zeroes remain significant. */
@@ -300,9 +349,27 @@ export const CourseCode = z
   )
 export type CourseCode = z.infer<typeof CourseCode>
 
+/**
+ * What kind of room you are in. `section` appears on `CourseSlot` rather than here in
+ * practice — a syllabus names the pattern its sections share, the slot pool names the
+ * instances. `drill` is the daily elementary-language class (Latin 1, Greek 1); it is not
+ * called `language` because a subject tag already owns that string and §7.8's whole point
+ * is that one string never serves two meanings.
+ */
+export const MeetingType = z.enum([
+  'lecture',
+  'section',
+  'lab',
+  'seminar',
+  'tutorial',
+  'activeLearning',
+  'drill',
+])
+export type MeetingType = z.infer<typeof MeetingType>
+
 export const Meeting = z
   .object({
-    type: z.enum(['lecture', 'section', 'lab', 'seminar']),
+    type: MeetingType,
     days: z.array(Weekday).min(1),
     /**
      * One of the three real block patterns, when this meeting is a canonical class
@@ -340,7 +407,7 @@ export const CourseSlot = z
     /** The concrete instance half of this slot's six-digit `(id, section)` identity. */
     section: SectionId,
     courseCode: CourseCode,
-    type: z.enum(['lecture', 'section', 'lab', 'seminar']),
+    type: MeetingType,
     pattern: MeetingPattern.optional(),
     /** The one real time this instance runs, e.g. `"09:00-11:45"`. */
     time: z.string().min(1),
@@ -489,7 +556,14 @@ export const OfficeHour = z
     days: z.array(Weekday).min(1),
     time: z.string().min(1),
     location: z.string().min(1),
-    demand: z.number().int().min(1).max(10),
+    /**
+     * How contested this office hour is. **Optional, and normally absent**: the standing
+     * rule is one below the course's own demand, so an authored value carries no
+     * information that `effectiveOfficeHourDemand` can't compute — and a stub can't know
+     * the number anyway, since the course's demand is itself derived. Author it only to
+     * record a genuine exception.
+     */
+    demand: z.number().int().min(1).max(10).optional(),
   })
   .strict()
 export type OfficeHour = z.infer<typeof OfficeHour>
@@ -499,14 +573,31 @@ export const Syllabus = z
     id: CourseId,
     courseCode: CourseCode,
     title: z.string().min(1),
-    /** Overall workload weight — what shopping week compares (§4.1). */
-    demand: z.number().int().min(1).max(10),
-    workloadHint: z.string().min(1),
+    /**
+     * Overall workload weight — what shopping week compares (§4.1). **Optional, and
+     * normally absent**: `effectiveDemand` (effort.ts) derives it from the course's own
+     * meetings, assignments and `demands`, so authoring it is an explicit override for a
+     * course whose real workload is known to differ from what its structure implies.
+     * Deriving is the point — 160 stubs must not carry 160 hand-guessed numbers that go
+     * stale the moment their assignments are transcribed.
+     */
+    demand: z.number().int().min(1).max(10).optional(),
+    /** Same: derived by `effectiveWorkloadHint` unless a real published figure is known. */
+    workloadHint: z.string().min(1).optional(),
     /** r11 — what the course asks of you, per subject tag. */
     demands: z.record(SubjectTag, z.number().int().nonnegative()),
     meetings: z.array(Meeting).min(1),
     officeHours: z.array(OfficeHour).min(1),
-    sessions: z.array(Session).min(1),
+    /**
+     * Empty means **not authored yet** — a stub whose real syllabus hasn't been transcribed.
+     * `fitSessions` skips an empty spine rather than throwing; a non-empty one must still
+     * match the term calendar exactly. The distinction is the point: "no sessions" is a
+     * legitimate state for one of the ~160 stubs, "35 sessions when the calendar says 36"
+     * never is, and collapsing the two would cost the only check that catches a miscounted
+     * holiday.
+     */
+    sessions: z.array(Session).default([]),
+    /** Same convention as `sessions`: empty means unauthored, not "ungraded". */
     assignments: z.array(Assignment).default([]),
   })
   .strict()

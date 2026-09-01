@@ -19,7 +19,10 @@ const OPTIONS = {
   contentHash: 'test-hash',
   budget: 10,
   refundCap: 5,
-  subjectTags: ['math', 'stats', 'code', 'writing', 'reading', 'lab', 'discussion'],
+  subjectTags: [
+    'math', 'stats', 'code', 'writing', 'reading', 'lab', 'discussion',
+    'proof', 'visual', 'language', 'fieldwork', 'memorization', 'ethics',
+  ],
   traits: [
     {
       id: 'international_student',
@@ -42,7 +45,7 @@ const OPTIONS = {
       name: 'NORDIC',
       blurb: 'Long winters and a rare language.',
       cost: -3,
-      kinds: ['language', 'international'],
+      kinds: ['multilingual', 'international'],
       affects: {},
       excludes: [],
       requiresAnyOf: [],

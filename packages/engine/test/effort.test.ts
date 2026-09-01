@@ -5,6 +5,9 @@ import {
   courseworkHoursPerWeek,
   deriveBrackets,
   drawCount,
+  effectiveDemand,
+  effectiveOfficeHourDemand,
+  effectiveWorkloadHint,
   effortScore,
   examSitHoursPerWeek,
   meetingHoursPerWeek,
@@ -100,6 +103,48 @@ describe('rawWeeklyHours / effortScore — CS50', () => {
   it('matches the decided value (7) once a representative section length is supplied', () => {
     // Real CS50 sections are 2h45m = 2.75h/week (content/sections.yaml).
     assert.equal(effortScore(cs50, 2.75), 7)
+  })
+})
+
+describe('the three fields a stub does not have to author', () => {
+  // A stub off the spreadsheet carries tags, a meeting pattern and office-hour locations —
+  // and nothing else. These are what fills the rest in (§4.1).
+  // Dropped by destructuring rather than set to `undefined`: `exactOptionalPropertyTypes`
+  // draws the distinction, and "absent" is the state a stub is actually in.
+  const { demand: _demand, workloadHint: _hint, ...cs50WithoutTheTwo } = cs50
+  const { demand: _ohDemand, ...officeHourWithoutDemand } = cs50.officeHours[0]!
+  const stub: Syllabus = {
+    ...cs50WithoutTheTwo,
+    courseCode: 'stub',
+    assignments: [],
+    officeHours: [officeHourWithoutDemand],
+  }
+
+  it('takes the authored value whenever a human pinned one', () => {
+    assert.equal(effectiveDemand(cs50, 2.75), 7)
+    assert.equal(effectiveWorkloadHint(cs50), '~12h/week')
+    assert.equal(effectiveOfficeHourDemand(cs50, cs50.officeHours[0]!, 2.75), 6)
+  })
+
+  it('derives demand from structure alone, clamped into 1-10', () => {
+    // 3h of lecture + 2.75h section, no coursework yet: round((5.75 + 3) / 2) = 4.
+    assert.equal(effectiveDemand(stub, 2.75), 4)
+  })
+
+  it('says outright that a stub knows only its contact time', () => {
+    assert.equal(effectiveWorkloadHint(stub, 2.75), '~5.8h/week in class, coursework TBD')
+    // Once assignments arrive the caveat drops off on its own — no second edit to remember.
+    assert.equal(effectiveWorkloadHint({ ...stub, assignments: cs50.assignments }, 2.75), '~11.4h/week')
+  })
+
+  it('puts office hours one below the course, derived from a derived demand', () => {
+    assert.equal(effectiveOfficeHourDemand(stub, stub.officeHours[0]!, 2.75), 3)
+  })
+
+  it('floors office-hour demand at 1, since 0 is not a legal value', () => {
+    // A demand-1 course: nothing in the schema stops one, and `1 - 1` would fail to parse.
+    const quiet: Syllabus = { ...stub, demand: 1 }
+    assert.equal(effectiveOfficeHourDemand(quiet, stub.officeHours[0]!), 1)
   })
 })
 

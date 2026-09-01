@@ -39,7 +39,10 @@ const rules = Rules.parse({
     sleepStressPerBand: 5,
     conditionDailyDrift: -0.8,
   },
-  subjectTags: ['math', 'stats', 'code', 'writing', 'reading', 'lab', 'discussion'],
+  subjectTags: [
+    'math', 'stats', 'code', 'writing', 'reading', 'lab', 'discussion',
+    'proof', 'visual', 'language', 'fieldwork', 'memorization', 'ethics',
+  ],
   schedule: {
     buy: [
       { primary: 1, secondary: 0, points: 1 },
@@ -52,14 +55,23 @@ const rules = Rules.parse({
     ],
     maxRefundPerTrait: 2,
   },
+  // Mirrors content/rules.yaml, including the six tags added by the 7 -> 13 widening. The
+  // record is partial, so a missing weight would silently price at 1.0 rather than fail —
+  // which is exactly why the fixture carries them all.
   tagWeights: {
     math: 1.3,
     writing: 1.2,
+    language: 1.1,
     stats: 1.0,
     code: 1.0,
+    proof: 1.0,
     reading: 0.9,
+    ethics: 0.9,
+    memorization: 0.9,
     discussion: 0.8,
     lab: 0.8,
+    visual: 0.7,
+    fieldwork: 0.7,
   },
   academics: { semesterEffortCap: 28 },
 })

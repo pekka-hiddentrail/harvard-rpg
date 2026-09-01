@@ -125,8 +125,11 @@ Nothing was committed for this request. The repo is clean at the tier1 commit.
   +2→×1.7 · +3→×2.4 · +4→×3.5 · **+5+ = not survivable**. *Partner gap* (joint study)
   = how fast you climb: **+3 or more→×0** (you cannot collaborate) · +1..+2→×1.6 ·
   0→×1.35 · −1..−2→×1.05 · −3 or less→×0.8.
-- **Seven closed subject tags:** `math · stats · code · writing · reading · lab ·
-  discussion`. Closed because ~120 course stubs carry them.
+- **Thirteen closed subject tags:** `math · stats · code · writing · reading · lab ·
+  discussion · proof · visual · language · fieldwork · memorization · ethics`. Closed
+  because ~160 course stubs carry them. Was seven; widened once, deliberately, *before*
+  the stubs were authored. The kind tag `language` was renamed `multilingual` to keep the
+  two namespaces disjoint (§7.8).
 - **All four attributes are deleted** (revision 9). Creation is a **priced trait
   economy** (revision 10, Project Zomboid as the reference): points buy nothing but
   traits, and subject levels are *derived* from the build via subject tags.
@@ -135,7 +138,7 @@ Nothing was committed for this request. The repo is clean at the tier1 commit.
   Costs round up, refunds round down, and refunds must be **concave** with a hard +2
   max per trait — a rising refund rate is a points farm.
 - **Three tag namespaces that must never merge:** `affects` = subject tags · `tags` =
-  kind tags (`language`, `international`) · **dispositions are NPC-only**
+  kind tags (`multilingual`, `international`) · **dispositions are NPC-only**
   (`mentor type`, `guarded at first`). `affinity.ts` must not even import the
   disposition table.
 - **`error` vs `note` severity: nothing in this game forbids you.** A half-band of

@@ -6,13 +6,19 @@ import { createRng, pickIndex } from './rng.ts'
 // the content, this screen only asks and renders (ARCHITECTURE §4).
 const BASE = (import.meta.env.VITE_HARVARD_SERVER as string | undefined) ?? 'http://127.0.0.1:4711'
 
+/** Mirrors the engine's `MeetingPattern`. Named so `PATTERN_MINUTES` below has to cover
+ * every case — a widened enum should break this build, not print `undefined min`. */
+type MeetingPattern = 'MWF' | 'TTh' | 'MW' | 'Th' | 'W' | 'MTWThF'
+
+type Attendance = 'mandatory' | 'expected' | 'flexible'
+
 type Meeting = {
   type: string
   days: string[]
-  pattern: 'MWF' | 'TTh' | 'MW' | null
+  pattern: MeetingPattern | null
   time: string | null
   size: number
-  attendance: 'mandatory' | 'flexible'
+  attendance: Attendance
   sections: boolean
 }
 
@@ -63,11 +69,11 @@ type CourseSlot = {
   section: string
   courseCode: string
   type: string
-  pattern: 'MWF' | 'TTh' | 'MW' | null
+  pattern: MeetingPattern | null
   time: string
   days: string[]
   size: number
-  attendance: 'mandatory' | 'flexible'
+  attendance: Attendance
   demand: number
   occupied: number
   theme: string | null
@@ -83,7 +89,16 @@ const dueOf = (a: Assignment): string | null => a.date ?? a.due ?? null
 // this is fixed, public trivia, not a rule the engine computes -- same category as the
 // weekday names). The exact slot within a pattern is a registration-time choice (the
 // "Crimson Cart"), never authored, so it's never shown here either.
-const PATTERN_MINUTES: Record<string, number> = { MWF: 50, TTh: 75, MW: 75 }
+/** A label, not a rule — the engine's `BLOCK_MINUTES` is the real table. Exhaustive over
+ * `MeetingPattern` on purpose, so it cannot drift into printing a blank duration. */
+const PATTERN_MINUTES: Record<MeetingPattern, number> = {
+  MWF: 50,
+  TTh: 75,
+  MW: 75,
+  Th: 180,
+  W: 120,
+  MTWThF: 60,
+}
 
 const meetingsLabel = (meetings: Meeting[]): string =>
   meetings
@@ -98,7 +113,7 @@ const capitalize = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1)
 /** "Lecture flexible, Section mandatory" -- one entry per distinct meeting type, drawn
  * from the course's own meetings plus any matching real section slots. */
 const attendanceSummary = (course: Course, slots: CourseSlot[]): string => {
-  const byType = new Map<string, 'mandatory' | 'flexible'>()
+  const byType = new Map<string, Attendance>()
   for (const m of course.meetings) byType.set(m.type, m.attendance)
   for (const s of slots) if (s.id === course.id) byType.set(s.type, s.attendance)
   return [...byType.entries()].map(([type, attendance]) => `${capitalize(type)} ${attendance}`).join(', ')
@@ -240,15 +255,22 @@ export function CourseRegistrationScreen({ identity, onBack }: CourseRegistratio
                   ))}
                 </ul>
 
+                {/* An empty spine means this course is still a stub whose real syllabus
+                    hasn't been transcribed (see `Syllabus.sessions`) — say so, rather than
+                    leaving a heading over an empty list. */}
                 <h3>Sessions</h3>
-                <ol className="course-sessions">
-                  {selected.sessions.map((s) => (
-                    <li key={s.n}>
-                      <span className="session-date">{s.date}</span>
-                      <span className="session-topic">{s.topic}</span>
-                    </li>
-                  ))}
-                </ol>
+                {selected.sessions.length === 0 ? (
+                  <p className="course-unauthored">Session schedule not published yet.</p>
+                ) : (
+                  <ol className="course-sessions">
+                    {selected.sessions.map((s) => (
+                      <li key={s.n}>
+                        <span className="session-date">{s.date}</span>
+                        <span className="session-topic">{s.topic}</span>
+                      </li>
+                    ))}
+                  </ol>
+                )}
 
                 {/* Section slots are a cart concern, not a browsing one: which sections
                     exist only matters once you've committed to the course. That step
