@@ -14,5 +14,9 @@
     "verbatimModuleSyntax": true,
     "types": ["node"]
   },
-  "include": ["packages/*/src/**/*", "packages/*/test/**/*", "scripts/**/*"]
+  "include": ["packages/*/src/**/*", "packages/*/test/**/*", "scripts/**/*"],
+  // The client is checked by its own `packages/client/tsconfig.browser.json`, which adds the
+  // DOM libs and Vite's `import.meta.env` types. Checking it from here as well only produced
+  // 15 phantom errors about `window` not existing — noise that hid the four real ones.
+  "exclude": ["packages/client/**"]
 }

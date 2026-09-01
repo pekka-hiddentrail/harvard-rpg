@@ -9,17 +9,27 @@
 import { weightedAverageGap } from './demands'
 import type { Levels, SubjectTag } from './schema'
 
-export type Band = 'narrow' | 'moderate' | 'wide'
+/**
+ * How wide the hidden draw's spread is — not to be confused with `Band` in `bands.ts`, which
+ * is a slot in the day's schedule. Both were called `Band` and both leave the engine through
+ * `export *`, so the public API had one name for two unrelated things: exactly the collision
+ * §7.8 forbids, and the reason the `language` kind tag became `multilingual`. This is the one
+ * that moved, because `CONFIDENCE_LABEL` below had already named the concept.
+ */
+export type ConfidenceBand = 'narrow' | 'moderate' | 'wide'
 
 /** The two authored thresholds from `deriveBrackets` (effort.ts) — no third cutoff. */
-export function bandFor(hoursBanked: number, brackets: { moderate: number; narrow: number }): Band {
+export function bandFor(
+  hoursBanked: number,
+  brackets: { moderate: number; narrow: number },
+): ConfidenceBand {
   if (hoursBanked >= brackets.narrow) return 'narrow'
   if (hoursBanked >= brackets.moderate) return 'moderate'
   return 'wide'
 }
 
 /** Half a letter grade, a full one, or up to two — the band's width, said in words. */
-export const CONFIDENCE_LABEL: Record<Band, string> = {
+export const CONFIDENCE_LABEL: Record<ConfidenceBand, string> = {
   narrow: 'give or take half a letter grade',
   moderate: 'give or take a full letter grade',
   wide: 'could swing one and a half to two letter grades either way',
@@ -29,7 +39,7 @@ export const CONFIDENCE_LABEL: Record<Band, string> = {
 
 /** Each card's range, by band. `wide` absorbs both the ±3 and ±4 magnitudes — one band,
  * not two, since splitting them added a threshold nothing else needed. */
-const CARD_RANGE: Record<Band, number> = { narrow: 1, moderate: 2, wide: 4 }
+const CARD_RANGE: Record<ConfidenceBand, number> = { narrow: 1, moderate: 2, wide: 4 }
 
 function hashSeed(saveSeed: string, assessmentId: string): number {
   const str = `${saveSeed}:${assessmentId}`
@@ -57,7 +67,7 @@ function mulberry32(seed: number): () => number {
  * forever once drawn (§4.4) — the caller draws exactly once per assessment and never
  * again, even if the player's band later changes.
  */
-export function drawCards(saveSeed: string, assessmentId: string, band: Band, count: number): number[] {
+export function drawCards(saveSeed: string, assessmentId: string, band: ConfidenceBand, count: number): number[] {
   const range = CARD_RANGE[band]
   const span = 2 * range + 1
   const rand = mulberry32(hashSeed(saveSeed, assessmentId))
@@ -115,7 +125,9 @@ export function applyBumps(cards: readonly number[], extraHours: number): number
   while (bumps > 0) {
     const target = pickBumpTarget(result)
     if (target === undefined) break
-    result[target] = bumpTowardZero(result[target])
+    // `!` is safe and not a shortcut: `pickBumpTarget` only ever returns an index it read out
+    // of this same array, so the slot exists. `noUncheckedIndexedAccess` can't see that.
+    result[target] = bumpTowardZero(result[target]!)
     bumps--
   }
   return result

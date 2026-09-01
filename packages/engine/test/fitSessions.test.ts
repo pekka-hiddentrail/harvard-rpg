@@ -17,7 +17,7 @@ const mwCourse: Syllabus = {
   demand: 5,
   workloadHint: '~5h/week',
   demands: {},
-  meetings: [{ type: 'lecture', days: ['Mon', 'Wed'], size: 10, attendance: 'flexible' }],
+  meetings: [{ type: 'lecture', days: ['Mon', 'Wed'], size: 10, attendance: 'flexible', sections: false }],
   officeHours: [{ type: 'officeHour', length: 'free', booked: false, days: ['Fri'], time: '14:00-15:00', location: 'Somewhere', demand: 4 }],
   sessions: [1, 2, 3, 4, 5].map((n) => ({ n, topic: `Session ${n}` })),
   assignments: [],

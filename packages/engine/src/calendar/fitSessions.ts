@@ -111,11 +111,15 @@ export function resolveCourseWeek(w: CourseWeek, course: Syllabus, term: Term): 
 }
 
 type ResolvedAssignment = Omit<Assignment, 'assigned' | 'due' | 'date' | 'stages' | 'resettable'> & {
-  assigned?: string
-  due?: string
-  date?: string
+  // `| undefined` is explicit rather than bare `?:` because `exactOptionalPropertyTypes`
+  // separates "absent" from "present and undefined", and this function produces the latter:
+  // an assignment with no `due` gets `due: undefined`, which the API layer then serialises
+  // away. Writing `due?: string` would be claiming the key is simply missing.
+  assigned?: string | undefined
+  due?: string | undefined
+  date?: string | undefined
   stages: { id: string; due: string }[]
-  resettable?: { carryover: number; before: string }
+  resettable?: { carryover: number; before: string } | undefined
 }
 
 /** Same idea as `fitSessions`, for the dates authored on `assignments` instead of `sessions`. */

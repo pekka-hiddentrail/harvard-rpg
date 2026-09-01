@@ -13,6 +13,7 @@ const identity: CharacterIdentity = {
   state: 'Massachusetts',
   school: 'Boston High School',
   avatarIndex: 0,
+  seed: 'test-seed',
 }
 
 const OPTIONS = {

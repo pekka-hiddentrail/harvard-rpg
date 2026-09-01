@@ -2,7 +2,13 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"]
+    "types": ["vite/client", "vitest/globals", "@testing-library/jest-dom"]
   },
-  "include": ["src/browser.tsx"]
+  // `browser.tsx` pulls in every screen transitively, so listing it covers all of `src`. The
+  // tests are listed explicitly because nothing imports them, and because the root tsconfig
+  // now excludes this package entirely — if they weren't here they would go unchecked.
+  "include": ["src/browser.tsx", "test/**/*"],
+  // Overrides the root's `exclude`, which names this package and is inherited through
+  // `extends` — without this, the config resolves to no input files at all.
+  "exclude": []
 }
