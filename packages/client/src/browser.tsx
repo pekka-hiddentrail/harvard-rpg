@@ -1,4 +1,4 @@
-import { StrictMode, useState } from 'react'
+import { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import './browser.css'
 import { AdmissionTimelineScreen } from './AdmissionTimelineScreen.tsx'
@@ -36,9 +36,51 @@ const requestedView = (): View => {
     : 'welcome'
 }
 
+const BASE = (import.meta.env.VITE_HARVARD_SERVER as string | undefined) ?? 'http://127.0.0.1:4711'
+
+/**
+ * Dev scaffolding, second half. Jumping straight to `?screen=courseRegistration` skips the
+ * screen that writes the save, so there is no game to shop for. Rather than have the screen
+ * pretend, post the `pekka` preset — the same build the server tests use — and hand back its
+ * id. Only ever called on the direct-jump path; the real route through the game already has a
+ * save by the time it reaches shopping week.
+ */
+const bootstrapDevSave = async (): Promise<string | null> => {
+  try {
+    const options = (await (await fetch(`${BASE}/api/creation/options`)).json()) as {
+      presets?: ({ id: string; name: string } & Record<string, unknown>)[]
+    }
+    const preset = options.presets?.find((p) => p.id === 'pekka')
+    if (!preset) return null
+    const { id: _id, name: _name, ...build } = preset
+    const res = await fetch(`${BASE}/api/game/new`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(build),
+    })
+    if (res.status !== 201) return null
+    return ((await res.json()) as { gameId: string }).gameId
+  } catch {
+    return null
+  }
+}
+
 function BrowserApp() {
   const [view, setView] = useState<View>(requestedView)
   const [identity, setIdentity] = useState<CharacterIdentity>(DEFAULT_IDENTITY)
+  /** The save every post-creation screen reads from. `null` until one is written (§4.6). */
+  const [gameId, setGameId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (gameId !== null || requestedView() === 'welcome') return
+    let stale = false
+    void bootstrapDevSave().then((id) => {
+      if (!stale && id) setGameId(id)
+    })
+    return () => {
+      stale = true
+    }
+  }, [gameId])
 
   if (view === 'welcome') {
     return <WelcomeScreen onStartNewGame={() => setView('character')} />
@@ -61,7 +103,13 @@ function BrowserApp() {
   }
 
   if (view === 'courseRegistration') {
-    return <CourseRegistrationScreen identity={identity} onBack={() => setView('timeline')} />
+    return (
+      <CourseRegistrationScreen
+        identity={identity}
+        gameId={gameId}
+        onBack={() => setView('timeline')}
+      />
+    )
   }
 
   if (view === 'timeline') {
@@ -77,7 +125,10 @@ function BrowserApp() {
   return <TraitSelectionScreen
     identity={identity}
     onBack={() => setView('character')}
-    onSaveAndStart={() => setView('timeline')}
+    onSaveAndStart={(id) => {
+      setGameId(id)
+      setView('timeline')
+    }}
   />
 }
 

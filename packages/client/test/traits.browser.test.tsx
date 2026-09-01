@@ -107,6 +107,11 @@ function mockFetch() {
       }
       // Real server behaviour: spent/refunded/levels ride along even when ok is false, so a
       // live-editing screen has real numbers before the budget is exactly balanced.
+      // Approved here, refused on write below — the one case the 422 path exists for, where
+      // the screen's validation and the engine's have drifted apart.
+      if (ids.includes('international_student') && ids.includes('nordic')) {
+        return Promise.resolve(new Response(JSON.stringify({ ok: true, spent: 3, refunded: 3, levels: {} })))
+      }
       if (ids.includes('bad_with_numbers') && !ids.includes('long_mathematics')) {
         return Promise.resolve(
           new Response(
@@ -131,6 +136,19 @@ function mockFetch() {
           }),
         ),
       )
+    }
+    if (url.endsWith('/api/game/new')) {
+      const body = JSON.parse(String(init?.body)) as { traits: { id: string }[] }
+      // Mirrors the server: the build is validated *again* on write, so one the screen
+      // thought was fine can still come back 422.
+      if (body.traits.some((t) => t.id === 'international_student')) {
+        return Promise.resolve(
+          new Response(JSON.stringify({ problems: [{ code: 'content', message: 'The trait pool changed under you.' }] }), {
+            status: 422,
+          }),
+        )
+      }
+      return Promise.resolve(new Response(JSON.stringify({ gameId: 'save-1' }), { status: 201 }))
     }
     return Promise.reject(new Error(`unexpected fetch to ${url}`))
   })
@@ -212,6 +230,40 @@ describe('trait selection screen', () => {
 
     const abilityScores = screen.getByRole('heading', { name: 'Ability scores' }).nextElementSibling!
     expect(within(abilityScores as HTMLElement).getByText('+2')).toBeVisible()
+  })
+
+  it('writes the save and hands the game id up, since a term is enrolled into a save', async () => {
+    const user = userEvent.setup()
+    const onSaveAndStart = vi.fn()
+    render(<TraitSelectionScreen identity={identity} onBack={() => {}} onSaveAndStart={onSaveAndStart} />)
+
+    await screen.findByRole('heading', { name: 'Traits and abilities' })
+    await user.click(screen.getByRole('button', { name: /LONG MATHEMATICS/i }))
+
+    const saveButton = await screen.findByRole('button', { name: /save and start game/i })
+    await waitFor(() => expect(saveButton).toBeEnabled())
+    await user.click(saveButton)
+
+    await waitFor(() => expect(onSaveAndStart).toHaveBeenCalledWith('save-1'))
+  })
+
+  it('shows the server’s refusal and does not navigate when the save is rejected', async () => {
+    const user = userEvent.setup()
+    const onSaveAndStart = vi.fn()
+    render(<TraitSelectionScreen identity={identity} onBack={() => {}} onSaveAndStart={onSaveAndStart} />)
+
+    await screen.findByRole('heading', { name: 'Traits and abilities' })
+    // A build `/validate` approves and `/game/new` refuses — the disagreement the 422 path
+    // exists for. Without it the screen would navigate to a save that was never written.
+    await user.click(screen.getByRole('button', { name: /INTERNATIONAL STUDENT/i }))
+    await user.click(screen.getByRole('button', { name: /NORDIC/i }))
+
+    const saveButton = await screen.findByRole('button', { name: /save and start game/i })
+    await waitFor(() => expect(saveButton).toBeEnabled())
+    await user.click(saveButton)
+
+    expect(await screen.findByText('The trait pool changed under you.')).toBeVisible()
+    expect(onSaveAndStart).not.toHaveBeenCalled()
   })
 
   it('leaves the trait screen without saving via Back', async () => {

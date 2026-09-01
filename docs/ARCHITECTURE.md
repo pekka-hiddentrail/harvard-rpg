@@ -310,11 +310,20 @@ session: 1 }` would resolve for no course and throw for several.
 Generating that skeleton is not cosmetic. `demand` and `workloadHint` derive from `estHours`,
 so a course with no assignments prices at its contact time alone: before the skeleton existed,
 138 of the 160 imported courses derived to demand 3 and the catalogue had no heavy courses in
-it. The skeleton gives each one a coursework budget of what's left of ~12 h/week after its own
-contact time — the figure the three hand-transcribed syllabi already quote — which puts the
-spread back where §4.6 wants it, on `demands`. It is still a placeholder, and it is still
-wrong in the direction of flattering the light courses: a Gen Ed lecture does not really ask
-twelve hours a week. Transcribing a real syllabus replaces it.
+it. The skeleton budgets each course's coursework *up* from what the course is — 1.5 h per
+contact hour plus 1 h per demand point, floored at 2 h/week — the way a syllabus states it
+("expect two hours outside class for every hour in"). A standard 4-credit course lands near the
+twelve hours all in that the three hand-transcribed syllabi quote, which puts the spread back
+where §4.6 wants it, on `demands`.
+
+Building it *up* rather than down from a total is the whole point, and not obviously so. An
+earlier version budgeted `target − contact` against a target that scaled with `demands`; that
+makes total hours equal the target identically, cancels contact time, and reduces
+`effortScore` to `4 + Σdemands` — true for 162 of 163 courses. Coursework must therefore scale
+with contact time *and* carry a separate demand term, so neither can cancel the other.
+`demands` does reach `effortScore` twice, once through these hours and once as itself; that
+double-count is deliberate, since `demands` is the only field on a generated course a human
+actually chose. It is still a placeholder. Transcribing a real syllabus replaces all of it.
 
 ### 3.2 Content validation at boot
 
@@ -1308,6 +1317,71 @@ recurs every week of it. Getting this wrong doesn't error — it silently inflat
 milestone's bracket by the mismatch, which is exactly the kind of bug the balance bot
 won't catch on its own once it's extended to exercise this module, since a systematically
 inflated-but-internally-consistent bracket still produces plausible-looking play.
+
+### 11.4 Shopping week: the first screen the grading module is actually wired into
+
+`packages/engine/src/shopping.ts` prices a course against a specific player's derived levels.
+It is the first consumer of §11.3's demand-gap work that a player can see, and it exists at
+this point in the order because §4.4's rule — *show the price, never the outcome* — makes it
+the one screen that can use the whole grading module without needing the day loop wired up
+first. Nothing in `shopping.ts` draws a card or predicts a grade; it reports hours.
+
+- **`previewCourse(syllabus, levels, extraMeetingHours)`** returns the row: `fixedHours`
+  (meetings + the representative section + exam sit time), `baseCourseworkHours` (what the
+  syllabus asks of someone at level), `personalCourseworkHours` (the same work with each tag's
+  gap multiplier applied to that tag's *share* of the coursework), and the two totals. It
+  computes nothing itself — it composes `demandGap`, `demandGapMultiplier`, `isCourseOpen`,
+  `courseworkHoursPerWeek`, `meetingHoursPerWeek`, `examSitHoursPerWeek` and
+  `effectiveDemand`, so pricing cannot drift away from §4.5.
+- **The one arithmetic judgement is where the multiplier applies:** to coursework only, never
+  to contact hours or exam sit-time. Being behind on linear algebra does not make the lecture
+  longer.
+- **Every field is rounded once, and each total is the sum of the *rounded* parts** rather
+  than a rounded sum of raw ones. §4.4's argument is one the player is supposed to be able to
+  check by adding it up, and a panel reading *"5.8 fixed + 5.9 coursework = 11.6"* destroys
+  that for the sake of a tenth of an hour that isn't a real quantity of time.
+- **`drivingTag`** names the single subject costing the most hours, with a not-survivable tag
+  always winning outright — it is the reason the course is shut, whatever the hours say.
+- **A closed course still prices.** `open: false` rows keep their gap rows and finite hours so
+  the client can render the reason and a route out (§9.3) instead of a hole in the list.
+
+Enrolment is two actions in the log — `enrol_course` and `drop_course`, both term-scoped — and
+`GameState.enrolled` is folded from them like everything else (§3). **Both replay cases are
+idempotent on purpose:** replay folds a log that is already committed, so it has no reply
+channel and cannot refuse anything. Filing a course twice updates the section rather than
+listing it twice (which is what switching sections *is*); dropping one you aren't in is a
+no-op. Whether either was sensible is the API's question, asked before the action is appended.
+
+The server refuses exactly two things at `POST /api/game/:id/shopping/enrol`: a course whose
+gap is not survivable, and a section that doesn't exist or is full. **The effort cap
+explicitly does not refuse** — §4.6 calls it a line, not a wall, so `summarizeCart` returns
+`over`/`overBy` and the route answers 200. A full-section check ships even though no slot in
+today's content is full, so the first full section isn't what discovers the check was missing.
+
+The client (`CourseRegistrationScreen.tsx`) joins `/api/courses` with
+`/api/game/:id/shopping` on `courseCode` because they answer two different questions: what a
+course *is* (identical for every player) and what it would cost *you* (needs a save). With no
+save it renders the plain catalogue, unpriced — which is what a course list is, and honest in
+a way that inventing gaps for a player who doesn't exist would not be.
+
+**The cap and the hours measure different things, and the first live run made that loud.**
+`effort` comes from `effectiveDemand`, which takes no `levels` — it is the course's intrinsic
+weight, clamped 1–10, identical for every player. `personalWeeklyHours` is what *you* would
+pay. For Pekka (math +2, writing −1, lab 0) a four-course card of Math 21b, LS 1A, CS 50 and
+Expos 20 reads **effort 30/28 — barely over — while the hours read 68.5/week**, because LS 1A
+alone is 28.8 for her (a lab gap of 3, so ×2.4 on three quarters of an 11.4 h coursework
+budget). The soft cap therefore does *not* see your gaps. That is arguably right — a cap that
+moved with your build would tell a weak student they may take fewer courses, which is a
+different and worse game — but it means the effort number cannot be the only warning shown,
+and it is why the cart states hours next to it. Whether §4.6's 28 should instead be a
+personal-hours line is an open design question, not a bug; nothing should be retuned until the
+collision view below exists, since spreading 68 hours across fourteen weeks is exactly what
+that view would reveal.
+
+**Deferred, and it is the other half of the gate:** the stacked workload-collision view — *"three
+psets in the week of October 19"* — is not built. Shopping week prices courses one at a time
+and sums them; it does not yet show *when* the hours land. §11's Tuesday-in-mid-October
+question is not fully answerable until it does.
 
 ## 12. Decisions I made for you
 

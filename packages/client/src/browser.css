@@ -1277,6 +1277,184 @@ h1 {
   color: #465048;
 }
 
+/* ── shopping week (§4.6) ─────────────────────────────────────────────────────────────
+   Two colours carry meaning here and nowhere else on the screen: crimson for a cost you
+   are carrying (a gap, the cap exceeded) and grey for a course that is shut. A closed row
+   is dimmed rather than hidden, because §9.3 wants the reason visible, not the course
+   gone. */
+
+.course-refusal {
+  margin-top: 16px;
+  padding: 10px 14px;
+  background: #f6e7ea;
+  border-left: 3px solid #8c1d31;
+  color: #8c1d31;
+  font-size: 14px;
+}
+
+.crimson-cart {
+  margin-top: 24px;
+  padding: 16px 20px;
+  background: #fff;
+  border: 1px solid #a7b0a5;
+  box-shadow: 4px 4px 0 #d9e0d6;
+}
+
+.crimson-cart h2 {
+  margin: 0 0 10px;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 18px;
+}
+
+.cart-empty {
+  margin: 0;
+  font-size: 13px;
+  font-style: italic;
+  color: #7c867e;
+}
+
+.cart-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cart-rows li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: baseline;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid #e4e8e2;
+  font-size: 13px;
+}
+
+.cart-course {
+  font-weight: 600;
+}
+
+.cart-price {
+  color: #465048;
+}
+
+.cart-drop,
+.drop-button,
+.add-button {
+  padding: 4px 10px;
+  background: #fff;
+  border: 1px solid #8c1d31;
+  color: #8c1d31;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+
+.add-button,
+.drop-button {
+  margin-top: 12px;
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+.add-button {
+  background: #8c1d31;
+  color: #fff;
+}
+
+.add-button:disabled,
+.drop-button:disabled,
+.cart-drop:disabled {
+  border-color: #a7b0a5;
+  background: #eceee9;
+  color: #7c867e;
+  cursor: not-allowed;
+}
+
+.cart-total {
+  margin: 12px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.cart-total.over {
+  color: #8c1d31;
+}
+
+.cart-warning {
+  margin: 6px 0 0;
+  font-size: 13px;
+  font-style: italic;
+  color: #8c1d31;
+}
+
+.course-list-item.closed {
+  background: #f2f3f0;
+  color: #7c867e;
+}
+
+.course-list-item.enrolled {
+  border-left: 4px solid #8c1d31;
+}
+
+.course-closed-note {
+  color: #8c1d31;
+  font-style: italic;
+}
+
+.demand-chip.behind {
+  background: #f6e7ea;
+  border-color: #c98d9b;
+  color: #8c1d31;
+}
+
+.demand-chip.driving {
+  font-weight: 700;
+}
+
+.gap-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.gap-table th,
+.gap-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid #e4e8e2;
+  text-align: right;
+}
+
+.gap-table thead th,
+.gap-table tbody th {
+  text-align: left;
+  color: #465048;
+  font-weight: 600;
+}
+
+.gap-table tr.not-survivable td:last-child {
+  color: #8c1d31;
+  font-style: italic;
+}
+
+.price-total {
+  margin: 12px 0 0;
+  font-size: 14px;
+}
+
+.price-closed {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #8c1d31;
+}
+
+.section-choice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 13px;
+}
+
 @media (max-width: 720px) {
   .welcome-shell {
     padding: 12px;

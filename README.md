@@ -41,6 +41,11 @@ from the welcome screen, append `?screen=<name>` to the URL — `character`, `tr
 `calendar`, `timeline`, or `courseRegistration` (`npm run gui:character` does this for
 character creation specifically).
 
+Any direct jump past the trait screen skips the step that writes a save, so there would be
+nothing to shop for. The scaffolding posts the `pekka` preset to `/api/game/new` on the way
+in and shops for that — which means `?screen=courseRegistration` needs the API server up,
+and shows prices for Pekka's build rather than one you picked.
+
 ## Test and Balance
 
 Run all tests (engine, content, server — Node's test runner):

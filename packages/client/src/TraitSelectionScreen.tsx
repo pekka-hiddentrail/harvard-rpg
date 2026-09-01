@@ -53,10 +53,22 @@ const post = async (path: string, body: unknown) => {
 
 const sign = (n: number): string => (n > 0 ? `+${n}` : `${n}`)
 
+/** The one build this screen describes: sent to `/validate` on every edit and to `/game/new`
+ * once. A function rather than a value so both callers read the same shape without it
+ * becoming a render-unstable effect dependency. */
+const buildRequest = (identity: CharacterIdentity, picks: Pick[]) => ({
+  hometown: `${identity.city}, ${identity.state}`,
+  schoolType: identity.school,
+  program: 'degree',
+  traits: picks,
+})
+
 type TraitSelectionScreenProps = {
   identity: CharacterIdentity
   onBack: () => void
-  onSaveAndStart?: (picks: Pick[]) => void
+  /** Called with the id of the save the server just wrote — nothing downstream works without
+   * one, since a term is enrolled *into* a save (§4.6). */
+  onSaveAndStart?: (gameId: string) => void
 }
 
 export function TraitSelectionScreen({ identity, onBack, onSaveAndStart }: TraitSelectionScreenProps) {
@@ -65,6 +77,7 @@ export function TraitSelectionScreen({ identity, onBack, onSaveAndStart }: Trait
   const [picks, setPicks] = useState<Pick[]>([])
   const [focusedId, setFocusedId] = useState<string | null>(null)
   const [valid, setValid] = useState<Validation | null>(null)
+  const [starting, setStarting] = useState(false)
 
   useEffect(() => {
     fetch(`${BASE}/api/creation/options`)
@@ -73,18 +86,34 @@ export function TraitSelectionScreen({ identity, onBack, onSaveAndStart }: Trait
       .catch(() => setError(`No server on ${BASE}. Start it with \`npm run server\` in another window.`))
   }, [])
 
+  /**
+   * Write the save. The server revalidates the build and re-prices every trait, so a `422`
+   * here is not a client bug to swallow — it means the screen's own validation and the
+   * engine's disagreed, and the player needs to see which. Nothing navigates on a failure.
+   */
+  const startGame = () => {
+    if (starting) return
+    setStarting(true)
+    post('/api/game/new', buildRequest(identity, picks))
+      .then(({ status, json }) => {
+        const body = json as { gameId?: string; problems?: Problem[] }
+        if (status === 201 && body.gameId) {
+          onSaveAndStart?.(body.gameId)
+          return
+        }
+        setValid({ ok: false, problems: body.problems ?? [{ code: 'server', message: `The server refused the save (${status}).` }] })
+      })
+      .catch(() => setError(`No server on ${BASE}. Start it with \`npm run server\` in another window.`))
+      .finally(() => setStarting(false))
+  }
+
   useEffect(() => {
     if (picks.length === 0) {
       setValid(null)
       return
     }
     let stale = false
-    post('/api/creation/validate', {
-      hometown: `${identity.city}, ${identity.state}`,
-      schoolType: identity.school,
-      program: 'degree',
-      traits: picks,
-    })
+    post('/api/creation/validate', buildRequest(identity, picks))
       .then(({ json }) => {
         if (!stale) setValid(json as Validation)
       })
@@ -305,10 +334,10 @@ export function TraitSelectionScreen({ identity, onBack, onSaveAndStart }: Trait
           <button
             className="continue-button"
             type="button"
-            disabled={valid?.ok !== true}
-            onClick={() => onSaveAndStart?.(picks)}
+            disabled={valid?.ok !== true || starting}
+            onClick={startGame}
           >
-            Save and start game
+            {starting ? 'Saving…' : 'Save and start game'}
           </button>
         </div>
       </section>

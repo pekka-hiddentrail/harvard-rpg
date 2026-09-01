@@ -1152,10 +1152,24 @@ turn out to have — the hint reads *"~5.8h/week in class, coursework TBD"* inst
 *"~5.8h/week"* — which is what made it obvious that deriving from contact time alone wasn't
 enough: with no coursework to price, 138 of the 160 stubs came out at demand 3, and a
 catalogue where nothing is heavier than anything else can't be shopped. So the import
-generates an assignment skeleton too (ARCHITECTURE §3.1), budgeting each course whatever is
-left of ~12 h/week after its own contact time. The derived spread is now 6–9 and it comes
-from `demands`, which is the intended answer: the workload arithmetic is arithmetic, and the
-human's judgement is the tag map.
+generates an assignment skeleton too (ARCHITECTURE §3.1), sizing each course's coursework
+budget from its contact hours *and* its subject demands — 1.5 h of work per contact hour plus
+an hour per demand point, so a 4-credit lecture lands near the twelve hours a real syllabus
+quotes. The derived spread is 6–10.
+
+Two earlier versions failed, and it is worth naming the second: budgeting each course
+*whatever was left* of a ~12 h/week target after its contact time. That looks like it prices
+the course and doesn't. If coursework is `target − contact` then total hours **are** the
+target, contact cancels, and `effortScore` collapses to `4 + Σdemands` — which held for 162 of
+163 courses. The number had stopped measuring anything and become a relabelling of its own
+input, pricing a 5.5 h/week lab identically to a 2 h/week seminar with the same tags. The fix
+is that coursework now scales with contact time *and* adds a demand term, so neither can
+cancel the other.
+
+The remaining compression is in the authored data, not the arithmetic: 141 of 163 courses land
+at 6 or 7 because the spreadsheet's tag levels only ever take the values 1–3 and 148 courses
+carry exactly two tags. That is an authoring question — the workload arithmetic is arithmetic,
+and the human's judgement is the tag map.
 
 There is also a **semester effort cap** (`rules.academics.semesterEffortCap`, 28) —
 a *soft* warning, not a hard block, on the sum of `effort` across a player's enrolled
