@@ -1,0 +1,85 @@
+# Generated from packages/user/harvard_course_schema.xlsx by
+# scripts/import-courses.ts. Authored, straight off the sheet: the tags this course asks of
+# you, how it meets, and where its office hours are. Absent because it derives: `demand`,
+# `workloadHint`, office-hour `demand`. Generated, and therefore placeholder: the session
+# spine (sized to this course's real meeting dates in Fall 2026 — the count has to match
+# exactly or `fitSessions` throws) and the assignment skeleton (a weekly item carrying the
+# ~12h/week coursework budget, plus a midterm and a final). Topics stay `TBD` until the real
+# syllabus is transcribed; when you transcribe one, delete the first line of this file and the
+# importer will stop overwriting it.
+id: "027"
+courseCode: "chem27"
+title: "Chem 27: Organic Chemistry, Part II"
+demands:
+  lab: 2
+  memorization: 3
+meetings:
+  - { type: lecture, days: [Mon, Wed, Fri], pattern: MWF, size: 150, attendance: flexible }
+  - { type: lab, days: [Thu], pattern: Th, size: 18, attendance: mandatory }
+officeHours:
+  - { type: officeHour, length: "30 minutes", booked: true, days: [Mon], time: "10:00-12:00", location: "Mallinckrodt Chemistry Laboratory" }
+sessions:
+  - { n: 1, topic: "TBD" }
+  - { n: 2, topic: "TBD" }
+  - { n: 3, topic: "TBD" }
+  - { n: 4, topic: "TBD" }
+  - { n: 5, topic: "TBD" }
+  - { n: 6, topic: "TBD" }
+  - { n: 7, topic: "TBD" }
+  - { n: 8, topic: "TBD" }
+  - { n: 9, topic: "TBD" }
+  - { n: 10, topic: "TBD" }
+  - { n: 11, topic: "TBD" }
+  - { n: 12, topic: "TBD" }
+  - { n: 13, topic: "TBD" }
+  - { n: 14, topic: "TBD" }
+  - { n: 15, topic: "TBD" }
+  - { n: 16, topic: "TBD" }
+  - { n: 17, topic: "TBD" }
+  - { n: 18, topic: "TBD" }
+  - { n: 19, topic: "TBD" }
+  - { n: 20, topic: "TBD" }
+  - { n: 21, topic: "TBD" }
+  - { n: 22, topic: "TBD" }
+  - { n: 23, topic: "TBD" }
+  - { n: 24, topic: "TBD" }
+  - { n: 25, topic: "TBD" }
+  - { n: 26, topic: "TBD" }
+  - { n: 27, topic: "TBD" }
+  - { n: 28, topic: "TBD" }
+  - { n: 29, topic: "TBD" }
+  - { n: 30, topic: "TBD" }
+  - { n: 31, topic: "TBD" }
+  - { n: 32, topic: "TBD" }
+  - { n: 33, topic: "TBD" }
+  - { n: 34, topic: "TBD" }
+  - { n: 35, topic: "TBD" }
+  - { n: 36, topic: "TBD" }
+  - { n: 37, topic: "TBD" }
+  - { n: 38, topic: "TBD" }
+  - { n: 39, topic: "TBD" }
+  - { n: 40, topic: "TBD" }
+  - { n: 41, topic: "TBD" }
+  - { n: 42, topic: "TBD" }
+  - { n: 43, topic: "TBD" }
+  - { n: 44, topic: "TBD" }
+  - { n: 45, topic: "TBD" }
+  - { n: 46, topic: "TBD" }
+  - { n: 47, topic: "TBD" }
+  - { n: 48, topic: "TBD" }
+  - { n: 49, topic: "TBD" }
+assignments:
+  - { id: lab1, title: "Lab Report 1", kind: pset, assigned: { week: 1, session: 1 }, due: { week: 2, session: 1 }, estHours: 7, weight: 0.0333, dependsOnSessions: [1, 2, 3] }
+  - { id: lab2, title: "Lab Report 2", kind: pset, assigned: { week: 2, session: 1 }, due: { week: 3, session: 1 }, estHours: 7, weight: 0.0333, dependsOnSessions: [4, 5, 6] }
+  - { id: lab3, title: "Lab Report 3", kind: pset, assigned: { week: 3, session: 1 }, due: { week: 4, session: 1 }, estHours: 7, weight: 0.0333, dependsOnSessions: [7, 8, 9, 10] }
+  - { id: lab4, title: "Lab Report 4", kind: pset, assigned: { week: 4, session: 1 }, due: { week: 5, session: 1 }, estHours: 7, weight: 0.0333, dependsOnSessions: [11, 12, 13, 14] }
+  - { id: lab5, title: "Lab Report 5", kind: pset, assigned: { week: 5, session: 1 }, due: { week: 6, session: 1 }, estHours: 7, weight: 0.0333, dependsOnSessions: [15, 16, 17, 18] }
+  - { id: lab6, title: "Lab Report 6", kind: pset, assigned: { week: 6, session: 1 }, due: { week: 7, session: 1 }, estHours: 7, weight: 0.0333, dependsOnSessions: [19, 20, 21, 22] }
+  - { id: lab7, title: "Lab Report 7", kind: pset, assigned: { week: 7, session: 1 }, due: { week: 8, session: 1 }, estHours: 7, weight: 0.0333, dependsOnSessions: [23, 24, 25] }
+  - { id: lab8, title: "Lab Report 8", kind: pset, assigned: { week: 8, session: 1 }, due: { week: 9, session: 1 }, estHours: 7, weight: 0.0333, dependsOnSessions: [26, 27, 28, 29] }
+  - { id: lab9, title: "Lab Report 9", kind: pset, assigned: { week: 9, session: 1 }, due: { week: 10, session: 1 }, estHours: 7, weight: 0.0333, dependsOnSessions: [30, 31, 32, 33] }
+  - { id: lab10, title: "Lab Report 10", kind: pset, assigned: { week: 10, session: 1 }, due: { week: 11, session: 1 }, estHours: 7, weight: 0.0333, dependsOnSessions: [34, 35, 36, 37] }
+  - { id: lab11, title: "Lab Report 11", kind: pset, assigned: { week: 11, session: 1 }, due: { week: 12, session: 1 }, estHours: 7, weight: 0.0333, dependsOnSessions: [38, 39, 40, 41] }
+  - { id: lab12, title: "Lab Report 12", kind: pset, assigned: { week: 12, session: 1 }, due: { week: 14, session: 1 }, estHours: 7, weight: 0.0333, dependsOnSessions: [42, 43, 44, 45] }
+  - { id: midterm, title: "Midterm Exam", kind: exam, date: { week: 8, day: Thu }, weight: 0.25 }
+  - { id: final, title: "Final Exam", kind: final, date: { week: 16, day: Wed }, weight: 0.3504 }

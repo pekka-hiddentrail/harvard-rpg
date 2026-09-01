@@ -12,8 +12,16 @@ const WEEKDAY_INDEX: Record<Weekday, number> = {
 }
 export type DatedSession = Session & { date: string }
 
-/** Every real (holiday-skipped) date this course meets on, across the whole term. */
-function realMeetingDates(course: Syllabus, term: Term): string[] {
+/**
+ * Every real (holiday-skipped) date this course meets on, across the whole term. Note the
+ * union: a course with an MWF lecture *and* a Thursday lab meets four days a week, and its
+ * session spine has to be that long.
+ *
+ * Exported because `scripts/import-courses.ts` sizes a generated session spine with it. That
+ * script and `fitSessions` below have to agree exactly — one counts the meetings, the other
+ * throws when the count is wrong — so they must not be two implementations.
+ */
+export function realMeetingDates(course: Syllabus, term: Term): string[] {
   const weekdays = new Set(course.meetings.flatMap((m) => m.days.map((d) => WEEKDAY_INDEX[d])))
   const holidays = new Set(term.holidays)
 
@@ -38,6 +46,11 @@ function realMeetingDates(course: Syllabus, term: Term): string[] {
  * should fail loudly here rather than silently mis-date every session after it.
  */
 export function fitSessions(course: Syllabus, term: Term): DatedSession[] {
+  // An empty spine means the syllabus hasn't been transcribed yet (see `Syllabus.sessions`),
+  // which is a normal state for a stub — so it is not a miscount and must not throw. Only a
+  // spine that exists and disagrees with the calendar is a content bug.
+  if (course.sessions.length === 0) return []
+
   const dates = realMeetingDates(course, term)
   const sessions = [...course.sessions].sort((a, b) => a.n - b.n)
   if (sessions.length !== dates.length) {
@@ -54,6 +67,22 @@ function week1Monday(term: Term) {
   const dow = weekdayIndex(first) // 0 = Sunday
   const back = dow === 0 ? 6 : dow - 1
   return addDays(first, -back)
+}
+
+/**
+ * Which term week a real date falls in — the inverse of the anchor above, and the reason
+ * `CourseWeek.week` and a generated due date can't drift apart. Exported for
+ * `scripts/import-courses.ts`, which has to turn real meeting dates back into the
+ * `{ week, session }` form assignments are authored in.
+ */
+export function termWeekOf(iso: string, term: Term): number {
+  const monday = week1Monday(term)
+  let week = 1
+  for (let at = monday; toISO(at) <= iso; at = addDays(at, 7)) {
+    if (toISO(addDays(at, 7)) > iso) return week
+    week++
+  }
+  return week
 }
 
 /**

@@ -10,7 +10,7 @@
 # Also real, for later narrative use (not a schema field — no place to put it yet): CS50's
 # academic-honesty policy explicitly permits CS50's own "Duck" AI tool but forbids
 # ChatGPT, GitHub Copilot, or any other outside AI code-completion tool.
-id: "050"
+id: "350"
 courseCode: "cs50"
 title: "CS50: Introduction to Computer Science"
 demand: 7

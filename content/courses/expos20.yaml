@@ -16,7 +16,7 @@
 # `CourseSlot` entries with `courseCode: expos20` — "Invention and Its Discontents" is that
 # pool's default (Section 204), and is NOT on the real theme list, authored the same way
 # any section head picks their own.
-id: "020"
+id: "320"
 courseCode: "expos20"
 title: "Expos 20: Invention and Its Discontents"
 demand: 6

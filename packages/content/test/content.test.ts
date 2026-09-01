@@ -3,8 +3,16 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, it } from 'node:test'
-import { parseDate, priceTrait, validateBuild, weekdayName } from '@harvard/engine'
-import { loadContent } from '../src/index.ts'
+import {
+  effectiveDemand,
+  fitSessions,
+  parseDate,
+  priceTrait,
+  resolveAssignmentDates,
+  validateBuild,
+  weekdayName,
+} from '@harvard/engine'
+import { loadContent, representativeSectionHours } from '../src/index.ts'
 
 /**
  * These tests read the real content files. They are the ones that break when a trait is
@@ -17,9 +25,9 @@ const root = join(here, '..', '..', '..', 'content')
 const content = loadContent(root)
 
 describe('the content loads', () => {
-  it('puts core first and has the seven tags', () => {
+  it('puts core first and has the thirteen tags', () => {
     assert.equal(content.packs[0]?.id, 'core')
-    assert.equal(content.rules.subjectTags.length, 7)
+    assert.equal(content.rules.subjectTags.length, 13)
   })
 
   it('hashes stably', () => {
@@ -41,10 +49,89 @@ describe('the content loads', () => {
   })
 
   it('gives every course office hours at one less than its normal demand', () => {
+    // Compared against `effectiveDemand`, not `course.demand` — most courses no longer
+    // author the latter at all (it derives from their structure), and the API serves the
+    // derived value, so asserting against the raw field would test something nothing reads.
+    //
+    // Only *authored* office-hour demands are checked: an absent one derives from this very
+    // rule (`effectiveOfficeHourDemand`), so asserting it here would be asserting that
+    // subtraction works. What's worth catching is a hand-typed number that has since drifted
+    // away from the course it belongs to. Reported as one list rather than one failure per
+    // course: with ~160 stubs, the useful output is *which* ones disagree, not the first one
+    // alphabetically.
+    const wrong: string[] = []
     for (const course of content.courses) {
       assert.ok(course.officeHours.length > 0, `${course.courseCode} has no office hours`)
+      const expected = effectiveDemand(course, representativeSectionHours(course.courseCode, content.slots)) - 1
       for (const officeHour of course.officeHours) {
-        assert.equal(officeHour.demand, course.demand - 1)
+        if (officeHour.demand !== undefined && officeHour.demand !== expected) {
+          wrong.push(`${course.courseCode} (office hour ${officeHour.demand}, expected ${expected})`)
+        }
+      }
+    }
+    assert.deepEqual(wrong, [], `office-hour demand must be one below the course's:\n  ${wrong.join('\n  ')}`)
+  })
+
+  it('never states a demand of zero, which would be a requirement the course does not have', () => {
+    // The spreadsheet the ~160 stubs come from has a column per subject tag and writes 0 in
+    // the twelve a course doesn't ask for; `scripts/import-courses.ts` drops those. It has
+    // to: the zeroes are arithmetically inert (levels weight by `courseLevel / totalDemand`)
+    // but `isCourseOpen` iterates every key in `demands`, so a zero reads as a real
+    // prerequisite at level 0 — a gate the course never meant to put up.
+    const zeroes: string[] = []
+    for (const course of content.courses) {
+      assert.ok(Object.keys(course.demands).length > 0, `${course.courseCode} demands nothing`)
+      for (const [tag, level] of Object.entries(course.demands)) {
+        if (level === 0) zeroes.push(`${course.courseCode}.${tag}`)
+      }
+    }
+    assert.deepEqual(zeroes, [], `zero-level demands:\n  ${zeroes.join('\n  ')}`)
+  })
+
+  it('gives every meeting a duration, so no course is silently weightless', () => {
+    // `meetingHours` reads `pattern` (via `BLOCK_MINUTES`) or else `time`, and returns 0 with
+    // neither. Since `demand` is now derived from those hours, a meeting with no duration
+    // doesn't fail — it quietly prices a real course as if nobody ever went to it.
+    const undated: string[] = []
+    for (const course of content.courses) {
+      assert.ok(course.meetings.length > 0, `${course.courseCode} never meets`)
+      for (const m of course.meetings) {
+        if (!m.pattern && !m.time) undated.push(`${course.courseCode} (${m.type})`)
+      }
+    }
+    assert.deepEqual(undated, [], `meetings with neither a pattern nor a time:\n  ${undated.join('\n  ')}`)
+  })
+
+  it('keeps a spine on every transcribed course, and names the stubs that lack one', () => {
+    // An empty spine is legal (see `Syllabus.sessions`) but it should never be *quiet*: the
+    // three courses transcribed from real syllabi must keep theirs, and the count of stubs
+    // still waiting for one gets printed rather than silently drifting upward.
+    for (const code of ['cs50', 'expos20', 'math21b']) {
+      const course = content.courses.find((c) => c.courseCode === code)
+      assert.ok(course, `${code} is missing entirely`)
+      assert.ok(course.sessions.length > 0, `${code} lost its session spine`)
+      assert.ok(course.assignments.length > 0, `${code} lost its assignments`)
+    }
+    const spineless = content.courses.filter((c) => c.sessions.length === 0)
+    if (spineless.length > 0) {
+      console.log(`    # ${spineless.length} stub(s) awaiting a syllabus spine`)
+    }
+  })
+
+  it('resolves every session and every assignment date against the real calendar', () => {
+    // The two functions that turn authored `{ week, session }` into a date both throw rather
+    // than guess, and until now nothing called them on the whole catalogue — only the server
+    // did, at request time, which is a bad place to find out. The failure they catch is
+    // specific and easy to author by accident: Fall 2026's Thanksgiving week has no meetings
+    // at all, so `{ week: 13, session: 1 }` resolves for no course, and a spine that
+    // miscounts a holiday mis-dates every session after it.
+    for (const term of content.terms) {
+      for (const course of content.courses) {
+        assert.doesNotThrow(() => fitSessions(course, term), `${course.courseCode} in ${term.id}`)
+        assert.doesNotThrow(
+          () => resolveAssignmentDates(course, term),
+          `${course.courseCode} in ${term.id}`,
+        )
       }
     }
   })
@@ -56,6 +143,10 @@ describe('the content loads', () => {
     // must sum to 1 within floating-point tolerance.
     const documentedShortfall = new Set(['expos20'])
     for (const course of content.courses) {
+      // No assignments at all means the syllabus hasn't been transcribed yet, not that the
+      // course is ungraded (see `Syllabus.assignments`). A *partial* set still has to sum,
+      // which is what keeps this test useful on the stubs as they get filled in.
+      if (course.assignments.length === 0) continue
       const total = course.assignments.reduce((sum, a) => sum + a.weight, 0)
       if (documentedShortfall.has(course.courseCode)) {
         assert.ok(total < 1, `${course.courseCode} was expected to fall short of 1.0, got ${total}`)

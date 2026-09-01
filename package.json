@@ -13,6 +13,7 @@
     "lint": "eslint . --ext .ts,.tsx",
     "server": "tsx packages/server/src/index.ts",
     "balance": "tsx scripts/balance.ts",
+    "import:courses": "tsx scripts/import-courses.ts",
     "gui": "npm run dev --workspace=@harvard/client",
     "gui:character": "npm run dev --workspace=@harvard/client -- --open /?screen=character",
     "gui:build": "npm run build --workspace=@harvard/client",
