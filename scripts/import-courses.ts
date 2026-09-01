@@ -3,7 +3,14 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
-import { Syllabus, Term, realMeetingDates, termWeekOf, type Meeting } from '@harvard/engine'
+import {
+  Syllabus,
+  Term,
+  realMeetingDates,
+  sumDemands,
+  termWeekOf,
+  type Meeting,
+} from '@harvard/engine'
 
 /**
  * `npm run import:courses`
@@ -136,19 +143,36 @@ function readSheet(files: Map<string, Buffer>): Row[] {
 // ── the session spine and assignment skeleton ─────────────────────────────────────────
 
 /**
- * A standard Harvard 4-credit course is about **twelve hours a week, all in** — the figure the
- * three hand-transcribed syllabi already quote ("~12h/week" for CS50, "~10-12h/week" for Math
- * 21b). So a generated course's coursework budget is what's left of twelve after its own
- * contact time, with a floor so a low-contact tutorial still asks for something.
+ * How many hours of coursework a week a generated course asks for, out of class. Built *up*
+ * from what the course is, rather than down from a target total — the way a syllabus states it
+ * ("expect two hours outside class for every hour in"). A standard 4-credit course lands near
+ * twelve hours all in, which is the figure the hand-transcribed syllabi quote ("~12h/week" for
+ * CS50, "~10-12h/week" for Math 21b).
  *
- * This is the whole reason the skeleton is worth generating rather than leaving `assignments`
- * empty: `demand` and `workloadHint` derive from `estHours`, so a course with no assignments
- * prices at its contact time alone, and 138 of the 160 stubs came out at demand 3 — a
- * catalogue where nothing is heavier than anything else. With the budget in place, raw weekly
- * hours land near twelve for every course and the spread comes from `demands` instead, which
- * is exactly where GAME_DESIGN §4.6 wants it: the one field a human actually picked.
+ * Two earlier versions of this are worth naming, because both failed the same way and the
+ * shape of the failure is not obvious from the code:
+ *
+ * - **A flat 12-hour target, coursework as the remainder.** 112 of 163 courses derived to
+ *   demand 8; a Gen Ed lecture priced like Organic Chemistry.
+ * - **A target scaling with `demands`, coursework still the remainder.** Barely moved it —
+ *   and for a much worse reason. If coursework is `target - contact`, then total hours *are*
+ *   the target, contact cancels, and `effortScore` reduces algebraically to `4 + Σdemands`.
+ *   It held for 162 of 163 courses. The score had stopped being a measurement and become a
+ *   relabelling of its own input, and a 5.5h/week lab priced identically to a 2h/week seminar
+ *   carrying the same tags.
+ *
+ * So: coursework scales with contact time *and* adds a term for subject demand, and neither
+ * one can cancel the other. `demands` does still reach `effortScore` twice, once through these
+ * hours and once as itself — that double-count is deliberate, since `demands` is the only field
+ * on a generated course a human actually chose. A transcribed syllabus overrides all of it.
+ *
+ * Generating any budget at all matters more than the exact coefficients: `demand` and
+ * `workloadHint` derive from `estHours`, so a course with no assignments prices at its contact
+ * time alone, and 138 of the 160 stubs came out at demand 3 — a catalogue with no heavy
+ * courses in it.
  */
-const WEEKLY_HOURS_TARGET = 12
+const HOURS_PER_CONTACT_HOUR = 1.5
+const HOURS_PER_DEMAND_POINT = 1
 const MIN_COURSEWORK_HOURS = 2
 
 /** Per meeting day, mirroring `BLOCK_MINUTES` — a course's own contact time. */
@@ -218,7 +242,9 @@ function plan(course: Syllabus, term: Term): Plan {
   // lands in a week the course doesn't meet, and the count follows the calendar.
   const count = Math.max(0, weeks.length - 1)
   const contact = contactHoursPerWeek(course.meetings)
-  const budget = Math.max(MIN_COURSEWORK_HOURS, WEEKLY_HOURS_TARGET - contact) * weeks.length
+  const perWeek =
+    contact * HOURS_PER_CONTACT_HOUR + sumDemands(course.demands) * HOURS_PER_DEMAND_POINT
+  const budget = Math.max(MIN_COURSEWORK_HOURS, perWeek) * weeks.length
 
   const weeklyWeight = count === 0 ? 0 : round(WEEKLY_SHARE / count, 4)
   const eachHours = count === 0 ? 0 : round(budget / count, 1)
@@ -309,8 +335,9 @@ const header = (row: Row) => `${MARKER}
 # course asks of you, how it meets, and where its office hours are. Absent because it derives: \`demand\`,
 # \`workloadHint\`, office-hour \`demand\`. Generated, and therefore placeholder: the session
 # spine (sized to this course's real meeting dates in Fall 2026 — the count has to match
-# exactly or \`fitSessions\` throws) and the assignment skeleton (a weekly item carrying the
-# ~12h/week coursework budget, plus a midterm and a final). Topics stay \`TBD\` until the real
+# exactly or \`fitSessions\` throws) and the assignment skeleton (a weekly item carrying a
+# coursework budget sized from this course's contact hours and subject demands, plus a midterm
+# and a final — see \`scripts/import-courses.ts\`). Topics stay \`TBD\` until the real
 # syllabus is transcribed; when you transcribe one, delete the first line of this file and the
 # importer will stop overwriting it.
 id: ${quote(row.id!)}

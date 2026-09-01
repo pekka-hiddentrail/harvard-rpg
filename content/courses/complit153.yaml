@@ -3,8 +3,9 @@
 # course asks of you, how it meets, and where its office hours are. Absent because it derives: `demand`,
 # `workloadHint`, office-hour `demand`. Generated, and therefore placeholder: the session
 # spine (sized to this course's real meeting dates in Fall 2026 — the count has to match
-# exactly or `fitSessions` throws) and the assignment skeleton (a weekly item carrying the
-# ~12h/week coursework budget, plus a midterm and a final). Topics stay `TBD` until the real
+# exactly or `fitSessions` throws) and the assignment skeleton (a weekly item carrying a
+# coursework budget sized from this course's contact hours and subject demands, plus a midterm
+# and a final — see `scripts/import-courses.ts`). Topics stay `TBD` until the real
 # syllabus is transcribed; when you transcribe one, delete the first line of this file and the
 # importer will stop overwriting it.
 id: "153"
@@ -45,17 +46,17 @@ sessions:
   - { n: 25, topic: "TBD" }
   - { n: 26, topic: "TBD" }
 assignments:
-  - { id: rr1, title: "Reading Response 1", kind: pset, assigned: { week: 1, session: 1 }, due: { week: 2, session: 1 }, estHours: 10.3, weight: 0.0333, dependsOnSessions: [1, 2] }
-  - { id: rr2, title: "Reading Response 2", kind: pset, assigned: { week: 2, session: 1 }, due: { week: 3, session: 1 }, estHours: 10.3, weight: 0.0333, dependsOnSessions: [3, 4] }
-  - { id: rr3, title: "Reading Response 3", kind: pset, assigned: { week: 3, session: 1 }, due: { week: 4, session: 1 }, estHours: 10.3, weight: 0.0333, dependsOnSessions: [5, 6] }
-  - { id: rr4, title: "Reading Response 4", kind: pset, assigned: { week: 4, session: 1 }, due: { week: 5, session: 1 }, estHours: 10.3, weight: 0.0333, dependsOnSessions: [7, 8] }
-  - { id: rr5, title: "Reading Response 5", kind: pset, assigned: { week: 5, session: 1 }, due: { week: 6, session: 1 }, estHours: 10.3, weight: 0.0333, dependsOnSessions: [9, 10] }
-  - { id: rr6, title: "Reading Response 6", kind: pset, assigned: { week: 6, session: 1 }, due: { week: 7, session: 1 }, estHours: 10.3, weight: 0.0333, dependsOnSessions: [11, 12] }
-  - { id: rr7, title: "Reading Response 7", kind: pset, assigned: { week: 7, session: 1 }, due: { week: 8, session: 1 }, estHours: 10.3, weight: 0.0333, dependsOnSessions: [13, 14] }
-  - { id: rr8, title: "Reading Response 8", kind: pset, assigned: { week: 8, session: 1 }, due: { week: 9, session: 1 }, estHours: 10.3, weight: 0.0333, dependsOnSessions: [15, 16] }
-  - { id: rr9, title: "Reading Response 9", kind: pset, assigned: { week: 9, session: 1 }, due: { week: 10, session: 1 }, estHours: 10.3, weight: 0.0333, dependsOnSessions: [17, 18] }
-  - { id: rr10, title: "Reading Response 10", kind: pset, assigned: { week: 10, session: 1 }, due: { week: 11, session: 1 }, estHours: 10.3, weight: 0.0333, dependsOnSessions: [19, 20] }
-  - { id: rr11, title: "Reading Response 11", kind: pset, assigned: { week: 11, session: 1 }, due: { week: 12, session: 1 }, estHours: 10.3, weight: 0.0333, dependsOnSessions: [21, 22] }
-  - { id: rr12, title: "Reading Response 12", kind: pset, assigned: { week: 12, session: 1 }, due: { week: 14, session: 1 }, estHours: 10.3, weight: 0.0333, dependsOnSessions: [23, 24] }
+  - { id: rr1, title: "Reading Response 1", kind: pset, assigned: { week: 1, session: 1 }, due: { week: 2, session: 1 }, estHours: 9.5, weight: 0.0333, dependsOnSessions: [1, 2] }
+  - { id: rr2, title: "Reading Response 2", kind: pset, assigned: { week: 2, session: 1 }, due: { week: 3, session: 1 }, estHours: 9.5, weight: 0.0333, dependsOnSessions: [3, 4] }
+  - { id: rr3, title: "Reading Response 3", kind: pset, assigned: { week: 3, session: 1 }, due: { week: 4, session: 1 }, estHours: 9.5, weight: 0.0333, dependsOnSessions: [5, 6] }
+  - { id: rr4, title: "Reading Response 4", kind: pset, assigned: { week: 4, session: 1 }, due: { week: 5, session: 1 }, estHours: 9.5, weight: 0.0333, dependsOnSessions: [7, 8] }
+  - { id: rr5, title: "Reading Response 5", kind: pset, assigned: { week: 5, session: 1 }, due: { week: 6, session: 1 }, estHours: 9.5, weight: 0.0333, dependsOnSessions: [9, 10] }
+  - { id: rr6, title: "Reading Response 6", kind: pset, assigned: { week: 6, session: 1 }, due: { week: 7, session: 1 }, estHours: 9.5, weight: 0.0333, dependsOnSessions: [11, 12] }
+  - { id: rr7, title: "Reading Response 7", kind: pset, assigned: { week: 7, session: 1 }, due: { week: 8, session: 1 }, estHours: 9.5, weight: 0.0333, dependsOnSessions: [13, 14] }
+  - { id: rr8, title: "Reading Response 8", kind: pset, assigned: { week: 8, session: 1 }, due: { week: 9, session: 1 }, estHours: 9.5, weight: 0.0333, dependsOnSessions: [15, 16] }
+  - { id: rr9, title: "Reading Response 9", kind: pset, assigned: { week: 9, session: 1 }, due: { week: 10, session: 1 }, estHours: 9.5, weight: 0.0333, dependsOnSessions: [17, 18] }
+  - { id: rr10, title: "Reading Response 10", kind: pset, assigned: { week: 10, session: 1 }, due: { week: 11, session: 1 }, estHours: 9.5, weight: 0.0333, dependsOnSessions: [19, 20] }
+  - { id: rr11, title: "Reading Response 11", kind: pset, assigned: { week: 11, session: 1 }, due: { week: 12, session: 1 }, estHours: 9.5, weight: 0.0333, dependsOnSessions: [21, 22] }
+  - { id: rr12, title: "Reading Response 12", kind: pset, assigned: { week: 12, session: 1 }, due: { week: 14, session: 1 }, estHours: 9.5, weight: 0.0333, dependsOnSessions: [23, 24] }
   - { id: essay1, title: "Midterm Essay", kind: essay, due: { week: 8, day: Fri }, weight: 0.25 }
   - { id: essay2, title: "Final Essay", kind: essay, due: { week: 15, day: Mon }, weight: 0.3504 }

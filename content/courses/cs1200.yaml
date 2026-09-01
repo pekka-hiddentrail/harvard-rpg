@@ -3,8 +3,9 @@
 # course asks of you, how it meets, and where its office hours are. Absent because it derives: `demand`,
 # `workloadHint`, office-hour `demand`. Generated, and therefore placeholder: the session
 # spine (sized to this course's real meeting dates in Fall 2026 — the count has to match
-# exactly or `fitSessions` throws) and the assignment skeleton (a weekly item carrying the
-# ~12h/week coursework budget, plus a midterm and a final). Topics stay `TBD` until the real
+# exactly or `fitSessions` throws) and the assignment skeleton (a weekly item carrying a
+# coursework budget sized from this course's contact hours and subject demands, plus a midterm
+# and a final — see `scripts/import-courses.ts`). Topics stay `TBD` until the real
 # syllabus is transcribed; when you transcribe one, delete the first line of this file and the
 # importer will stop overwriting it.
 id: "200"
@@ -42,17 +43,17 @@ sessions:
   - { n: 22, topic: "TBD" }
   - { n: 23, topic: "TBD" }
 assignments:
-  - { id: ps1, title: "Problem Set 1", kind: pset, assigned: { week: 1, session: 1 }, due: { week: 2, session: 1 }, estHours: 10.3, weight: 0.0333, dependsOnSessions: [1] }
-  - { id: ps2, title: "Problem Set 2", kind: pset, assigned: { week: 2, session: 1 }, due: { week: 3, session: 1 }, estHours: 10.3, weight: 0.0333, dependsOnSessions: [2] }
-  - { id: ps3, title: "Problem Set 3", kind: pset, assigned: { week: 3, session: 1 }, due: { week: 4, session: 1 }, estHours: 10.3, weight: 0.0333, dependsOnSessions: [3, 4] }
-  - { id: ps4, title: "Problem Set 4", kind: pset, assigned: { week: 4, session: 1 }, due: { week: 5, session: 1 }, estHours: 10.3, weight: 0.0333, dependsOnSessions: [5, 6] }
-  - { id: ps5, title: "Problem Set 5", kind: pset, assigned: { week: 5, session: 1 }, due: { week: 6, session: 1 }, estHours: 10.3, weight: 0.0333, dependsOnSessions: [7, 8] }
-  - { id: ps6, title: "Problem Set 6", kind: pset, assigned: { week: 6, session: 1 }, due: { week: 7, session: 1 }, estHours: 10.3, weight: 0.0333, dependsOnSessions: [9, 10] }
-  - { id: ps7, title: "Problem Set 7", kind: pset, assigned: { week: 7, session: 1 }, due: { week: 8, session: 1 }, estHours: 10.3, weight: 0.0333, dependsOnSessions: [11] }
-  - { id: ps8, title: "Problem Set 8", kind: pset, assigned: { week: 8, session: 1 }, due: { week: 9, session: 1 }, estHours: 10.3, weight: 0.0333, dependsOnSessions: [12, 13] }
-  - { id: ps9, title: "Problem Set 9", kind: pset, assigned: { week: 9, session: 1 }, due: { week: 10, session: 1 }, estHours: 10.3, weight: 0.0333, dependsOnSessions: [14, 15] }
-  - { id: ps10, title: "Problem Set 10", kind: pset, assigned: { week: 10, session: 1 }, due: { week: 11, session: 1 }, estHours: 10.3, weight: 0.0333, dependsOnSessions: [16, 17] }
-  - { id: ps11, title: "Problem Set 11", kind: pset, assigned: { week: 11, session: 1 }, due: { week: 12, session: 1 }, estHours: 10.3, weight: 0.0333, dependsOnSessions: [18, 19] }
-  - { id: ps12, title: "Problem Set 12", kind: pset, assigned: { week: 12, session: 1 }, due: { week: 14, session: 1 }, estHours: 10.3, weight: 0.0333, dependsOnSessions: [20, 21] }
+  - { id: ps1, title: "Problem Set 1", kind: pset, assigned: { week: 1, session: 1 }, due: { week: 2, session: 1 }, estHours: 8.4, weight: 0.0333, dependsOnSessions: [1] }
+  - { id: ps2, title: "Problem Set 2", kind: pset, assigned: { week: 2, session: 1 }, due: { week: 3, session: 1 }, estHours: 8.4, weight: 0.0333, dependsOnSessions: [2] }
+  - { id: ps3, title: "Problem Set 3", kind: pset, assigned: { week: 3, session: 1 }, due: { week: 4, session: 1 }, estHours: 8.4, weight: 0.0333, dependsOnSessions: [3, 4] }
+  - { id: ps4, title: "Problem Set 4", kind: pset, assigned: { week: 4, session: 1 }, due: { week: 5, session: 1 }, estHours: 8.4, weight: 0.0333, dependsOnSessions: [5, 6] }
+  - { id: ps5, title: "Problem Set 5", kind: pset, assigned: { week: 5, session: 1 }, due: { week: 6, session: 1 }, estHours: 8.4, weight: 0.0333, dependsOnSessions: [7, 8] }
+  - { id: ps6, title: "Problem Set 6", kind: pset, assigned: { week: 6, session: 1 }, due: { week: 7, session: 1 }, estHours: 8.4, weight: 0.0333, dependsOnSessions: [9, 10] }
+  - { id: ps7, title: "Problem Set 7", kind: pset, assigned: { week: 7, session: 1 }, due: { week: 8, session: 1 }, estHours: 8.4, weight: 0.0333, dependsOnSessions: [11] }
+  - { id: ps8, title: "Problem Set 8", kind: pset, assigned: { week: 8, session: 1 }, due: { week: 9, session: 1 }, estHours: 8.4, weight: 0.0333, dependsOnSessions: [12, 13] }
+  - { id: ps9, title: "Problem Set 9", kind: pset, assigned: { week: 9, session: 1 }, due: { week: 10, session: 1 }, estHours: 8.4, weight: 0.0333, dependsOnSessions: [14, 15] }
+  - { id: ps10, title: "Problem Set 10", kind: pset, assigned: { week: 10, session: 1 }, due: { week: 11, session: 1 }, estHours: 8.4, weight: 0.0333, dependsOnSessions: [16, 17] }
+  - { id: ps11, title: "Problem Set 11", kind: pset, assigned: { week: 11, session: 1 }, due: { week: 12, session: 1 }, estHours: 8.4, weight: 0.0333, dependsOnSessions: [18, 19] }
+  - { id: ps12, title: "Problem Set 12", kind: pset, assigned: { week: 12, session: 1 }, due: { week: 14, session: 1 }, estHours: 8.4, weight: 0.0333, dependsOnSessions: [20, 21] }
   - { id: midterm, title: "Midterm Exam", kind: exam, date: { week: 8, day: Thu }, weight: 0.25 }
   - { id: final, title: "Final Exam", kind: final, date: { week: 16, day: Wed }, weight: 0.3504 }

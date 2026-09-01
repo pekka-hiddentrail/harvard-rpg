@@ -104,7 +104,13 @@ export function rawWeeklyHours(syllabus: Syllabus, extraMeetingHours = 0): numbe
   )
 }
 
-function sumDemands(demands: Syllabus['demands']): number {
+/**
+ * How much a course asks of its subjects, all told. Exported for
+ * `scripts/import-courses.ts`, which sizes a generated coursework budget from it — the same
+ * total `effortScore` blends in below, so the two cannot drift into disagreeing about what
+ * "how much does this course ask" means.
+ */
+export function sumDemands(demands: Syllabus['demands']): number {
   return Object.values(demands).reduce((sum, level) => sum + level, 0)
 }
 
