@@ -281,7 +281,7 @@ This is worth getting right early. It's cheap to add now and genuinely painful t
 retrofit once there are saves worth keeping.
 
 **The spreadsheet is not content.** The catalogue was authored in
-`packages/user/harvard_course_schema.xlsx` — one row per course, a column per subject tag —
+`authoring/harvard_course_schema.xlsx` — one row per course, a column per subject tag —
 and `npm run import:courses` (`scripts/import-courses.ts`) turns it into one YAML file per course under
 `content/courses/`. The import is a script, run by hand, and deliberately not a loader step:
 the content hash covers the YAML, and a hash that depended on a binary nobody can diff would
