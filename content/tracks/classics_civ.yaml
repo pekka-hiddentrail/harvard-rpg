@@ -75,8 +75,9 @@ requirements:
 
   - id: classics-elective
     label: "Classics elective"
-    kind: course
+    kind: set
     need: 1
-    from: [classics_elective]
+    from: [clasarch10, clsstdy173, clsstdy177, clsstdy181, clsstdy190]
     notes:
       - "The published total is twelve; the department's enumeration comes to eleven. This is the twelfth, inferred by subtraction rather than named in the source."
+      - "Content's five upper-level Classical Studies and Classical Archaeology courses are taught in English, so they belong here rather than in the Greek/Latin group — and this is the one requirement on the track a player can shop for today."

@@ -49,10 +49,10 @@ requirements:
     label: "Ancient History courses"
     kind: set
     need: 3
-    from: [ancient_history_1, ancient_history_2, ancient_history_3]
+    from: [clasarch10, clsstdy173, clsstdy177, clsstdy181, clsstdy190, ancient_history_6]
     notes:
       - "The source names four of the seven Classics-side courses; these three are the remainder, inferred by subtraction."
-      - "Ordinarily drawn from the History Department's ancient offerings, which content does not carry."
+      - "Content's upper-level Classical Studies and Classical Archaeology courses are the natural route — Greek Archaeology, Roman Exemplarity, Rhetoric, Gender in Byzantium. The History Department's own ancient offerings, which content does not carry, would also count."
 
   - id: senior-thesis
     label: "Senior thesis"

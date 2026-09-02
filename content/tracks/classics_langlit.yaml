@@ -69,8 +69,9 @@ requirements:
 
   - id: classics-elective
     label: "Classics elective"
-    kind: course
+    kind: set
     need: 1
-    from: [classics_elective]
+    from: [clasarch10, clsstdy173, clsstdy177, clsstdy181, clsstdy190]
     notes:
       - "The twelfth course, inferred by subtraction from the published total rather than named in the source."
+      - "Taught in English, so it does not double as one of the six read in the original — which is the distinction this track is built on."
