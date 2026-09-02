@@ -99,7 +99,14 @@ function BrowserApp() {
   }
 
   if (view === 'calendar') {
-    return <CalendarScreen onBack={() => setView('timeline')} />
+    // Back goes where you came from: with a save, that is shopping week, and going straight
+    // back to it is the whole loop — see the Tuesday, change the card, look again.
+    return (
+      <CalendarScreen
+        onBack={() => setView(gameId === null ? 'timeline' : 'courseRegistration')}
+        gameId={gameId}
+      />
+    )
   }
 
   if (view === 'courseRegistration') {
@@ -108,6 +115,7 @@ function BrowserApp() {
         identity={identity}
         gameId={gameId}
         onBack={() => setView('timeline')}
+        onViewTerm={() => setView('calendar')}
       />
     )
   }

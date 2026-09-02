@@ -692,3 +692,113 @@ describe('POST /api/game/:id/shopping/enrol and /drop', () => {
     }
   })
 })
+
+describe('GET /api/game/:id/term', () => {
+  const enrol = async (id: string, payload: object) =>
+    await app.inject({ method: 'POST', url: `/api/game/${id}/shopping/enrol`, payload })
+
+  type Plan = {
+    term: string
+    firstDay: string
+    lastDay: string
+    courses: { courseCode: string; section?: string; meetings: { type: string; time: string; derivedTime: boolean; startBand: number; endBand: number }[] }[]
+    days: { date: string; freeBands: number; density: string; conflicts: unknown[] }[]
+    weeks: { week: number; monday: string; due: { courseCode: string; date: string }[]; baseHours: number; personalHours: number; freeBands: number; pressure: number }[]
+    collisions: { a: string; b: string; severity: string; dates: string[]; derived: boolean }[]
+    peakWeeks: number[]
+  }
+
+  const plan = async (id: string): Promise<Plan> => {
+    const res = await app.inject({ method: 'GET', url: `/api/game/${id}/term` })
+    assert.equal(res.statusCode, 200, res.body)
+    return res.json().plan as Plan
+  }
+
+  it('answers with an empty term for a save that has enrolled in nothing', async () => {
+    const p = await plan(await newGame())
+    assert.deepEqual(p.courses, [])
+    assert.equal(p.collisions.length, 0)
+    // The days are still there, all of them free — an empty schedule is a real schedule, not
+    // a missing one, and this is the screen a player sees before shopping week.
+    assert.equal(p.days[0]?.date, content.terms[0]?.firstDay)
+    assert.ok(p.weeks.length >= 14)
+    assert.equal(p.weeks.every((w) => w.due.length === 0 && w.pressure === 0), true)
+    assert.deepEqual(p.peakWeeks, [])
+  })
+
+  it('places every enrolled course on the band grid, saying which times are guessed', async () => {
+    const id = await newGame()
+    // CS50 is taught as many sections, so filing it means picking one — and the slot is what
+    // carries the real published time.
+    assert.equal((await enrol(id, { courseCode: 'cs50', section: '011' })).statusCode, 200)
+    assert.equal((await enrol(id, { courseCode: 'ls1a' })).statusCode, 200)
+    const p = await plan(id)
+    assert.deepEqual(p.courses.map((c) => c.courseCode).sort(), ['cs50', 'ls1a'])
+    for (const c of p.courses) {
+      for (const m of c.meetings) {
+        assert.match(m.time, /^\d{1,2}:\d{2}-\d{1,2}:\d{2}$/, `${c.courseCode} ${m.type}: ${m.time}`)
+        assert.ok(m.endBand > m.startBand, `${c.courseCode} ${m.type} occupies no band`)
+      }
+    }
+    // CS50 publishes its lecture time; LS 1A's lab is pattern-only, so it is derived. The
+    // distinction has to survive the wire, or the client cannot tell the player which is real.
+    const cs50 = p.courses.find((c) => c.courseCode === 'cs50')
+    assert.equal(cs50?.meetings.find((m) => m.type === 'lecture')?.derivedTime, false)
+    assert.equal(p.courses.find((c) => c.courseCode === 'ls1a')?.meetings.some((m) => m.derivedTime), true)
+  })
+
+  it('empties Thanksgiving week even with a full card', async () => {
+    const id = await newGame()
+    await enrol(id, { courseCode: 'cs50', section: '011' })
+    for (const courseCode of ['ls1a', 'chem17']) await enrol(id, { courseCode })
+    const p = await plan(id)
+    const thanksgiving = p.weeks.find((w) => w.monday === '2026-11-23')
+    assert.ok(thanksgiving, 'no week starting 2026-11-23')
+    assert.equal(thanksgiving.freeBands, 7 * 11)
+    assert.equal(thanksgiving.due.length, 0)
+  })
+
+  it('prices the same term differently for a player who is behind', async () => {
+    // Same card, two builds. The hours due are a fact about the syllabus; the hours *you* owe
+    // are not — which is the whole of §4.5, now visible per week rather than only per term.
+    const strong = await newGame()
+    const weak = await newGameFrom(badWithNumbersBuild())
+    // Stat 110 asks `math 1, stats 3`, and `bad_with_numbers` is behind on both — unlike
+    // Chem 17, where the same swap buys `lab_hands` and the weak build is the *cheaper* one.
+    for (const id of [strong, weak]) {
+      assert.equal((await enrol(id, { courseCode: 'stat110' })).statusCode, 200)
+    }
+
+    const [a, b] = [await plan(strong), await plan(weak)]
+    const busiest = (p: Plan) => p.weeks.reduce((m, w) => (w.personalHours > m.personalHours ? w : m))
+    assert.equal(busiest(a).baseHours, busiest(b).baseHours, 'the syllabus did not change')
+    assert.ok(busiest(b).personalHours > busiest(a).personalHours, 'but the term did')
+    for (const p of [a, b]) for (const w of p.weeks) assert.equal(Number.isFinite(w.personalHours), true)
+  })
+
+  it('reports a clash once per meeting pair, with its dates', async () => {
+    const id = await newGame()
+    // cs50 and math21b both hold a 09:00 lecture — one published, one derived off the block
+    // grid — on the days they share.
+    assert.equal((await enrol(id, { courseCode: 'cs50', section: '011' })).statusCode, 200)
+    assert.equal((await enrol(id, { courseCode: 'math21b' })).statusCode, 200)
+    const p = await plan(id)
+    assert.ok(p.collisions.length >= 1, 'no collision found')
+    const clash = p.collisions.find((c) => c.a.startsWith('cs50') && c.b.startsWith('math21b'))
+    assert.ok(clash, JSON.stringify(p.collisions))
+    assert.ok(clash.dates.length > 1, 'a recurring clash reported only once')
+    assert.equal(clash.derived, true)
+    // Every folded date is also in the per-day list, which is what a single day's view reads.
+    const conflicted = new Set(p.days.filter((d) => d.conflicts.length > 0).map((d) => d.date))
+    for (const date of clash.dates) assert.ok(conflicted.has(date), `${date} missing from days`)
+  })
+
+  it('404s an unknown save and leaks no seed and no outcome', async () => {
+    assert.equal((await app.inject({ method: 'GET', url: '/api/game/nope/term' })).statusCode, 404)
+    const id = await newGame()
+    await enrol(id, { courseCode: 'cs50', section: '011' })
+    const res = await app.inject({ method: 'GET', url: `/api/game/${id}/term` })
+    assert.equal(/"seed"/.test(res.body), false)
+    assert.equal(/"grade"|"letter"|"cards"|"lean"/.test(res.body), false)
+  })
+})

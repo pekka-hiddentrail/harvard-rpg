@@ -584,6 +584,50 @@ against a deadline you can already read. That last one is the whole reason sylla
 are play-invariant (§4.7). A player who cannot plan into a knowable future is not
 being offered the game this design is about.
 
+### 3.7 The first half of that view, built: the term your card makes
+
+The institutional layer of §3.6 now exists as a screen. It answers one question —
+**what does the card I just filed actually look like as fourteen weeks?** — and it
+answers it in three panels, deliberately in this order:
+
+- **The week rail.** All fourteen weeks at once, each with a pressure bar, a
+  deadline count and the hours *you* would pay. This is the panel that makes the
+  term legible as a shape rather than a list. It opens on the busiest week, because
+  week 1 is empty by construction and the wall clock is not your character's date.
+- **The band grid.** Monday to Sunday down eleven bands, with each day's free-band
+  count in its column head and density shading (§3.2). A class occupying two bands
+  is drawn in both, so the row it is *missing* from reads as a row you could study
+  in. Where two classes share a band the cell is marked, and the two are still
+  distinguishable: one you must attend, one you may skip (§4.3). That mark is the
+  decision the whole screen is for.
+- **The week's deadlines, and the card.** Every assignment due in the selected
+  week, in your hours and the syllabus's side by side — the gap (§4.5) made
+  concrete on the calendar rather than in a total. An exam reads *"sat, not
+  written"* instead of silently reporting zero hours.
+
+Three design commitments held here, and they are the reason it is worth having:
+
+- **The loop is the feature.** Shopping week has a *"see the term this makes"*
+  button and the calendar's Back returns to shopping week. See the Tuesday, change
+  the card, look again. A cart total can tell you a term is heavy; only this can
+  tell you a particular Tuesday is impossible.
+- **A collision is a sentence, not twenty-three rows.** Two classes overlapping on
+  every Monday and Wednesday of the term is *one* fact with a count, and it is
+  reported that way.
+- **The game says when an hour is its own guess.** Most of the catalogue authors the
+  *day* a class meets but not the hour. The game picks one — the same pick for every
+  player, so planning stays a skill (§4.7) — and then marks it, with the caveat
+  spelled out where a collision depends on it. A schedule problem the game invented
+  is still a real problem to solve; it is not a claim about Harvard, and the screen
+  never lets the two blur.
+
+**What §3.6 still wants and this does not do:** the personal layer. No drag-to-move,
+no study blocks placed three weeks out, no exceptions on a standing commitment — the
+whole *editing* half. This screen is read-only, and its honest description is a
+mirror: it shows you the consequences of a card you already chose. Planning forward
+into it is the next thing, and it needs the day loop to accept a placement before it
+can mean anything.
+
 ---
 
 ## 4. The academic spine

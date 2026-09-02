@@ -28,9 +28,11 @@ import {
   resolveAssignmentDates,
   resolveDay,
   summarizeCart,
+  termPlan,
   toCreationBlock,
   validateBuild,
   type Activity,
+  type EnrolledCourse,
   type Levels,
   type Placement,
 } from '@harvard/engine'
@@ -485,6 +487,49 @@ export function buildApp({ content, dbFile }: ServerOptions): {
       ...(parsed.data.section === undefined ? {} : { section: parsed.data.section }),
     })
     return commit(found.save, action, shoppingTerm.id, levels.levels)
+  })
+
+  /**
+   * The term as enrolled: real dates, real bands, real collisions (ARCHITECTURE §11.5).
+   *
+   * The shopping-week routes above answer "what would this cost" one course at a time and sum
+   * it. This answers the question a total cannot — *when* — which is §11's go/no-go gate:
+   * planning a Tuesday in mid-October with three deadlines converging and a lecture you would
+   * rather skip. Same save, same derived levels, one pass through `termPlan`, so the conflicts
+   * and the weekly hours on one screen were computed against the same card.
+   *
+   * Still a price and never an outcome (§4.4): hours due, bands occupied, clashes. No grade.
+   */
+  app.get('/api/game/:id/term', (req, reply) => {
+    const found = load(req.params as { id: string })
+    if (!found) return reply.code(404).send({ error: 'no such save' })
+    if (!shoppingTerm) return reply.code(409).send({ error: 'no term in content' })
+    const levels = revalidate(found.save)
+    if (!levels.ok) return reply.code(409).send({ problems: levels.problems })
+
+    const state = replay(found.save.actions, content.activityIndex, content.rules.day)
+    const enrolled: EnrolledCourse[] = []
+    for (const e of enrolledIn(state, shoppingTerm.id)) {
+      const syllabus = courseByCode.get(e.courseCode)
+      if (!syllabus) continue // content moved under the save; the hash pin will say so
+      const slot =
+        e.section === undefined
+          ? undefined
+          : content.slots.find((s) => s.courseCode === e.courseCode && s.section === e.section)
+      enrolled.push(slot ? { syllabus, slot } : { syllabus })
+    }
+
+    // `termPlan` throws on a content bug — an assignment authored for a week that has no such
+    // session, typically a miscounted holiday. That is worth surfacing as the content problem
+    // it is rather than as a 500: the save is fine, one course file isn't.
+    try {
+      return { contentHash: content.hash, levels: levels.levels, plan: termPlan(enrolled, levels.levels, shoppingTerm) }
+    } catch (e) {
+      return reply.code(422).send({
+        error: 'the term calendar could not be built from this card',
+        detail: e instanceof Error ? e.message : String(e),
+      })
+    }
   })
 
   const DropBody = z.object({ courseCode: z.string().min(1) }).strict()

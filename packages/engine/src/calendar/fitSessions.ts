@@ -61,8 +61,11 @@ export function fitSessions(course: Syllabus, term: Term): DatedSession[] {
   return sessions.map((s, i) => ({ ...s, date: dates[i]! }))
 }
 
-/** The Monday on or before the term's `firstDay` — the anchor `CourseWeek.week` counts from. */
-function week1Monday(term: Term) {
+/** The Monday on or before the term's `firstDay` — the anchor `CourseWeek.week` counts from.
+ * Exported because `schedule.ts` buckets a term's deadlines into weeks and has to start
+ * counting from this exact Monday; a second copy of the arithmetic would be the drift bug
+ * `termWeekOf` exists to prevent. */
+export function week1Monday(term: Term) {
   const first = parseDate(term.firstDay)
   const dow = weekdayIndex(first) // 0 = Sunday
   const back = dow === 0 ? 6 : dow - 1

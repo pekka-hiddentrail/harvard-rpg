@@ -17,25 +17,72 @@ export type Anchor = 'wakeup' | 'meal' | 'night'
 
 export type Band = {
   index: number
-  /** Display only. Nothing computes with this. */
+  /** Display only. Nothing computes with this — see `startMin`/`endMin`. */
   label: string
   name: string
   anchor: Anchor | null
+  /** Minutes since midnight. The band's real clock extent. */
+  startMin: number
+  /** Exclusive. Night runs to the end of the day, which is what 24:00 means here. */
+  endMin: number
 }
 
+/**
+ * The clock extents were added when the term schedule needed them: a published class time
+ * like CS50's `"09:00-10:30"` has to land on specific bands before anything can say two
+ * courses collide. `label` stays the prototype's own string (note the en dash, and Night's
+ * open end) and is still display-only; these two numbers are what arithmetic reads.
+ */
 export const BANDS: readonly Band[] = [
-  { index: 0, label: '07:15 – 08:00', name: 'wakeup', anchor: 'wakeup' },
-  { index: 1, label: '08:15 – 09:00', name: 'breakfast', anchor: 'meal' },
-  { index: 2, label: '09:00 – 10:15', name: 'morning', anchor: null },
-  { index: 3, label: '10:30 – 11:45', name: 'late morning', anchor: null },
-  { index: 4, label: '12:00 – 13:15', name: 'lunch', anchor: 'meal' },
-  { index: 5, label: '13:30 – 14:45', name: 'early afternoon', anchor: null },
-  { index: 6, label: '15:00 – 16:15', name: 'afternoon', anchor: null },
-  { index: 7, label: '16:45 – 17:30', name: 'late afternoon', anchor: null },
-  { index: 8, label: '18:00 – 19:30', name: 'dinner', anchor: 'meal' },
-  { index: 9, label: '19:30 – 21:00', name: 'evening', anchor: null },
-  { index: 10, label: '21:00 –', name: 'night', anchor: 'night' },
+  { index: 0, label: '07:15 – 08:00', name: 'wakeup', anchor: 'wakeup', startMin: 435, endMin: 480 },
+  { index: 1, label: '08:15 – 09:00', name: 'breakfast', anchor: 'meal', startMin: 495, endMin: 540 },
+  { index: 2, label: '09:00 – 10:15', name: 'morning', anchor: null, startMin: 540, endMin: 615 },
+  { index: 3, label: '10:30 – 11:45', name: 'late morning', anchor: null, startMin: 630, endMin: 705 },
+  { index: 4, label: '12:00 – 13:15', name: 'lunch', anchor: 'meal', startMin: 720, endMin: 795 },
+  { index: 5, label: '13:30 – 14:45', name: 'early afternoon', anchor: null, startMin: 810, endMin: 885 },
+  { index: 6, label: '15:00 – 16:15', name: 'afternoon', anchor: null, startMin: 900, endMin: 975 },
+  { index: 7, label: '16:45 – 17:30', name: 'late afternoon', anchor: null, startMin: 1005, endMin: 1050 },
+  { index: 8, label: '18:00 – 19:30', name: 'dinner', anchor: 'meal', startMin: 1080, endMin: 1170 },
+  { index: 9, label: '19:30 – 21:00', name: 'evening', anchor: null, startMin: 1170, endMin: 1260 },
+  { index: 10, label: '21:00 –', name: 'night', anchor: 'night', startMin: 1260, endMin: 1440 },
 ]
+
+/** `"09:00"` → minutes since midnight. Throws rather than returning `NaN`, which would
+ * otherwise propagate silently into a band range and place a class nowhere. */
+export function minutesOfClock(hhmm: string): number {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm.trim())
+  if (!m) throw new Error(`not a clock time: \`${hhmm}\``)
+  const hours = Number(m[1])
+  const minutes = Number(m[2])
+  if (hours > 24 || minutes > 59) throw new Error(`not a clock time: \`${hhmm}\``)
+  return hours * 60 + minutes
+}
+
+/**
+ * Which bands a real clock range occupies, as a half-open `[startBand, endBand)`.
+ *
+ * A band counts as occupied if the class overlaps it **at all**. That is deliberately
+ * generous: a class running 09:00–11:45 covers band 2 fully, the 10:15–10:30 gap, and band 3
+ * fully, and you cannot study in a fifteen-minute gap between two halves of your own lab.
+ * Rounding the other way would hand the player back bands they do not actually have, which is
+ * the one direction a scheduling view must never be wrong in.
+ */
+export function bandsForMinutes(startMin: number, endMin: number): { startBand: number; endBand: number } {
+  if (endMin <= startMin) throw new Error(`empty clock range ${startMin}..${endMin}`)
+  const first = BANDS.findIndex((b) => b.endMin > startMin)
+  // `findLastIndex` over the same predicate, written as a scan so the target stays ES2022.
+  let last = -1
+  for (const b of BANDS) if (b.startMin < endMin) last = b.index
+  if (first === -1 || last === -1) throw new Error(`clock range ${startMin}..${endMin} falls outside the day`)
+  return { startBand: first, endBand: last + 1 }
+}
+
+/** `"09:00-10:30"` → the bands it occupies. Accepts either hyphen or en dash. */
+export function bandsForTimeRange(range: string): { startBand: number; endBand: number } {
+  const parts = range.split(/[-–]/)
+  if (parts.length !== 2) throw new Error(`not a time range: \`${range}\``)
+  return bandsForMinutes(minutesOfClock(parts[0]!), minutesOfClock(parts[1]!))
+}
 
 export const BAND_COUNT = BANDS.length
 export const HALVES_PER_BAND = 2

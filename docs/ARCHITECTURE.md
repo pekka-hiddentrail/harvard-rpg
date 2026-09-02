@@ -1378,10 +1378,84 @@ personal-hours line is an open design question, not a bug; nothing should be ret
 collision view below exists, since spreading 68 hours across fourteen weeks is exactly what
 that view would reveal.
 
-**Deferred, and it is the other half of the gate:** the stacked workload-collision view — *"three
-psets in the week of October 19"* — is not built. Shopping week prices courses one at a time
-and sums them; it does not yet show *when* the hours land. §11's Tuesday-in-mid-October
-question is not fully answerable until it does.
+The other half of the gate — the stacked collision view, *"three psets in the week of October
+19"* — is §11.5.
+
+### 11.5 The term as enrolled: the join nothing was performing
+
+`packages/engine/src/schedule.ts` is the first code that puts enrolled courses and the term
+calendar in the same room. Before it, shopping week priced courses one at a time and summed
+them, and the calendar screen drew a month grid off `new Date()`. Neither could answer §11's
+gate question, because *when* the hours land was nowhere computed.
+
+`termPlan(enrolled, levels, term)` returns one object: the placed card, every day of the term
+with its occupied bands and conflicts, every term week with its deadlines and hours, the folded
+collision list, and the peak weeks. The server exposes it at `GET /api/game/:id/term` and
+`CalendarScreen.tsx` draws it. Six judgement calls are worth writing down, because each one had
+a defensible alternative I rejected:
+
+- **A meeting's hour is derived from the course code, not the save.** 169 of the catalogue's
+  335 meetings carry a `pattern` (`MWF`, `TTh`, `Th`…) but no `time` — the day is authored, the
+  hour is not. Assigning the hour per save seed would invent a per-player fact about Harvard
+  and destroy play-invariance (§4.7); showing the day without a band would leave half the
+  catalogue unable to collide with anything, which is most of the point. So `derivedBlockTime`
+  hashes `courseCode:type:pattern` through `pickFrom` and lands on the published block grid
+  (`BLOCK_STARTS`, `BLOCK_MINUTES`). Keyed on `type` as well, so a course's own lecture and lab
+  don't stack. An authored `time` always wins — the same derived-not-authored shape as
+  `effectiveDemand`.
+- **`PlacedMeeting.derivedTime` is an honesty flag, and it survives all the way to the UI.**
+  It becomes `Collision.derived` and then a `~` with a tooltip and the line *"one of these
+  hours is the game's guess, not the registrar's."* A derived collision is a real scheduling
+  problem in this playthrough and every other, but it is not a fact about the university, and
+  the screen must not let the player mistake one for the other.
+- **A derived meeting must finish by the dinner anchor.** The first version only excluded
+  starts past midnight, which put LS 1A's three-hour lab at 19:30–22:30 — through dinner and
+  into Night, wrecking the two bands the day loop cares most about. Night starts remain as a
+  fallback no current pattern reaches. This is regression-tested, because the failure was
+  invisible in fixtures and obvious the moment real content ran.
+- **Collisions fold per meeting *pair*, not per event or per day.** Folding by `eventId` split
+  CS 50 × Math 21b into a Monday row (×13) and a Wednesday row (×10); not folding at all gave
+  twenty-three identical rows. Twenty-three identical rows is not a report, it is the same fact
+  printed until the reader stops reading. `meetingKeyFor` is deliberately weekday-free so the
+  fold key is *these two classes overlap*, and the dates go in a list. Severity is `hard` only
+  when both meetings are `mandatory` (§4.3) — a skippable lecture clash is a decision, not an
+  error, which is exactly the "lecture you would rather skip" the gate asks about.
+- **`pressure` is a comparative index and says so.** It is `personalHours / freeBands`, and it
+  is *not* a survivability threshold. There is no universal hours-per-band constant to divide
+  by: `day.ts` derives banked hours from an authored per-activity `curve[halves-1]` times
+  multipliers, so any absolute conversion would be invented. `pressure` orders the fourteen
+  weeks against each other and nothing more. The survivability question stays with §4.6's
+  effort cap, where it is at least an authored number.
+- **`peakWeeks` names where the author put the crunch; it does not grade weeks.** The design
+  treats crunch as an authored lever, so classifying weeks against a made-up cutoff would
+  invent a difficulty curve the syllabi never claimed. `CalendarScreen` opens on the peak week
+  for the same reason: week 1 is empty by construction and the machine's clock is not the
+  save's, so the peak week is the one the plan itself says is worth looking at.
+
+Two smaller things. Holidays go into each recurring meeting's `except` list, so week 13 comes
+out *genuinely* empty rather than showing five phantom Thanksgiving lectures — the empty week
+is the test case that catches a calendar built by counting instead of by dates. And a
+not-survivable course contributes `baseHours` rather than summing `Infinity`; the docstring
+says it understates knowingly, because refusing closure is shopping week's job, not the
+calendar's.
+
+`bands.ts` grew the minute extents this needs: every `Band` now carries `startMin`/`endMin`,
+`label` is documented as display-only, and `bandsForMinutes` counts a band occupied if the
+class overlaps it **at all**. That generosity is deliberate — you cannot study in the fifteen
+minutes between two halves of your own lab. `hash.ts` was extracted at the same time so
+`grading.ts` and `schedule.ts` cannot drift into two FNV-1a implementations.
+
+**The gate, answered against real content.** Pekka (math +2, writing −1) with CS 50 §011,
+Math 21b, Expos 20 §204 and LS 1A gets peak week 9 (26 Oct): four deadlines, 96.7 h for her
+against 46.3 h as authored, 67 free bands. Tuesday the 27th holds a mandatory CS 50 section at
+09:00 that overlaps a mandatory Expos 20 seminar on thirteen separate days — the card is not
+merely heavy, it is **unfileable**, and nothing before this view could say so. A third
+collision (CS 50 lecture × Math 21b lecture, ×23 days) is soft: both derived hours, one
+skippable. That is the gate question with a yes: the decision exists before any prose does. It
+also raises the obvious next one — the registrar would never *sell* two mandatory meetings in
+the same band, so shopping week arguably ought to refuse or at least flag it at enrol time.
+That check is not built, and deliberately: §11.4's route refuses only two things, and adding a
+third belongs with the requirement solver's work on what a card *means*.
 
 ## 12. Decisions I made for you
 

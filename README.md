@@ -46,6 +46,12 @@ nothing to shop for. The scaffolding posts the `pekka` preset to `/api/game/new`
 in and shops for that — which means `?screen=courseRegistration` needs the API server up,
 and shows prices for Pekka's build rather than one you picked.
 
+`?screen=calendar` draws the term the save's card makes: fourteen weeks on the band grid,
+with deadlines, free bands and meeting collisions. It reads the same save, so a card filed
+in shopping week shows up there immediately — and shopping week's **"See the term this
+makes →"** button goes straight to it. A freshly bootstrapped save has nothing enrolled, so
+enrol something first or the term is (correctly) empty.
+
 ## Test and Balance
 
 Run all tests (engine, content, server — Node's test runner):

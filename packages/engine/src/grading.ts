@@ -7,6 +7,7 @@
  */
 
 import { weightedAverageGap } from './demands'
+import { fnv1a } from './hash.ts'
 import type { Levels, SubjectTag } from './schema'
 
 /**
@@ -41,15 +42,11 @@ export const CONFIDENCE_LABEL: Record<ConfidenceBand, string> = {
  * not two, since splitting them added a threshold nothing else needed. */
 const CARD_RANGE: Record<ConfidenceBand, number> = { narrow: 1, moderate: 2, wide: 4 }
 
-function hashSeed(saveSeed: string, assessmentId: string): number {
-  const str = `${saveSeed}:${assessmentId}`
-  let h = 2166136261 >>> 0
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i)
-    h = Math.imul(h, 16777619)
-  }
-  return h >>> 0
-}
+/** The composition is the load-bearing part (§3.3): a draw is a function of the save and
+ * the assessment, and of nothing else — no stream position, which is what makes undo safe
+ * to offer. The hash itself is shared (`hash.ts`) so it cannot fork. */
+const hashSeed = (saveSeed: string, assessmentId: string): number =>
+  fnv1a(`${saveSeed}:${assessmentId}`)
 
 /** mulberry32 — small, seeded, deterministic. Not cryptographic; doesn't need to be. */
 function mulberry32(seed: number): () => number {

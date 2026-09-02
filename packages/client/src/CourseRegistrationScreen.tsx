@@ -194,6 +194,10 @@ type CourseRegistrationScreenProps = {
   /** The save being shopped for. `null` renders the catalogue unpriced — see below. */
   gameId: string | null
   onBack: () => void
+  /** Opens the term as enrolled. The loop this closes is the point: shopping week can only
+   * quote a *total*, and a total cannot tell you your Tuesday is impossible — so the answer to
+   * "is this card any good" lives on the calendar, and you come back here to change it. */
+  onViewTerm?: (() => void) | undefined
 }
 
 /**
@@ -210,7 +214,7 @@ type CourseRegistrationScreenProps = {
  * hours, gaps and multipliers, and never a predicted grade. A closed course renders its
  * reason, because that is what the payload carries instead of a refusal.
  */
-export function CourseRegistrationScreen({ identity, gameId, onBack }: CourseRegistrationScreenProps) {
+export function CourseRegistrationScreen({ identity, gameId, onBack, onViewTerm }: CourseRegistrationScreenProps) {
   const [courses, setCourses] = useState<Course[] | null>(null)
   const [slots, setSlots] = useState<CourseSlot[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -360,6 +364,11 @@ export function CourseRegistrationScreen({ identity, gameId, onBack }: CourseReg
                 That is {summary.overBy} over the semester effort cap. People do it. It is
                 usually the term they stop sleeping.
               </p>
+            )}
+            {onViewTerm && enrolled.length > 0 && (
+              <button type="button" className="view-term-button" onClick={onViewTerm}>
+                See the term this makes →
+              </button>
             )}
           </aside>
         )}

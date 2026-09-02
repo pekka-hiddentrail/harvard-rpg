@@ -314,6 +314,9 @@ export const BLOCK_MINUTES: Record<MeetingPattern, number> = {
   MTWThF: 60,
 }
 export const BLOCK_STARTS = ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30'] as const
+
+/** Evening starts, for the meetings that don't fit the daytime grid — a three-hour lab or a
+ * two-hour tutorial. Separate from `BLOCK_STARTS` because these are not block slots. */
 export const BLOCK_NIGHT_STARTS = ['18:00', '19:30'] as const
 
 /**
@@ -374,9 +377,14 @@ export const Meeting = z
     /**
      * One of the three real block patterns, when this meeting is a canonical class
      * slot — absent for ad hoc arrangements (e.g. a TF-scheduled discussion section).
-     * Deliberately no specific start time: which of `BLOCK_STARTS`/`BLOCK_NIGHT_STARTS`
-     * a given section lands on is a registration-time fact (the shopping cart, not built
-     * yet), so content declares the pattern/range and never pins one slot.
+     * Deliberately no specific start time: content declares the pattern and never pins one
+     * of `BLOCK_STARTS`/`BLOCK_NIGHT_STARTS`, because for 169 of the catalogue's 335
+     * meetings that is genuinely all the import knew.
+     *
+     * `schedule.ts` resolves a pattern to a slot when something needs to draw the week —
+     * derived from the course code, so every player sees the same hour, and overridden the
+     * moment a real `time` is authored. A concrete section's slot comes from `CourseSlot`,
+     * which does publish a `time`.
      */
     pattern: MeetingPattern.optional(),
     /**
