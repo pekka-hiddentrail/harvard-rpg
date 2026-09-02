@@ -199,14 +199,31 @@ const emptySummary = {
  * cares about most: past the cap, and still answering 200.
  */
 function mockFetch(
-  opts: { over?: boolean; refuse?: { status: number; body: object }; noPlan?: boolean } = {},
+  opts: {
+    over?: boolean
+    refuse?: { status: number; body: object }
+    noPlan?: boolean
+    /**
+     * Hold `/api/courses` open until the test lets it go. The catalogue and the card are two
+     * fetches and the card is far the smaller, so "priced already, 163 syllabi not yet" is the
+     * ordinary state of the first render rather than a contrived one.
+     */
+    holdCourses?: boolean
+    /** A card that already has something on it before the screen mounts. */
+    enrolled?: { term: string; courseCode: string }[]
+  } = {},
 ) {
   const commits: { action: string; body: unknown }[] = []
   /** The server's own state, minimally: whether cs50 is on the card yet. */
   let filed = false
+  let releaseCourses = () => {}
+  const coursesGate = new Promise<void>((resolve) => {
+    releaseCourses = resolve
+  })
   const fn = vi.fn((url: string, init?: RequestInit) => {
     if (url.endsWith('/api/courses')) {
-      return Promise.resolve(new Response(JSON.stringify(COURSES)))
+      const body = () => new Response(JSON.stringify(COURSES))
+      return opts.holdCourses ? coursesGate.then(body) : Promise.resolve(body())
     }
     if (url.endsWith('/plan')) {
       // The planner being unreachable must not put an error across shopping week, which
@@ -226,7 +243,7 @@ function mockFetch(
             cap: 28,
             levels: { code: 0, math: -2 },
             courses: [CS50_PRICED, MATH_PRICED, EXPOS_PRICED],
-            enrolled: [],
+            enrolled: opts.enrolled ?? [],
             summary: emptySummary,
           }),
         ),
@@ -266,7 +283,7 @@ function mockFetch(
     }
     return Promise.reject(new Error(`unexpected fetch to ${url}`))
   })
-  return { fn, commits }
+  return { fn, commits, releaseCourses: () => releaseCourses() }
 }
 
 const priceBox = () =>
@@ -512,6 +529,24 @@ describe('what a course counts toward', () => {
     await waitFor(() =>
       expect(within(cart).getByText(/expos20 counts toward no concentration here/)).toBeVisible(),
     )
+  })
+
+  it('waits for the catalogue before claiming a course counts toward nothing', async () => {
+    // Two independent fetches, and the card is the smaller one. Keying the orphan line off a
+    // missing `countsToward` alone made the screen state a content fact — "cs50 counts toward
+    // no concentration here" — for as long as the catalogue took to arrive, about a course that
+    // counts toward three groups.
+    const mock = mockFetch({ holdCourses: true, enrolled: [{ term: 'fall-2026', courseCode: 'cs50' }] })
+    vi.stubGlobal('fetch', mock.fn)
+    render(<CourseRegistrationScreen identity={identity} gameId="save-1" onBack={() => {}} />)
+
+    const cart = await screen.findByRole('complementary', { name: 'Crimson Cart' })
+    expect(within(cart).queryByText(/counts toward no concentration here/)).toBeNull()
+
+    mock.releaseCourses()
+    await waitFor(() => expect(screen.getByRole('button', { name: /CS50/ })).toBeVisible())
+    // And it still says nothing once the catalogue is in, because cs50 is not an orphan.
+    expect(within(cart).queryByText(/counts toward no concentration here/)).toBeNull()
   })
 
   it('carries on without the plan when the planner cannot be reached', async () => {

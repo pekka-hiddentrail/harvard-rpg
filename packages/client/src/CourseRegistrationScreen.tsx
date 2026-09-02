@@ -320,10 +320,15 @@ export function CourseRegistrationScreen({
   /** Tracks the card is actually pointing at, in the order the solver ranked them. */
   const leading = (plan ?? []).filter((t) => t.counted.length > 0)
   const atRisk = (plan ?? []).filter((t) => AT_RISK.includes(t.status))
-  /** On the card, and counts toward nothing anywhere. Worth saying before the slot is spent. */
-  const orphans = enrolled
-    .filter((e) => (byCode.get(e.courseCode)?.countsToward.length ?? 0) === 0)
-    .map((e) => byCode.get(e.courseCode)?.courseCode ?? e.courseCode)
+  /**
+   * On the card, and counts toward nothing anywhere. Worth saying before the slot is spent —
+   * but only once the catalogue is actually here. `/api/courses` and `/api/game/:id/shopping`
+   * are separate fetches and the card usually lands first, so keying this off a missing
+   * `countsToward` alone flashed *"cs50, math21b counts toward no concentration here"* on the
+   * way in: a false claim about content, for as long as 163 syllabi take to arrive.
+   */
+  const orphans =
+    courses === null ? [] : enrolled.filter((e) => byCode.get(e.courseCode)?.countsToward.length === 0).map((e) => e.courseCode)
 
   /**
    * Add or drop. The whole card comes back from the server, so this never patches its own

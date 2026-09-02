@@ -289,6 +289,41 @@ describe('PlannerScreen', () => {
     expect(within(routes).queryByText('math55b')).toBeNull()
   })
 
+  it('still names a course shut with nothing cheaper, because silence reads as "fine"', async () => {
+    // The other half of the same fact. Dropping these rows from the route list is right;
+    // dropping them from the screen would mean a card that had closed forty courses outright
+    // showed an empty panel, which §9.3 reads as nothing being wrong.
+    render(<PlannerScreen onBack={() => {}} gameId="g1" />)
+    await screen.findByRole('heading', { name: 'Mathematics' })
+    expect(
+      screen.getByText(/1 course is shut with nothing cheaper in the catalogue to open it: math55b/),
+    ).toBeTruthy()
+  })
+
+  it('says nothing about dead ends when there are none', async () => {
+    vi.stubGlobal('fetch', mockFetch({ plan: { ...PLAN, blocked: [PLAN.blocked[0]] } }))
+    render(<PlannerScreen onBack={() => {}} gameId="g1" />)
+    await screen.findByRole('heading', { name: 'Mathematics' })
+    expect(screen.queryByText(/shut with nothing cheaper/)).toBeNull()
+  })
+
+  it('counts what it truncated instead of quietly dropping it', async () => {
+    // Twelve shut courses, eight rows. A list that silently ends at eight is a list that lies
+    // about how much of the catalogue this build has closed.
+    const many = Array.from({ length: 12 }, (_, i) => ({
+      blocked: `c${i}`,
+      tag: 'math',
+      gap: 5,
+      via: [{ courseCode: 'mathma', title: 'Math Ma', demand: 0, gap: 2 }],
+    }))
+    vi.stubGlobal('fetch', mockFetch({ plan: { ...PLAN, blocked: many } }))
+    render(<PlannerScreen onBack={() => {}} gameId="g1" />)
+    await screen.findByRole('heading', { name: 'Mathematics' })
+    const routes = document.querySelector('.route-list') as HTMLElement
+    expect(within(routes).getAllByRole('listitem')).toHaveLength(8)
+    expect(screen.getByText('…and 4 more with a way in.')).toBeTruthy()
+  })
+
   it('switches tracks from the rail', async () => {
     render(<PlannerScreen onBack={() => {}} gameId="g1" />)
     await screen.findByRole('heading', { name: 'Mathematics' })

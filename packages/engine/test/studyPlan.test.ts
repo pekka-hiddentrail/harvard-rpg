@@ -6,8 +6,9 @@ import type { Levels, RequirementGroup, Rules, Syllabus, Track } from '../src/sc
 
 /**
  * Fixtures kept small on purpose: the interesting behaviour is the *shape* of the requirement
- * graph, not the size of the catalogue. The one place real content appears is the last
- * describe block, which guards the arithmetic that a made-up graph would never have caught.
+ * graph, not the size of the catalogue. The arithmetic that only real content catches — the
+ * Mathematics track's eight-not-eleven — is guarded in `packages/content/test`, against the
+ * authored files, because a made-up graph would never have got it wrong.
  */
 
 const course = (courseCode: string, demands: Syllabus['demands'] = {}): Syllabus =>
@@ -266,6 +267,13 @@ describe('countsToward: what a single row in shopping week says', () => {
   it('is empty for a course no track wants, which is a real thing to know', () => {
     assert.deepEqual(countsToward('c1', tracks), [])
   })
+
+  it('reads a sequence, which states its pool in a different field', () => {
+    // `poolOf` switches on `kind`, so a course that only ever appears inside a sequence — Econ
+    // 10a is exactly this — would otherwise report "counts toward nothing" on its own row.
+    const seq = [track('t', [group({ id: 'intro', label: 'Intro', kind: 'sequence', need: 2, sequence: ['a1', 'a2'] })])]
+    assert.deepEqual(countsToward('a2', seq).map((r) => r.groupId), ['intro'])
+  })
 })
 
 describe('openingRoutes: the fourth output (r11)', () => {
@@ -294,5 +302,59 @@ describe('openingRoutes: the fourth output (r11)', () => {
 
   it('says nothing about a course that is not in the catalogue', () => {
     assert.deepEqual(openingRoutes('nosuch', levels, catalogue), [])
+  })
+
+  it('will not offer a route that is itself shut on some other tag', () => {
+    // The bug this pins: `stats_wall` asks less of math than `hard` does, so it looked like the
+    // way in — and it is shut on stats, so enrolling in it 422s. Checking only the blocking tag
+    // offered 130 such routes out of 632 on a build two levels down in math and stats, which is
+    // a build creation sells for four of its five refund points.
+    const twoHoles: Levels = { ...zeroLevels(), math: -2, stats: -2 }
+    const shop = [
+      course('hard', { math: 3 }),
+      course('stats_wall', { math: 1, stats: 3 }),
+      course('takeable', { math: 1, stats: 1 }),
+    ]
+    const via = openingRoutes('hard', twoHoles, shop)[0]?.via.map((v) => v.courseCode)
+    assert.deepEqual(via, ['takeable'])
+  })
+
+  it('offers an empty route list rather than an unusable one, and that is the answer', () => {
+    // Far enough down and nothing in the catalogue helps. §9.3 wants that stated, not padded
+    // with courses you cannot take — so `via` is empty and the caller renders the other case.
+    const deep: Levels = { ...zeroLevels(), math: -3, stats: -3 }
+    const shop = [course('hard', { math: 2 }), course('nope', { math: 1, stats: 2 })]
+    const routes = openingRoutes('hard', deep, shop)
+    assert.equal(routes.length, 1)
+    assert.deepEqual(routes[0]?.via, [])
+  })
+
+  it('reports one route list per blocking tag, because either wall is enough to stop you', () => {
+    const both: Levels = { ...zeroLevels(), math: -2, code: -2 }
+    const shop = [
+      course('wall', { math: 3, code: 3 }),
+      course('easymath', { math: 1 }),
+      course('easycode', { code: 1 }),
+    ]
+    const routes = openingRoutes('wall', both, shop)
+    assert.deepEqual(routes.map((r) => r.tag).sort(), ['code', 'math'])
+    assert.deepEqual(routes.find((r) => r.tag === 'math')?.via.map((v) => v.courseCode), ['easymath'])
+  })
+})
+
+describe('trackProgress: the end of the degree', () => {
+  const t = track('t', [group({ id: 'g', label: 'Core', need: 2, from: ['a1', 'a2'] })])
+
+  it('has no slots left in the term after the last one, and says so without going negative', () => {
+    const p = trackProgress(t, { taken: [], termsUsed: 8 }, CATALOGUE, rules)
+    assert.equal(p.slotsLeft, 0)
+    assert.equal(p.status, 'closed')
+    assert.match(p.reasons[0] ?? '', /0 slots remain \(0 terms × 4\)/)
+  })
+
+  it('does not report negative slots for a save that has somehow run past the degree', () => {
+    const p = trackProgress(t, { taken: [], termsUsed: 12 }, CATALOGUE, rules)
+    assert.equal(p.slotsLeft, 0)
+    assert.equal(p.slack, -2)
   })
 })

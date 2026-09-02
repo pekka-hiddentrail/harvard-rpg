@@ -2790,7 +2790,7 @@ say what a term costs you in three years, and that is the question a player cann
 intuition — so a catalogue row now carries the concentrations it serves, the Crimson Cart carries
 which tracks the card is pointing at, and there is a screen for the rest.
 
-**Three commitments, and each of them is a refusal to round up.**
+**Four commitments, and each of them is a refusal to round up.**
 
 *Every track, every time.* Seven tracks are solved on every change, and the list is never
 filtered to the plausible ones. The whole value of the planner is telling you that a
@@ -2812,6 +2812,17 @@ None of these fit a requirement graph, all of them are real, and the department'
 rides along next to the group it belongs to. A player reading their Mathematics requirements sees
 the four-of-eight rule and can see that the catalogue carries only two 100-level courses — which
 is a truthful statement about an unfinished game, and far better than a checkmark that lies.
+
+*A suggested course is one you can actually enrol in.* §9.3 asks for *"closed this year, and here
+is the cheapest way to open it"*, and the first build of that answer only checked the subject that
+was doing the blocking — so it happily offered a player two levels down in both math and statistics
+a statistics-heavy course as the way into a maths one. Roughly a fifth of the routes it printed
+would have been refused at the registrar's desk. A route the game will then refuse is worse than no
+route at all: it turns advice into a second rejection, which is the exact failure §9.3 was written
+against. Every route now clears every subject it demands, and when a player is far enough behind
+that nothing in the catalogue helps, the screen says *that* rather than padding the list — those
+courses are named as shut with nothing cheaper to open them, because an empty panel reads as
+reassurance.
 
 **What this does to Year 1, which is the design payoff.** §9.4 wants freshman year played under
 deliberate uncertainty, and the risk of a requirement solver is that it removes exactly that: a

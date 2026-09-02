@@ -1531,14 +1531,55 @@ read, and §9.3's whole posture is that the honest output is a sentence.
    (Breadth: Geometry/Topology) has exactly one route, so it must get the course. The
    backtracking §3.4 budgeted for was never needed; the ordering alone resolves every case in
    today's content, and the docstring says so rather than implying a search that isn't there.
+
+   Worth being exact about what that buys, because the first draft of the docstring was not: this
+   is a heuristic, not a maximum matching. It is exact for `content/tracks/` because the pools
+   that overlap there are strictly nested — three breadth groups inside one wide one — and that
+   is the shape scarcity ordering gets right. If content ever grows genuinely crossing pools it
+   can be wrong, and only in one direction: a group starved of a course a better matching would
+   have found reports `needMore` too **high**, never too low. A track claiming one course more
+   than it owes is the symptom, and a real matching here is the fix, not a tweak to the sort.
 5. **`openingRoutes` reuses `courseGaps` rather than recomputing a gap.** A second gap
    calculation is how the route a screen offers drifts from the refusal it explains. It also
    reports routes and not a forecast: what a term of work does to a level is §4.5's business,
    and predicting it here is precisely the promise §4.4 forbids.
+
+   The first version got this half-right and shipped a real bug, found in review: it checked
+   that a candidate was cheaper on the **blocking** tag and survivable on that tag, and never
+   asked whether the candidate was open on the other twelve. On a build two levels down in math
+   and stats — which creation sells for four of its five refund points — 130 of the 632 routes
+   it offered were courses the server would have refused at enrol time with a 422. A route that
+   422s is a refusal wearing a suggestion's clothes, which is the one thing r11 exists not to
+   do. `via` now passes the whole candidate through `isCourseOpen`, and the promise it makes is
+   *enrollable today*.
+
+   That fix makes a second state reachable and it had to be handled with it: at a deep enough
+   hole, nothing in the catalogue helps and `via` comes back empty. The planner used to filter
+   those rows out of the route list (correctly — a list of routes must contain routes) and then
+   say nothing else, so a card that had closed 236 courses outright rendered an empty panel,
+   which §9.3 reads as *nothing is wrong*. It now names them as shut with nothing cheaper, and
+   the route list counts what it truncated instead of ending silently at eight.
 6. **The `needMore` arithmetic was wrong first, in the loudest direction.** The first version
    added a parent's deficit to its children's. That reports the Mathematics track as **closed**
    to a freshman with 28 slots left. The fix is in §3.4; two engine tests and one real-content
    test now pin it, because this is the number the entire screen is about.
+7. **The loader refuses two shapes the solver cannot answer, rather than answering wrongly.**
+   Both came out of reviewing the above, and both are shapes `RequirementGroup` has always
+   permitted and nothing has ever authored:
+
+   - **`kind: 'tag'`** — *"four courses demanding `proof`"*. `poolOf` builds its pool out of
+     `from`/`oneOf`/`anyOf`/`sequence` and a tag group names none of them, so it came out as a
+     permanently unsatisfiable group with an empty list where its reason line names what is
+     missing — quietly taking its whole track to `unplannable`. The old validation went the other
+     way and *exempted* tag groups from the pool check while checking their `subjectTag`, so the
+     loader was carefully validating a shape the solver could not read.
+   - **Nested `counts`** — a child that counts children of its own. `needMore` charges
+     `max(parent, Σ children)` exactly one level deep, so the grandchildren's deficits would
+     vanish from the bill entirely. That is the *understating* direction, which is worse than
+     item 6's: a track that quietly owes four more courses than it says.
+
+   Both now throw at load with the shape named and the fix suggested. Depth and kind are both
+   decidable, so this is cheap; the alternative is a wrong number no test would catch.
 
 **The live picture, which is the point of running all seven always.** An empty freshman card
 prices every track as reachable with slack, from `math_joint_allied` at 5 more courses to
@@ -1558,6 +1599,14 @@ frame one year longer: a rail of all seven destinations, the selected one's grou
 with assigned and *credited* courses distinguished, and the warnings down the side that §9.2
 calls the point of the whole screen. The client computes one thing — `need - have`, for display
 next to two numbers it was handed — and nothing else.
+
+One client bug in the same family as the route one, also found in review and worth the sentence
+because the shape recurs: the cart's *"counts toward no concentration here"* line was derived from
+a course's `countsToward` being empty, and `/api/courses` and `/api/game/:id/shopping` are two
+independent fetches with the card far the smaller. So on the way in, before 163 syllabi arrived,
+the screen stated a content fact — *"cs50 counts toward no concentration here"* — about a course
+that counts toward three groups. An absent catalogue and a course nothing wants are not the same
+answer, and a view model must not collapse them just because both render as a missing field.
 
 **Not built, and named so it stays visible:** there is no transcript. `GameState.enrolled` is
 the only record of a course ever taken, so the solver cannot yet tell *taken* from *passed*, and

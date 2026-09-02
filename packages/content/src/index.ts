@@ -8,7 +8,6 @@ import {
   CourseSlotList,
   Preset,
   Rules,
-  SUBJECT_TAGS,
   Syllabus,
   Term,
   TraitPack,
@@ -19,7 +18,6 @@ import {
   type Activity,
   type ActivityIndex,
   type CourseSlot,
-  type SubjectTag,
   type Track,
   type Trait,
   type TraitIndex,
@@ -152,7 +150,7 @@ export function loadContent(root: string): Content {
     const { version: _version, ...track } = parsed.data
     return track
   })
-  assertTracksUsable(tracks, courses)
+  assertTracksUsable(tracks)
 
   // Fails at boot, not at first render, if a course's session count drifts from its
   // meeting pattern × the shared term's real dates (a miscounted holiday, e.g.).
@@ -227,9 +225,8 @@ function assertActivitiesUsable(activities: readonly Activity[]): void {
  * — and every one of these would otherwise surface as a track that silently cannot be
  * satisfied, which is the failure mode the whole component exists to prevent.
  */
-function assertTracksUsable(tracks: readonly Track[], courses: readonly Syllabus[]): void {
+export function assertTracksUsable(tracks: readonly Track[]): void {
   const trackIds = new Set<string>()
-  const tagNames = new Set<string>(SUBJECT_TAGS)
   for (const t of tracks) {
     if (trackIds.has(t.id)) throw new Error(`duplicate track id \`${t.id}\``)
     trackIds.add(t.id)
@@ -247,34 +244,45 @@ function assertTracksUsable(tracks: readonly Track[], courses: readonly Syllabus
         }
         if (c === g.id) throw new Error(`track \`${t.id}\`: requirement \`${g.id}\` counts itself`)
       }
-      // A group asking for more courses than it names can never be satisfied, whatever the
-      // player does. `tag` groups are exempt: they draw on the whole catalogue, not a list.
-      if (g.kind !== 'tag') {
-        const pool = g.kind === 'sequence' ? g.sequence : [...g.from, ...g.oneOf, ...g.anyOf]
-        if (pool.length < g.need) {
-          throw new Error(`track \`${t.id}\`: requirement \`${g.id}\` needs ${g.need} but names only ${pool.length}`)
-        }
-        // A course listed twice makes the pool look bigger than it is, which is exactly how
-        // the check above gets fooled into passing a group that cannot be satisfied.
-        const seen = new Set<string>()
-        for (const ref of pool) {
-          if (seen.has(ref)) {
-            throw new Error(`track \`${t.id}\`: requirement \`${g.id}\` lists \`${ref}\` twice`)
-          }
-          seen.add(ref)
+      /**
+       * The schema allows `kind: tag` and the solver cannot solve it: `poolOf` builds a pool
+       * out of `from`/`oneOf`/`anyOf`/`sequence`, and a tag group names none of those, so such
+       * a group would come out permanently unsatisfiable — quietly making its whole track
+       * `unplannable`, with an empty list where the reason line names what is missing. No
+       * content uses one. Refusing the file beats accepting it and answering wrongly; when a
+       * track wants one, the fix is a catalogue-derived pool in `poolOf`, not a relaxation here.
+       */
+      if (g.kind === 'tag') {
+        throw new Error(
+          `track \`${t.id}\`: requirement \`${g.id}\` is a \`tag\` requirement, which the solver does not implement — express it as a \`set\` with an explicit \`from\``,
+        )
+      }
+      /**
+       * A group `counts` another as a way of saying "those are some of mine, not extra". The
+       * solver's slot arithmetic charges a parent and its children `max(parent, Σ children)`,
+       * one level deep — so a child that is itself a parent would have *its* children dropped
+       * from the bill entirely, understating what the track owes. Depth is decidable here.
+       */
+      for (const c of g.counts) {
+        const child = t.requirements.find((x) => x.id === c)
+        if (child && child.counts.length > 0) {
+          throw new Error(`track \`${t.id}\`: requirement \`${g.id}\` counts \`${c}\`, which counts groups of its own — nested \`counts\` is not supported`)
         }
       }
-      if (g.kind === 'tag') {
-        if (g.subjectTag === undefined) {
-          throw new Error(`track \`${t.id}\`: requirement \`${g.id}\` is a tag requirement with no \`subjectTag\``)
+      // A group asking for more courses than it names can never be satisfied, whatever the
+      // player does.
+      const pool = g.kind === 'sequence' ? g.sequence : [...g.from, ...g.oneOf, ...g.anyOf]
+      if (pool.length < g.need) {
+        throw new Error(`track \`${t.id}\`: requirement \`${g.id}\` needs ${g.need} but names only ${pool.length}`)
+      }
+      // A course listed twice makes the pool look bigger than it is, which is exactly how the
+      // check above gets fooled into passing a group that cannot be satisfied.
+      const seen = new Set<string>()
+      for (const ref of pool) {
+        if (seen.has(ref)) {
+          throw new Error(`track \`${t.id}\`: requirement \`${g.id}\` lists \`${ref}\` twice`)
         }
-        // §7.8: the subject tags are a closed namespace, so a misspelling here is decidable.
-        if (!tagNames.has(g.subjectTag)) {
-          throw new Error(`track \`${t.id}\`: requirement \`${g.id}\` wants subject tag \`${g.subjectTag}\`, which is not one of the ${SUBJECT_TAGS.length}`)
-        }
-        if (!courses.some((c) => (c.demands[g.subjectTag as SubjectTag] ?? 0) > 0)) {
-          throw new Error(`track \`${t.id}\`: requirement \`${g.id}\` wants subject tag \`${g.subjectTag}\`, which no course in content asks for`)
-        }
+        seen.add(ref)
       }
       if (g.min !== undefined && g.max !== undefined && g.min > g.max) {
         throw new Error(`track \`${t.id}\`: requirement \`${g.id}\` has min ${g.min} above max ${g.max}`)

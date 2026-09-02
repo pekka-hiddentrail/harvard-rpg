@@ -4,8 +4,10 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, it } from 'node:test'
 import {
+  Track,
   effectiveDemand,
   fitSessions,
+  isCourseOpen,
   openingRoutes,
   parseDate,
   priceTrait,
@@ -15,7 +17,7 @@ import {
   weekdayName,
   type Levels,
 } from '@harvard/engine'
-import { loadContent, representativeSectionHours } from '../src/index.ts'
+import { assertTracksUsable, loadContent, representativeSectionHours } from '../src/index.ts'
 
 /**
  * These tests read the real content files. They are the ones that break when a trait is
@@ -419,6 +421,7 @@ describe('the tracks, against the courses that actually exist', () => {
 
   it('names a route out of every course a weak build is shut out of (r11)', () => {
     const weak = Object.fromEntries(content.rules.subjectTags.map((t) => [t, -2])) as Levels
+    const byCode = new Map(content.courses.map((c) => [c.courseCode, c]))
     const shut = content.courses.filter((c) => openingRoutes(c.courseCode, weak, content.courses).length > 0)
     assert.ok(shut.length > 0, 'a level of −2 in everything should shut something')
     for (const c of shut) {
@@ -429,11 +432,64 @@ describe('the tracks, against the courses that actually exist', () => {
         // Every route is genuinely cheaper on the blocking tag, and cheapest first.
         const wants = c.demands[route.tag] ?? 0
         assert.ok(route.via.every((v) => v.demand < wants))
+        /**
+         * ...and every route is one this player can actually enrol in *today*, on every tag it
+         * demands. This is the assertion that was missing: the same −2-in-everything vector
+         * used to produce 503 routes out of 1740 that the server would have refused at enrol
+         * time, because being cheaper on the blocking tag says nothing about the other twelve.
+         */
+        for (const v of route.via) {
+          const target = byCode.get(v.courseCode)!
+          assert.ok(
+            isCourseOpen(target.demands, weak),
+            `${c.courseCode}/${route.tag} offers ${v.courseCode}, which is itself shut`,
+          )
+        }
         assert.deepEqual(
           route.via.map((v) => v.demand),
           [...route.via.map((v) => v.demand)].sort((x, y) => x - y),
         )
       }
     }
+  })
+})
+
+describe('the track loader refuses the shapes the solver cannot answer', () => {
+  const group = (over: Record<string, unknown>) => ({ id: 'g', label: 'G', kind: 'set', need: 1, from: ['cs50'], ...over })
+  const one = (requirements: Record<string, unknown>[]) => [
+    Track.parse({ id: 't', name: 'T', field: 'test', requirements }),
+  ]
+
+  it('accepts the shapes the seven real tracks actually use', () => {
+    // The guard below is only worth having if it lets real content through, so this is the
+    // control: today's files load, which the suite's very first line already proves.
+    assert.doesNotThrow(() => assertTracksUsable(content.tracks))
+  })
+
+  it('refuses a `tag` requirement, which has no pool for `poolOf` to read', () => {
+    // The schema has always allowed this kind and the solver has never implemented it: such a
+    // group would be permanently unsatisfiable, taking its whole track to `unplannable` with
+    // nothing in the reason line to name. Refused at load rather than answered wrongly.
+    assert.throws(
+      () => assertTracksUsable(one([group({ kind: 'tag', subjectTag: 'math', from: [] })])),
+      /does not implement/,
+    )
+  })
+
+  it('refuses nested `counts`, which the slot arithmetic would silently drop', () => {
+    // `needMore` charges a parent and its children `max(parent, Σ children)` one level deep. A
+    // child that counts groups of its own would have *those* deficits vanish from the bill —
+    // understating what a track owes, which is the direction that matters.
+    assert.throws(
+      () =>
+        assertTracksUsable(
+          one([
+            group({ id: 'top', counts: ['mid'], need: 3, from: ['cs50', 'expos20', 'ls1a'] }),
+            group({ id: 'mid', counts: ['low'], from: ['cs50'] }),
+            group({ id: 'low', from: ['cs50'] }),
+          ]),
+        ),
+      /nested `counts` is not supported/,
+    )
   })
 })

@@ -1,5 +1,5 @@
 import type { Levels, RequirementGroup, Rules, SubjectTag, Syllabus, Track } from './schema.ts'
-import { NOT_SURVIVABLE_GAP, demandGap } from './demands.ts'
+import { NOT_SURVIVABLE_GAP, demandGap, isCourseOpen } from './demands.ts'
 import { courseGaps } from './shopping.ts'
 
 /**
@@ -9,10 +9,10 @@ import { courseGaps } from './shopping.ts'
  * slots, and a track's requirement graph, is the track still reachable — and if not, *why*.
  * A solver that returns `false` is useless here (§9.3), so every output carries its reason.
  *
- * Scoped deliberately small, per §3.4: ~12 groups, ≤32 slots, ~160 courses. Greedy assignment
- * with backtracking over groups sorted by scarcity resolves every real case in microseconds.
- * There is no LP solver, no SAT solver, and no dependency. If it ever gets slow the fix is
- * memoising on `(taken, trackId)`, not a better algorithm.
+ * Scoped deliberately small, per §3.4: ~12 groups, ≤32 slots, ~160 courses. One greedy pass
+ * over groups sorted by scarcity, in microseconds. There is no LP solver, no SAT solver, no
+ * backtracking and no dependency. If it ever gets slow the fix is memoising on
+ * `(taken, trackId)`, not a better algorithm.
  *
  * ── Three things content forced this to get right ────────────────────────────────────────
  *
@@ -148,8 +148,15 @@ const poolOf = (g: RequirementGroup): string[] =>
  *
  * The matching runs greedily over groups sorted by **scarcity** — fewest real routes first —
  * because a group with one route must get that course or it gets nothing, while a group with
- * eighteen routes can afford to lose one. That ordering alone resolves every case in today's
- * content; the backtrack below exists for the ones it won't.
+ * eighteen routes can afford to lose one.
+ *
+ * That ordering is the whole matching: there is no backtracking, so this is a heuristic and not
+ * a maximum matching. It is exact for every graph in `content/tracks/` (the pools that overlap
+ * are strictly nested — three breadth groups inside one wide one — which is the case scarcity
+ * ordering gets right), and it is only ever wrong in one direction: a group starved of a course
+ * a better matching would have found reports `needMore` too *high*, never too low. If content
+ * ever grows a graph with genuinely crossing pools, the fix is a real matching here, not a
+ * tweak to the sort — and a track reporting one course more than it owes is the symptom.
  */
 export function trackProgress(
   track: Track,
@@ -259,8 +266,14 @@ export function trackProgress(
     )
   } else if (unmet.every((g) => g.routes.length === 0)) {
     status = 'unplannable'
+    // The abstract slots are the usual cause and worth naming, but not the only one: a group
+    // whose real routes were all claimed by scarcer siblings also has none left. Naming an
+    // empty list would print "not courses in content — ." at the player.
+    const slots = uniq(unmet.flatMap((g) => g.abstractSlots))
     reasons.push(
-      `Nothing left to plan: every remaining requirement names only slots that are not courses in content — ${uniq(unmet.flatMap((g) => g.abstractSlots)).join(', ')}.`,
+      slots.length > 0
+        ? `Nothing left to plan: every remaining requirement names only slots that are not courses in content — ${slots.join(', ')}.`
+        : 'Nothing left to plan: no course in the catalogue can serve any remaining requirement.',
     )
   } else {
     status = slack === 0 ? 'tight' : 'slack'
@@ -283,8 +296,12 @@ export function trackProgress(
     }
     const short = g.need - g.have
     if (g.dependsOnAbstract) {
+      const rest =
+        g.abstractSlots.length > 0
+          ? ` — the rest must come from ${g.abstractSlots.join(', ')}`
+          : ', and its other courses are spoken for by requirements that had no alternative'
       reasons.push(
-        `${g.label}: ${short} more, but only ${g.routes.length} course${g.routes.length === 1 ? '' : 's'} in content can serve it — the rest must come from ${g.abstractSlots.join(', ')}.`,
+        `${g.label}: ${short} more, but only ${g.routes.length} course${g.routes.length === 1 ? '' : 's'} in content can serve it${rest}.`,
       )
       continue
     }
@@ -356,6 +373,11 @@ export type OpeningRoute = {
  * that they are the courses that ask less of the tag that is stopping you. What a term of work
  * actually does to a level is §4.5's business, and inventing a forecast here would be exactly
  * the kind of promise §4.4 forbids.
+ *
+ * What it does promise is that every route is **enrollable today** — open on every tag it
+ * demands, not merely cheaper on the blocking one. `via` is therefore empty for a player who is
+ * far enough down that nothing in the catalogue helps, and that is the answer rather than a
+ * missing one: callers render the two cases differently.
  */
 export function openingRoutes(
   courseCode: string,
@@ -373,10 +395,15 @@ export function openingRoutes(
       .filter((c) => c.courseCode !== courseCode)
       .flatMap((c) => {
         const demand = c.demands[row.tag]
-        // Only genuinely cheaper courses, and only ones you could actually take now.
+        // Only genuinely cheaper on the tag that is doing the blocking...
         if (demand === undefined || demand >= row.courseLevel) return []
+        // ...and only courses you could actually take now, which means *every* tag they
+        // demand, not just this one. Checking the blocking tag alone offered am101 as the way
+        // into apmth50 to a player two levels down in both math and stats: cheaper on math,
+        // and shut on stats. A route that 422s at enrol time is a refusal wearing a
+        // suggestion's clothes, which is the one thing r11 exists to not do.
+        if (!isCourseOpen(c.demands, levels)) return []
         const gap = demandGap(demand, levels[row.tag])
-        if (gap >= NOT_SURVIVABLE_GAP) return []
         return [{ courseCode: c.courseCode, title: c.title, demand, gap }]
       })
       .sort((a, b) => a.demand - b.demand || a.courseCode.localeCompare(b.courseCode))

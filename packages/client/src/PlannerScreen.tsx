@@ -125,9 +125,14 @@ export function PlannerScreen({ onBack, gameId }: { onBack: () => void; gameId: 
     plan === null ? null : (plan.tracks.find((t) => t.trackId === selectedId) ?? plan.tracks[0] ?? null)
 
   const atRisk = (plan?.tracks ?? []).filter((t) => AT_RISK.includes(t.status))
-  /** Only the blocked courses that have a way in. A closed course with no cheaper route is a
-   * fact about your levels, and it belongs on shopping week's row, not in a list of routes. */
+  /** Only the blocked courses that have a way in — a list of routes must contain routes. */
   const routes = (plan?.blocked ?? []).filter((b) => b.via.length > 0)
+  /**
+   * ...and the ones shut with nothing cheaper in content, which is not the same answer and
+   * must not read as silence. Rendering only `routes` meant a card that had closed forty
+   * courses outright showed an empty panel, which §9.3 reads as "nothing is wrong".
+   */
+  const dead = [...new Set((plan?.blocked ?? []).filter((b) => b.via.length === 0).map((b) => b.blocked))]
 
   return (
     <main className="planner-shell">
@@ -318,7 +323,21 @@ export function PlannerScreen({ onBack, gameId }: { onBack: () => void; gameId: 
                       </li>
                     ))}
                   </ul>
+                  {routes.length > 8 && (
+                    <p className="planner-fine">…and {routes.length - 8} more with a way in.</p>
+                  )}
                 </>
+              )}
+
+              {dead.length > 0 && (
+                <p className="planner-fine">
+                  {dead.length} course{dead.length === 1 ? ' is' : 's are'} shut with nothing
+                  cheaper in the catalogue to open {dead.length === 1 ? 'it' : 'them'}:{' '}
+                  {dead.slice(0, 6).join(', ')}
+                  {dead.length > 6 ? `, and ${dead.length - 6} more` : ''}. That is a fact about
+                  your levels rather than a route, so shopping week&rsquo;s own rows are where it
+                  gets priced.
+                </p>
               )}
             </aside>
           </div>
