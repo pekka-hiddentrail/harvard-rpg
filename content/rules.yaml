@@ -131,3 +131,7 @@ tagWeights:
 # CS50 + Math21b + Expos 20's own effort scores, 20 total, plus room for one more).
 academics:
   semesterEffortCap: 28
+  # Four courses a term, eight terms: the 32 slots a concentration's requirements compete
+  # for. The requirement solver reads these to answer "is this track still reachable?"
+  coursesPerTerm: 4
+  termsToDegree: 8

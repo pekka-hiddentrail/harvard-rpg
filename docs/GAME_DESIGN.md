@@ -2614,6 +2614,10 @@ That last row is the design justification for the whole section: a joint concent
 should be *visibly* the hard road, and with a requirement graph it is — the feasibility
 check (§9.3) simply tells you it no longer fits.
 
+**Built, with two differences worth knowing before reading on** (§9.6): seven tracks exist in
+content — CS + MBB, Mathematics, Mathematics joint ×2, and Economics ×3 — and a requirement
+group carries a `notes` list for the rules this shape cannot express.
+
 **College-wide requirements live separately**, because every track carries them and
 duplicating them across tracks is how requirement data rots:
 
@@ -2631,6 +2635,13 @@ reasoning of everyone, and §7.8's hindrance economy depends on that being true 
 `bad with numbers` is only a real cost if the college can put you in a math-tagged course
 against your will. Note it is expressed as a **subject tag** rather than a course list, which
 is what lets the CI invariant in `ARCHITECTURE.md` §10 check it mechanically.
+
+**This block is designed and not authored**, and it is the single largest gap between this
+section and the shipped game. There is no `college_requirements` file in content, which means
+Expos 20 — the one course every freshman takes — counts toward nothing in the planner, and the
+`quant` invariant §10 of `ARCHITECTURE.md` is meant to check has nothing to check. Both screens
+say this in words rather than showing a blank, but the honest summary is that the college half of
+the degree does not exist yet while all seven concentrations do.
 
 `language: testable_out` is the mirror image, and worth noticing because it is the clearest
 case of a refund trait paying for itself: a native Finnish speaker tests out and recovers two
@@ -2669,6 +2680,12 @@ CS + MBB track (undeclared — declare by Fall Y2)          28 / 32 slots planne
 The two warnings at the bottom are the point of the whole screen. **A track closing is
 a consequence, and the player should watch it happen.**
 
+**Built** (§9.6). Three things about the mockup did not survive contact with content, and all
+three are it being too confident: there are no `planned Y2 Fall` columns, because nothing in the
+game plans a future term yet; the Gen Ed and Language bars are absent, because the college-wide
+requirements above are unwritten; and a requirement can now report that its remaining slots are
+**not courses** — a thesis, an unspecified elective, or a course the catalogue does not carry.
+
 ### 9.3 Feasibility is the interesting query
 
 With `k` semesters left at four courses each, is a track still reachable? This is a
@@ -2695,6 +2712,12 @@ prerequisite, a course dropped after the deadline, a term on academic probation 
 consumes slots and can push a track from tight to closed. Which means §4.4's quiet
 grading system is what feeds the loudest long-term consequence in the game, exactly as
 it should: the grade is boring, what it forecloses is not.
+
+**This paragraph is the one thing in §9 that is not built**, and it is not a solver problem.
+There is no transcript: `GameState.enrolled` records that a course was taken and nothing records
+that it was passed, so the shipped solver cannot distinguish the two and a failure currently
+costs a track nothing. The fix is a state shape, not an algorithm, and it is named in
+`ARCHITECTURE.md` §11.6 so it does not quietly become a design that shipped.
 
 **r11: the solver gains a fourth output, and it is the useful one.** A demand gap of +5
 (§4.5) closes a *course*, not a track — so the honest answer is almost never "closed" but
@@ -2758,6 +2781,46 @@ central mechanic rather than a supporting one. With one term you cannot know man
 people, the curve's early-meetings-matter-most shape becomes the whole strategy, and
 every arrangement (§3.5) is scarce. It would play completely differently on identical
 content, which is the best possible argument for eventually building it.
+
+### 9.6 Built: the second question shopping week can now answer
+
+The solver, the planner, and *"counts toward"* on a course row all shipped together, and the
+reason they had to is §9.3's own argument. Shopping week could already price a term. It could not
+say what a term costs you in three years, and that is the question a player cannot answer by
+intuition — so a catalogue row now carries the concentrations it serves, the Crimson Cart carries
+which tracks the card is pointing at, and there is a screen for the rest.
+
+**Three commitments, and each of them is a refusal to round up.**
+
+*Every track, every time.* Seven tracks are solved on every change, and the list is never
+filtered to the plausible ones. The whole value of the planner is telling you that a
+concentration you were not thinking about just moved, which cannot happen if the screen only
+shows the ones you are near. Pekka's freshman card counts toward CS + MBB and Mathematics and
+**counts toward nothing at all** in any of the three Economics tracks — and that is the sentence
+the screen exists to be able to say.
+
+*A slot that is not a course is named as one.* A requirement can point at a senior thesis, at
+"an elective, you pick", or at a real Harvard course the catalogue has not been written yet. The
+game cannot tell those three apart, so it does not try: it says *"no course in content satisfies
+this — math_expository_paper"*, charges the slot, and never lets the requirement look finished.
+The alternative was letting a track claim to be complete with the thesis unwritten, which would
+make the one number this whole section is about untrustworthy.
+
+*The rules the graph cannot hold are printed anyway.* *"At least four of the eight must be
+100-level."* *"Math Ma + Mb count as one combined credit."* *"Thesis or four extra courses."*
+None of these fit a requirement graph, all of them are real, and the department's own wording now
+rides along next to the group it belongs to. A player reading their Mathematics requirements sees
+the four-of-eight rule and can see that the catalogue carries only two 100-level courses — which
+is a truthful statement about an unfinished game, and far better than a checkmark that lies.
+
+**What this does to Year 1, which is the design payoff.** §9.4 wants freshman year played under
+deliberate uncertainty, and the risk of a requirement solver is that it removes exactly that: a
+screen that tells you the optimal card turns a year of interesting mistakes into data entry. It
+does not, and the reason is the honesty above. The planner will tell you that Economics needs a
+two-term sequence you have not started, and it will not tell you whether you would enjoy it; it
+will tell you that four of your eight math courses must be 100-level, and that only two exist to
+take. What the player gets is not an answer. It is a good enough map to have the argument with
+themselves that §9's opening paragraph is about.
 
 ---
 

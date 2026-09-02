@@ -6,11 +6,14 @@ import { describe, it } from 'node:test'
 import {
   effectiveDemand,
   fitSessions,
+  openingRoutes,
   parseDate,
   priceTrait,
   resolveAssignmentDates,
+  studyPlan,
   validateBuild,
   weekdayName,
+  type Levels,
 } from '@harvard/engine'
 import { loadContent, representativeSectionHours } from '../src/index.ts'
 
@@ -341,4 +344,96 @@ describe('the activity pack (Tier 1)', () => {
     assert.ok(asc(content.rules.day.fatigue.map((f) => f.atOrBelow)))
   })
 
+})
+
+describe('the tracks, against the courses that actually exist', () => {
+  const codes = new Set(content.courses.map((c) => c.courseCode))
+  const pool = (g: { kind: string; from: string[]; oneOf: string[]; anyOf: string[]; sequence: string[] }) =>
+    g.kind === 'sequence' ? g.sequence : [...g.from, ...g.oneOf, ...g.anyOf]
+
+  it('loads all seven', () => {
+    // Nothing read `content/tracks/` until the solver did, so none of these files had ever
+    // been schema-validated. Two of the seven did not parse.
+    assert.equal(content.tracks.length, 7)
+    assert.deepEqual(
+      content.tracks.map((t) => t.id).sort(),
+      ['cs_mbb', 'econ_basic', 'econ_honors_advanced', 'econ_honors_thesis', 'math', 'math_joint_allied', 'math_joint_primary'],
+    )
+  })
+
+  it('leaves only deliverables abstract in the three math tracks', () => {
+    // These files used to reference twenty course ids that did not exist, so the tracks could
+    // not be solved at all. What remains abstract is the expository paper and the thesis,
+    // which are things you write rather than courses you enrol in.
+    for (const id of ['math', 'math_joint_primary']) {
+      const t = content.tracks.find((x) => x.id === id)!
+      const abstract = t.requirements.flatMap((g) => pool(g).filter((c) => !codes.has(c)))
+      assert.deepEqual([...new Set(abstract)].sort(), ['math_expository_paper', 'math_senior_thesis'])
+    }
+    // The allied side of a joint concentration owes neither, so it is fully solvable.
+    const allied = content.tracks.find((x) => x.id === 'math_joint_allied')!
+    assert.deepEqual(allied.requirements.flatMap((g) => pool(g).filter((c) => !codes.has(c))), [])
+  })
+
+  it('spells the econ prerequisites the way the catalogue does', () => {
+    // `ec10a`, `ec10b`, `stat109a` and `apmth101` were typos for courses that do exist, so
+    // four requirement groups were quietly unsatisfiable in three tracks.
+    for (const id of ['econ_basic', 'econ_honors_advanced', 'econ_honors_thesis']) {
+      const t = content.tracks.find((x) => x.id === id)!
+      const refs = t.requirements.flatMap(pool)
+      for (const typo of ['ec10a', 'ec10b', 'stat109a', 'apmth101']) {
+        assert.ok(!refs.includes(typo), `${id} still references \`${typo}\``)
+      }
+      assert.ok(refs.includes('econ10a') && refs.includes('econ10b'))
+    }
+  })
+
+  it('prices the Mathematics track at eight math courses, not eleven', () => {
+    // The breadth groups are three *of* the eight, which is what `counts` encodes. Summing
+    // parent and children instead reports the track closed to a freshman — the loudest
+    // possible way to be wrong, and the reason this test reads real content.
+    const plan = studyPlan({ taken: [], termsUsed: 1 }, content.tracks, content.courses, content.rules)
+    const math = plan.find((t) => t.trackId === 'math')!
+    // 8 math + 4 related field + 1 expository paper; the thesis is optional.
+    assert.equal(math.needMore, 13)
+    assert.equal(math.status, 'slack')
+  })
+
+  it('reports what a real freshman card does to every track at once', () => {
+    const plan = studyPlan(
+      { taken: ['cs50', 'math21b', 'expos20', 'ls1a'], termsUsed: 1 },
+      content.tracks,
+      content.courses,
+      content.rules,
+    )
+    assert.equal(plan.length, 7)
+    const mbb = plan.find((t) => t.trackId === 'cs_mbb')!
+    // Math 21b is the linear algebra requirement; CS 50 is one of the eight CS core courses.
+    assert.deepEqual(mbb.counted.sort(), ['cs50', 'math21b'])
+    // Expos 20 and LS 1A count toward no concentration in content — there is no
+    // college-wide requirements file yet, which is a real gap and not a solver bug.
+    assert.deepEqual(mbb.wasted.sort(), ['expos20', 'ls1a'])
+    // CS core cannot be finished out of the catalogue: eight wanted, six real courses.
+    assert.match(mbb.reasons.join('\n'), /CS core: 7 more, but only 6 courses in content/)
+  })
+
+  it('names a route out of every course a weak build is shut out of (r11)', () => {
+    const weak = Object.fromEntries(content.rules.subjectTags.map((t) => [t, -2])) as Levels
+    const shut = content.courses.filter((c) => openingRoutes(c.courseCode, weak, content.courses).length > 0)
+    assert.ok(shut.length > 0, 'a level of −2 in everything should shut something')
+    for (const c of shut) {
+      for (const route of openingRoutes(c.courseCode, weak, content.courses)) {
+        // §9.3: "closed this year, and here is the cheapest way to open it." A route list that
+        // is empty is a refusal wearing a suggestion's clothes.
+        assert.ok(route.via.length > 0, `${c.courseCode} is shut on ${route.tag} with no way out`)
+        // Every route is genuinely cheaper on the blocking tag, and cheapest first.
+        const wants = c.demands[route.tag] ?? 0
+        assert.ok(route.via.every((v) => v.demand < wants))
+        assert.deepEqual(
+          route.via.map((v) => v.demand),
+          [...route.via.map((v) => v.demand)].sort((x, y) => x - y),
+        )
+      }
+    }
+  })
 })

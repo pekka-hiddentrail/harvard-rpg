@@ -1,7 +1,12 @@
 # math_joint_primary.yaml — Mathematics as the PRIMARY field in a Joint Concentration.
 # Same coursework as math.yaml, but joint concentrations are honors-only by definition, so
-# the thesis is mandatory here rather than optional. Whatever the allied department
-# requires on its own side is out of scope for this file.
+# the thesis is mandatory here rather than optional. Whatever the allied department requires
+# on its own side is out of scope for this file — which is exactly why GAME_DESIGN §9.1 calls
+# a joint concentration the hardest road: the solver sees only half the bill.
+#
+# Course references were placeholders until the requirement solver was built; they now name
+# real `courseCode`s, on the same terms as math.yaml. The expository paper and the thesis stay
+# abstract because they are deliverables rather than courses.
 id: math_joint_primary
 name: "Mathematics (Joint Concentration, Math primary)"
 field: math
@@ -17,57 +22,88 @@ requirements:
     label: "Mathematics-labeled courses"
     kind: set
     need: 8
+    # As in the non-joint track: the three breadth courses count toward this group, not on
+    # top of it.
+    counts: [breadth-analysis, breadth-algebra, breadth-geometry-topology]
     from:
-      - math_100_level_a
-      - math_100_level_b
-      - math_100_level_c
-      - math_100_level_d
-      - math_upper_a
-      - math_upper_b
-      - math_upper_c
-      - math_upper_d
-    # Same as the non-joint Mathematics track.
+      - mathma
+      - mathmb
+      - math1a
+      - math1b
+      - math21a
+      - math21b
+      - math22a
+      - math22b
+      - math23a
+      - math25a
+      - math25b
+      - math55a
+      - math55b
+      - math101
+      - math154
+    notes:
+      - "Same as the non-joint Mathematics track, including the unenforced 4-of-8 100-level rule."
 
   - id: related-field-courses
     label: "Related-field courses"
     kind: set
     need: 4
     from:
-      - related_field_a
-      - related_field_b
-      - related_field_c
-      - related_field_d
-    # Same as the non-joint Mathematics track.
+      - am22a
+      - am22b
+      - am101
+      - apmth10
+      - apmth50
+      - apphy50a
+      - apphy50b
+      - cs20
+      - cs50
+      - cs51
+      - cs61
+      - cs1200
+      - cs1210
+      - cs1240
+      - stat100
+      - stat110
+      - stat111
+      - stat139
+    notes:
+      - "Same as the non-joint Mathematics track."
+      - "On a joint concentration these often double as the allied field's own requirements — the solver cannot see that and will not claim to."
 
   - id: breadth-analysis
     label: "Breadth: Analysis"
     kind: set
     need: 1
-    from: [math_analysis_a, math_analysis_b]
+    from: [math23a, math25a, math25b, math55b]
 
   - id: breadth-algebra
     label: "Breadth: Algebra"
     kind: set
     need: 1
-    from: [math_algebra_a, math_algebra_b]
+    from: [math55a, math101]
 
   - id: breadth-geometry-topology
     label: "Breadth: Geometry/Topology"
     kind: set
     need: 1
-    from: [math_geometry_a, math_topology_a]
+    from: [math101]
+    notes:
+      - "Math 101 is the only route in content, and it cannot also be the Algebra course."
 
   - id: expository-paper
     label: "Math Expository Requirement"
     kind: course
     need: 1
     from: [math_expository_paper]
-    # Same as the non-joint Mathematics track.
+    notes:
+      - "Same as the non-joint Mathematics track. Not a course."
 
   - id: thesis
     label: "Senior thesis"
     kind: course
     need: 1
     from: [math_senior_thesis]
-    # Mandatory here, unlike the non-joint track's optional thesis — full Math Honors
-    # requirements apply when Math is the primary field of a joint concentration.
+    notes:
+      - "Mandatory here, unlike the non-joint track's optional thesis — full Math Honors requirements apply when Math is the primary field."
+      - "It must also be acceptable to the allied department, which is a constraint no file here can express."

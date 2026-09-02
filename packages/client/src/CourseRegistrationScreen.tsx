@@ -51,6 +51,9 @@ type OfficeHour = {
   demand: number
 }
 
+/** One requirement group, in one concentration, that a course could serve (§9.1). */
+type CountsToward = { trackId: string; trackName: string; groupId: string; groupLabel: string }
+
 type Course = {
   id: string
   courseCode: string
@@ -62,6 +65,10 @@ type Course = {
   officeHours: OfficeHour[]
   sessions: Session[]
   assignments: Assignment[]
+  /** Pure content, like `demand` — the same for every player, so it rides on `/api/courses`
+   * rather than on the priced payload. It is what lets a row answer §9.3's second question,
+   * *"what does this cost me in three years?"* */
+  countsToward: CountsToward[]
 }
 
 type CourseSlot = {
@@ -139,9 +146,36 @@ type ShoppingResponse = {
 /** What a commit (`/enrol`, `/drop`) answers with. */
 type CardResponse = { enrolled: Enrolment[]; courses: PricedCourse[]; summary: CartSummary }
 
+// ── the study plan, as much of it as the cart needs (§9.2) ────────────────────────────
+// A deliberate subset of `/api/game/:id/plan`'s `TrackProgress`: the cart shows which way the
+// card is pointing and which tracks it is closing, and sends you to the planner for the rest.
+// Every field here is the solver's own — the client does not count a slot or price a track.
+
+type TrackStatus = 'done' | 'slack' | 'tight' | 'closed' | 'unplannable'
+
+type TrackLine = {
+  trackId: string
+  name: string
+  status: TrackStatus
+  counted: string[]
+  needMore: number
+  slotsLeft: number
+  slack: number
+  reasons: string[]
+}
+
+type PlanResponse = { tracks: TrackLine[] }
+
+/** The statuses §9.2 calls the point of the whole screen: a track closing is a consequence. */
+const AT_RISK: TrackStatus[] = ['closed', 'tight', 'unplannable']
+
 const signed = (n: number): string => (n > 0 ? `+${n}` : `${n}`)
 
 const hours = (n: number): string => `~${n}h/wk`
+
+/** A catalogue row cannot carry twelve group labels, so a course's requirement groups collapse
+ * to the concentrations they sit in. The groups themselves are in the detail panel. */
+const trackNames = (rows: CountsToward[]): string[] => [...new Set(rows.map((r) => r.trackName))]
 
 const dueOf = (a: Assignment): string | null => a.date ?? a.due ?? null
 
@@ -198,6 +232,10 @@ type CourseRegistrationScreenProps = {
    * quote a *total*, and a total cannot tell you your Tuesday is impossible — so the answer to
    * "is this card any good" lives on the calendar, and you come back here to change it. */
   onViewTerm?: (() => void) | undefined
+  /** Opens the planner (§9.2). The same loop one year longer: the cart can say a track just
+   * went tight, but not which of its twelve groups did it, so the reason lives on that screen
+   * and you come back here to spend the slot differently. */
+  onViewPlan?: (() => void) | undefined
 }
 
 /**
@@ -214,7 +252,13 @@ type CourseRegistrationScreenProps = {
  * hours, gaps and multipliers, and never a predicted grade. A closed course renders its
  * reason, because that is what the payload carries instead of a refusal.
  */
-export function CourseRegistrationScreen({ identity, gameId, onBack, onViewTerm }: CourseRegistrationScreenProps) {
+export function CourseRegistrationScreen({
+  identity,
+  gameId,
+  onBack,
+  onViewTerm,
+  onViewPlan,
+}: CourseRegistrationScreenProps) {
   const [courses, setCourses] = useState<Course[] | null>(null)
   const [slots, setSlots] = useState<CourseSlot[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -224,6 +268,7 @@ export function CourseRegistrationScreen({ identity, gameId, onBack, onViewTerm 
   const [summary, setSummary] = useState<CartSummary | null>(null)
   const [refusal, setRefusal] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
+  const [plan, setPlan] = useState<TrackLine[] | null>(null)
   /** Per course, so switching courses in the list doesn't silently reset a section you picked. */
   const [sectionChoice, setSectionChoice] = useState<Record<string, string>>({})
 
@@ -250,8 +295,35 @@ export function CourseRegistrationScreen({ identity, gameId, onBack, onViewTerm 
       .catch(() => setError(`No server on ${BASE}. Start it with \`npm run server\` in another window.`))
   }, [gameId])
 
+  /**
+   * The third fetch, and the only one that has to be repeated: prices do not move when you add
+   * a course, but the study plan does — that is the entire reason it is on this screen. A
+   * failure here is swallowed on purpose. An unreachable planner should not put an error across
+   * shopping week, which works perfectly well without knowing where the card leads.
+   */
+  const loadPlan = (id: string) => {
+    fetch(`${BASE}/api/game/${id}/plan`)
+      .then(async (r) => (r.ok ? ((await r.json()) as PlanResponse) : null))
+      .then((res) => setPlan(res ? res.tracks : null))
+      .catch(() => setPlan(null))
+  }
+
+  useEffect(() => {
+    if (gameId === null) return
+    loadPlan(gameId)
+  }, [gameId])
+
   const selected = courses?.find((c) => c.id === selectedId) ?? null
   const isEnrolled = (courseCode: string) => enrolled.some((e) => e.courseCode === courseCode)
+
+  const byCode = new Map((courses ?? []).map((c) => [c.courseCode, c]))
+  /** Tracks the card is actually pointing at, in the order the solver ranked them. */
+  const leading = (plan ?? []).filter((t) => t.counted.length > 0)
+  const atRisk = (plan ?? []).filter((t) => AT_RISK.includes(t.status))
+  /** On the card, and counts toward nothing anywhere. Worth saying before the slot is spent. */
+  const orphans = enrolled
+    .filter((e) => (byCode.get(e.courseCode)?.countsToward.length ?? 0) === 0)
+    .map((e) => byCode.get(e.courseCode)?.courseCode ?? e.courseCode)
 
   /**
    * Add or drop. The whole card comes back from the server, so this never patches its own
@@ -283,6 +355,9 @@ export function CourseRegistrationScreen({ identity, gameId, onBack, onViewTerm 
             for (const c of card.courses) next.set(c.courseCode, { ...next.get(c.courseCode)!, ...c })
             return next
           })
+          // The card changed, so the plan did. Re-asked rather than patched: a track going from
+          // tight to closed is arithmetic over twelve groups, and the client owns none of it.
+          loadPlan(gameId)
           return
         }
         const problem = body as { error?: string; sections?: string[] }
@@ -365,11 +440,60 @@ export function CourseRegistrationScreen({ identity, gameId, onBack, onViewTerm 
                 usually the term they stop sleeping.
               </p>
             )}
-            {onViewTerm && enrolled.length > 0 && (
-              <button type="button" className="view-term-button" onClick={onViewTerm}>
-                See the term this makes →
-              </button>
+            {/* §9.3's second question, on the same screen as the first: shopping week asks
+                "can I survive this workload?", and the planner asks "what does this cost me in
+                three years?" — which the player cannot answer by intuition, so the cart has to
+                at least say which way the card is pointing. */}
+            {plan !== null && (
+              <div className="cart-plan">
+                <p className="kicker">Where this leads</p>
+                {leading.length === 0 ? (
+                  <p className="plan-none">Nothing on the card counts toward a concentration yet.</p>
+                ) : (
+                  <ul className="plan-lines">
+                    {leading.map((t) => (
+                      <li key={t.trackId} className={`plan-line ${t.status}`}>
+                        <span className="plan-track">{t.name}</span>
+                        <span className="plan-progress">
+                          {t.counted.length} on the card · {t.needMore} more of {t.slotsLeft} slots
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {/* §9.2: the warnings are the point of the whole screen. A track closing is a
+                    consequence, and the player should watch it happen. */}
+                {atRisk.length > 0 && (
+                  <ul className="plan-warnings">
+                    {atRisk.map((t) => (
+                      <li key={t.trackId} className={t.status}>
+                        <span aria-hidden="true">⚠ </span>
+                        {t.name}: {t.reasons[0]}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {orphans.length > 0 && (
+                  <p className="plan-orphans">
+                    {orphans.join(', ')} counts toward no concentration here. The college-wide
+                    requirements — Expos, Gen Ed, language — are not in content yet, so a course
+                    that only serves those looks exactly like a course that serves nothing.
+                  </p>
+                )}
+              </div>
             )}
+            <div className="cart-exits">
+              {onViewTerm && enrolled.length > 0 && (
+                <button type="button" className="view-term-button" onClick={onViewTerm}>
+                  See the term this makes →
+                </button>
+              )}
+              {onViewPlan && (
+                <button type="button" className="view-plan-button" onClick={onViewPlan}>
+                  Where this leads →
+                </button>
+              )}
+            </div>
           </aside>
         )}
 
@@ -412,6 +536,14 @@ export function CourseRegistrationScreen({ identity, gameId, onBack, onViewTerm 
                           <>demand {c.demand} · {c.workloadHint}</>
                         )}
                       </span>
+                      {/* Content, not price — so it is here whether or not there is a save.
+                          An unpriced catalogue can still tell you a course is three tracks'
+                          core requirement, and that is worth knowing before you have a game. */}
+                      {c.countsToward.length > 0 && (
+                        <span className="course-counts">
+                          counts toward {trackNames(c.countsToward).join(' · ')}
+                        </span>
+                      )}
                       <span className="course-demands">
                         {Object.entries(c.demands).map(([tag, level]) => {
                           const gap = p?.gaps.find((g) => g.tag === tag)
@@ -550,6 +682,31 @@ export function CourseRegistrationScreen({ identity, gameId, onBack, onViewTerm 
                     </div>
                   )
                 })()}
+
+                {/* Directly under the price, because these are §9.3's two questions in order:
+                    what does this cost me this term, and what does it cost me in three years. */}
+                <h3>Counts toward</h3>
+                {selected.countsToward.length === 0 ? (
+                  <p className="course-unauthored">
+                    No concentration in content asks for this course. That may mean it is a free
+                    elective, or that it serves a college-wide requirement — those are not
+                    authored yet, and from here the two look the same.
+                  </p>
+                ) : (
+                  <ul className="course-counts-list">
+                    {trackNames(selected.countsToward).map((name) => (
+                      <li key={name}>
+                        <span className="counts-track">{name}</span>
+                        <span className="counts-groups">
+                          {selected.countsToward
+                            .filter((r) => r.trackName === name)
+                            .map((r) => r.groupLabel)
+                            .join(', ')}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
 
                 <h3>Office hours</h3>
                 <ul className="course-slots">

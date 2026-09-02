@@ -73,7 +73,7 @@ const rules = Rules.parse({
     visual: 0.7,
     fieldwork: 0.7,
   },
-  academics: { semesterEffortCap: 28 },
+  academics: { semesterEffortCap: 28, coursesPerTerm: 4, termsToDegree: 8 },
 })
 
 const trait = (over: Partial<TraitT> & { id: string; cost: number }): TraitT =>

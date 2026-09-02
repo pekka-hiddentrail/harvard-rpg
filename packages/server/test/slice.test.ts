@@ -802,3 +802,146 @@ describe('GET /api/game/:id/term', () => {
     assert.equal(/"grade"|"letter"|"cards"|"lean"/.test(res.body), false)
   })
 })
+
+describe('GET /api/game/:id/plan', () => {
+  type Group = {
+    id: string
+    label: string
+    need: number
+    have: number
+    state: string
+    optional: boolean
+    assigned: string[]
+    credited: string[]
+    routes: string[]
+    abstractSlots: string[]
+    dependsOnAbstract: boolean
+    next?: string
+    notes: string[]
+  }
+  type TrackRow = {
+    trackId: string
+    name: string
+    status: string
+    needMore: number
+    slotsLeft: number
+    slack: number
+    counted: string[]
+    wasted: string[]
+    reasons: string[]
+    groups: Group[]
+  }
+  type Body = {
+    taken: string[]
+    termsUsed: number
+    tracks: TrackRow[]
+    blocked: { blocked: string; tag: string; gap: number; via: { courseCode: string; demand: number }[] }[]
+  }
+
+  const studyPlanOf = async (id: string): Promise<Body> => {
+    const res = await app.inject({ method: 'GET', url: `/api/game/${id}/plan` })
+    assert.equal(res.statusCode, 200, res.body)
+    return res.json() as Body
+  }
+
+  it('solves every track for a save that has enrolled in nothing', async () => {
+    const body = await studyPlanOf(await newGame())
+    // §3.4: all of them, always. A "chosen track" fast path is how the planner stops being
+    // able to tell you a concentration you were not thinking about just closed.
+    assert.equal(body.tracks.length, content.tracks.length)
+    assert.deepEqual(body.taken, [])
+    assert.equal(body.termsUsed, 1)
+    // Nothing taken, eight terms of four: every track is still comfortably reachable.
+    assert.ok(body.tracks.every((t) => t.status === 'slack'), JSON.stringify(body.tracks.map((t) => [t.trackId, t.status])))
+    assert.ok(body.tracks.every((t) => t.slotsLeft === 28))
+  })
+
+  it('credits a filed course to the concentration it serves, and says what it does not', async () => {
+    const id = await newGame()
+    await app.inject({ method: 'POST', url: `/api/game/${id}/shopping/enrol`, payload: { courseCode: 'math21b' } })
+    const body = await studyPlanOf(id)
+    assert.deepEqual(body.taken, ['math21b'])
+    const mbb = body.tracks.find((t) => t.trackId === 'cs_mbb')!
+    assert.deepEqual(mbb.counted, ['math21b'])
+    assert.equal(mbb.groups.find((g) => g.id === 'linear-algebra')?.state, 'done')
+    // The same course counts elsewhere too, which is the point of running every track.
+    assert.equal(body.tracks.find((t) => t.trackId === 'math')?.counted.length, 1)
+    // And it does nothing at all for the econ tracks.
+    assert.deepEqual(body.tracks.find((t) => t.trackId === 'econ_basic')?.wasted, ['math21b'])
+  })
+
+  it('does not let one course satisfy three groups just because three groups list it', async () => {
+    // Math 101 appears in the Mathematics track's math-courses, breadth-algebra and
+    // breadth-geometry-topology. Taking it is one course.
+    const id = await newGame()
+    await app.inject({ method: 'POST', url: `/api/game/${id}/shopping/enrol`, payload: { courseCode: 'math101' } })
+    const math = (await studyPlanOf(id)).tracks.find((t) => t.trackId === 'math')!
+    const satisfied = math.groups.filter((g) => g.state === 'done')
+    assert.equal(satisfied.length, 1)
+    // `counts` still credits the parent: the breadth course is one of the eight, not a ninth.
+    const big = math.groups.find((g) => g.id === 'math-courses')!
+    assert.equal(big.have, 1)
+    assert.deepEqual(big.credited, ['math101'])
+    assert.deepEqual(big.assigned, [])
+  })
+
+  it('carries the authored notes the graph cannot enforce', async () => {
+    const math = (await studyPlanOf(await newGame())).tracks.find((t) => t.trackId === 'math')!
+    const thesis = math.groups.find((g) => g.id === 'thesis')!
+    assert.equal(thesis.optional, true)
+    // "thesis OR four extra courses" is not expressible, so it is said out loud instead.
+    assert.match(thesis.notes.join(' '), /thesis OR four extra courses/)
+  })
+
+  it('reports a requirement no course in content can satisfy as exactly that', async () => {
+    const math = (await studyPlanOf(await newGame())).tracks.find((t) => t.trackId === 'math')!
+    const paper = math.groups.find((g) => g.id === 'expository-paper')!
+    assert.deepEqual(paper.routes, [])
+    assert.deepEqual(paper.abstractSlots, ['math_expository_paper'])
+    // §9.3: report why. Silently satisfying it would let the track claim to be finished.
+    assert.match(math.reasons.join('\n'), /Math Expository Requirement: no course in content satisfies this/)
+  })
+
+  it('names the next course of a sequence rather than the whole sequence', async () => {
+    const econ = (await studyPlanOf(await newGame())).tracks.find((t) => t.trackId === 'econ_basic')!
+    const seq = econ.groups.find((g) => g.next !== undefined)!
+    assert.equal(seq.next, 'econ10a')
+    assert.match(econ.reasons.join('\n'), /must be taken in order; next is econ10a/)
+  })
+
+  it('surfaces "counts toward" on the catalogue, with no save needed', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/courses' })
+    assert.equal(res.statusCode, 200)
+    const body = res.json() as {
+      tracks: { id: string }[]
+      courses: { courseCode: string; countsToward: { trackId: string; groupId: string; groupLabel: string }[] }[]
+    }
+    assert.equal(body.tracks.length, content.tracks.length)
+    const cs50 = body.courses.find((c) => c.courseCode === 'cs50')!
+    assert.ok(cs50.countsToward.some((r) => r.trackId === 'cs_mbb' && r.groupId === 'cs-core'))
+    // Expos 20 is a college-wide requirement, and there is no college-wide requirements file
+    // in content — so it honestly counts toward no concentration rather than being faked.
+    assert.deepEqual(body.courses.find((c) => c.courseCode === 'expos20')?.countsToward, [])
+  })
+
+  it('names a way out of a course a weak build is shut out of, rather than only refusing', async () => {
+    const weak = await newGameFrom(badWithNumbersBuild())
+    const body = await studyPlanOf(weak)
+    // r11 (§9.3): the honest answer is "closed this year, and here is the cheapest way to open
+    // it". A `blocked` entry with an empty `via` would be a refusal wearing a suggestion's suit.
+    for (const b of body.blocked) {
+      assert.ok(b.via.length > 0, `${b.blocked} is shut on ${b.tag} with no route out`)
+      assert.deepEqual(b.via.map((v) => v.demand), [...b.via.map((v) => v.demand)].sort((x, y) => x - y))
+    }
+  })
+
+  it('404s for a save that does not exist, and leaks nothing when it does', async () => {
+    const missing = await app.inject({ method: 'GET', url: '/api/game/nope/plan' })
+    assert.equal(missing.statusCode, 404)
+    const body = await app.inject({ method: 'GET', url: `/api/game/${await newGame()}/plan` })
+    // §4.4: the study plan is about what a card forecloses, never about grades.
+    for (const secret of ['grade', 'letter', 'cards', 'lean', 'seed']) {
+      assert.ok(!body.body.includes(`"${secret}"`), `plan leaked ${secret}`)
+    }
+  })
+})

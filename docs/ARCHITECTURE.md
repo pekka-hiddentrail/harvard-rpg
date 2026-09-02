@@ -424,19 +424,21 @@ doesn't need to be talked out of cheating.
 ### 3.4 The requirement solver
 
 `studyPlan.ts` is the only component in the project with a non-obvious algorithm, so
-it needs scoping before it gets built as something clever.
+it was scoped before it got built as something clever. **Built** — this section
+describes what shipped; §11.6 covers what the content turned out to be.
 
 The question is: given courses completed, courses planned, and `k` remaining terms of
-4 slots, is track `T` satisfiable? That is bipartite matching — requirement buckets
-against available slots — with side constraints for prerequisite ordering, term
-availability (a course offered only in spring), and sequences that need consecutive
-terms.
+`rules.academics.coursesPerTerm` slots, is track `T` satisfiable? That is bipartite
+matching — requirement groups against available slots — with side constraints for
+prerequisite ordering, term availability (a course offered only in spring), and
+sequences that need consecutive terms.
 
-**Scope it small and keep it that way.** The numbers are tiny: ~10 buckets, ≤32
-slots, ~120 course stubs. A greedy assignment with backtracking over buckets sorted
-by scarcity resolves every real case in microseconds, and there is no need for an LP
-solver, a SAT solver, or a dependency on anything. If it ever gets slow, the fix is
-memoising per `(completedSet, trackId)` — not a better algorithm.
+**Scope it small and keep it that way.** The numbers are tiny: ~12 groups, ≤32
+slots, ~160 course stubs. A greedy assignment over groups sorted by scarcity — fewest
+real routes first, because a group with one route must get that course or it gets
+nothing — resolves every case in today's content in microseconds, and there is no LP
+solver, no SAT solver, and no dependency. If it ever gets slow, the fix is memoising
+per `(taken, trackId)` — not a better algorithm.
 
 Two requirements that are easy to miss and are the whole value of the component:
 
@@ -444,13 +446,38 @@ Two requirements that are easy to miss and are the whole value of the component:
   sequence, which needs three consecutive terms; two remain"* is the output the
   player sees (`GAME_DESIGN.md` §9.3). A solver that returns `false` is useless here,
   so the failing constraint has to be reported, which means the search records what
-  it tried.
+  it tried. `TrackProgress.reasons` is therefore never empty, including when the track
+  is reachable.
 - **It runs against every track, not just the chosen one**, on every enrollment
   change — that is how the planner can warn you that a track you were not thinking
   about just closed. Seven tracks × microseconds is free, so run them all always.
 
 It is a pure function of `(state, content)` with no randomness and no I/O, which
 makes it exhaustively testable and a good early milestone (§11).
+
+**Four things the shipped version does that the plan above does not mention**, each
+because content demanded it rather than because it was elegant:
+
+- **One course satisfies one group, except where `counts` says otherwise.** Math 101
+  appears in three of the Mathematics track's groups. Assignment is a matching, so a
+  student who took it has taken *one* course — and the slot bill for a parent group and
+  its `counts` children is `max(parent deficit, Σ child deficits)`, not the sum of all
+  of them. Eight Mathematics courses *of which* three are the breadth courses is eight.
+  Adding them up instead reports the Mathematics track as closed to a freshman, which
+  is the loudest available way to be wrong.
+- **Abstract slots.** A `from` entry need not name a course. It can be a deliverable
+  (`math_senior_thesis`), an unspecified elective (`econ_elective_3`), or a real
+  Harvard course the catalogue does not carry (`cs91r`). All three are mechanically
+  identical from inside the solver, so it does not guess: the entry is reported as an
+  abstract slot, still costs one of the 32, and can never be silently satisfied.
+- **A fifth status, `unplannable`.** A track whose every unmet group has zero real
+  routes is not closed and not reachable-with-slack — there is nothing in the catalogue
+  to plan against it. §9.3's three outputs plus r11's fourth do not cover that case,
+  and it is a common one while content is incomplete.
+- **`dependsOnAbstract`.** A group needing more courses than it has real routes left
+  cannot report *"7 more of 6 remaining routes"*, which is arithmetic the player is
+  right to distrust. The flag makes the screen say which of the remaining slots are
+  not courses.
 
 ## 4. Server-authoritative client
 
@@ -1456,6 +1483,86 @@ also raises the obvious next one — the registrar would never *sell* two mandat
 the same band, so shopping week arguably ought to refuse or at least flag it at enrol time.
 That check is not built, and deliberately: §11.4's route refuses only two things, and adding a
 third belongs with the requirement solver's work on what a card *means*.
+
+### 11.6 The requirement solver: seven tracks nothing had ever read
+
+§3.4 describes the algorithm. This section is about the six days of judgement calls that the
+algorithm was the easy part of, and it starts with the finding that reorganised the work:
+**`content/tracks/` had never been loaded by anything.** Seven files, 55 requirement groups,
+written months earlier, and no code path — not the loader, not a test, not the CI invariant in
+§10 — had ever parsed them. So they were wrong in the ways unread files are wrong.
+
+`cs_mbb.yaml` failed `.strict()` on six `notes:` keys the schema had no field for. `TrackPack`
+(`{ version, id, tracks: [...] }`) described a file shape none of the seven had. The econ tracks
+named `ec10a`, `ec10b`, `stat109a` and `apmth101` — four courses that exist in the catalogue
+under different codes, so four requirement groups were quietly unsatisfiable across three
+tracks. The three math tracks referenced placeholder ids almost throughout.
+
+**The `notes` were kept, not deleted.** The easy fix for six schema violations is to remove the
+prose; the right one is `RequirementGroup.notes`, because what those lines say is *"21b/22a are
+the default routes"*, *"Math Ma + Mb count as one combined credit"*, *"thesis OR four extra
+courses"* — the rules the requirement graph cannot express. They are carried verbatim to the
+screen and never parsed. A rule the solver cannot enforce is at least a rule the player can
+read, and §9.3's whole posture is that the honest output is a sentence.
+
+**Six judgement calls, and what was rejected.**
+
+1. **`assertTracksUsable` treats a non-course reference as legal.** The loader's new check
+   throws on duplicate track and group ids, a `counts` reference that is not a sibling group, a
+   pool smaller than its own `need`, a duplicate course inside one pool, a `tag` group with no
+   or an out-of-namespace `subjectTag`, `min > max`, and a `courseHints[].countsToward` that
+   names no group. It deliberately does *not* throw on a `from` entry no syllabus matches —
+   see §3.4's abstract slots. Rejecting the alternative mattered: erroring would make content
+   unloadable, since six of the seven tracks have abstract slots and `econ_honors_thesis` has
+   twelve.
+2. **The degree shape is authored, not constant.** `rules.academics` gained `coursesPerTerm: 4`
+   and `termsToDegree: 8` rather than the solver hardcoding 4 × 8, because *"four courses a term
+   for eight terms"* is a rule about Harvard, and the closed-track reason line quotes it back
+   (`4 slots remain (1 term × 4)`).
+3. **The math tracks were fixed against courses that exist, not by inventing syllabi.** Every
+   `from` entry in all three now names a real `courseCode`; `math_joint_allied` has zero
+   abstract references and the other two have exactly two each, both deliverables. The cost of
+   honesty here is a rule that cannot be enforced: the catalogue's entire math tier is 17
+   courses of which only `math101` and `math154` are 100-level, so *"at least four of the eight
+   must be 100-level"* is authored as a `note`. Fabricating six upper-level syllabi to make the
+   check pass would have made the solver right about content that was wrong.
+4. **The scarcity ordering is the whole matching.** Groups sorted by fewest real routes, then
+   greedy. `Math 101` sits in three of the Mathematics track's groups and the narrowest of them
+   (Breadth: Geometry/Topology) has exactly one route, so it must get the course. The
+   backtracking §3.4 budgeted for was never needed; the ordering alone resolves every case in
+   today's content, and the docstring says so rather than implying a search that isn't there.
+5. **`openingRoutes` reuses `courseGaps` rather than recomputing a gap.** A second gap
+   calculation is how the route a screen offers drifts from the refusal it explains. It also
+   reports routes and not a forecast: what a term of work does to a level is §4.5's business,
+   and predicting it here is precisely the promise §4.4 forbids.
+6. **The `needMore` arithmetic was wrong first, in the loudest direction.** The first version
+   added a parent's deficit to its children's. That reports the Mathematics track as **closed**
+   to a freshman with 28 slots left. The fix is in §3.4; two engine tests and one real-content
+   test now pin it, because this is the number the entire screen is about.
+
+**The live picture, which is the point of running all seven always.** An empty freshman card
+prices every track as reachable with slack, from `math_joint_allied` at 5 more courses to
+`econ_honors_thesis` at 16. Pekka's four-course card (CS 50, Math 21b, Expos 20, LS 1A) counts
+two courses toward `cs_mbb` and `math`, one toward `math_joint_allied`, and **none at all**
+toward the three econ tracks — and it wastes Expos 20 and LS 1A against every track in content,
+because there is no college-wide-requirements file. That last fact is worth stating plainly: the
+`college_requirements` block in `GAME_DESIGN.md` §9.1 is designed and unwritten, so Expos 20
+genuinely counts toward nothing, and both screens say so in those words rather than leaving a
+blank.
+
+**What the screens do with it.** Shopping week gained `countsToward` on every row (pure content,
+so it renders unpriced too) and a cart panel that re-asks `/api/game/:id/plan` after every enrol
+and drop — prices do not move when you add a course, but the plan does, which is the only reason
+it belongs there. The planner (`PlannerScreen.tsx`, `?screen=planner`) is the term calendar's
+frame one year longer: a rail of all seven destinations, the selected one's groups as a table
+with assigned and *credited* courses distinguished, and the warnings down the side that §9.2
+calls the point of the whole screen. The client computes one thing — `need - have`, for display
+next to two numbers it was handed — and nothing else.
+
+**Not built, and named so it stays visible:** there is no transcript. `GameState.enrolled` is
+the only record of a course ever taken, so the solver cannot yet tell *taken* from *passed*, and
+§9.3's *"failure has to be able to close a track"* is therefore still a design sentence. That is
+the next thing this system needs, and it is a state-shape change rather than a solver change.
 
 ## 12. Decisions I made for you
 

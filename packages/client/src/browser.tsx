@@ -5,10 +5,11 @@ import { AdmissionTimelineScreen } from './AdmissionTimelineScreen.tsx'
 import { CalendarScreen } from './CalendarScreen.tsx'
 import { CharacterGenerationScreen, type CharacterIdentity } from './CharacterGenerationScreen.tsx'
 import { CourseRegistrationScreen } from './CourseRegistrationScreen.tsx'
+import { PlannerScreen } from './PlannerScreen.tsx'
 import { TraitSelectionScreen } from './TraitSelectionScreen.tsx'
 import { WelcomeScreen } from './WelcomeScreen.tsx'
 
-type View = 'welcome' | 'character' | 'traits' | 'calendar' | 'timeline' | 'courseRegistration'
+type View = 'welcome' | 'character' | 'traits' | 'calendar' | 'planner' | 'timeline' | 'courseRegistration'
 
 const DEFAULT_IDENTITY: CharacterIdentity = {
   name: 'Pekka',
@@ -23,13 +24,15 @@ const DEFAULT_IDENTITY: CharacterIdentity = {
 }
 
 /** Dev scaffolding: `?screen=character`, `?screen=traits`, `?screen=calendar`,
- *  `?screen=timeline` or `?screen=courseRegistration` opens a screen directly with default
- *  data, so a screen under work doesn't require clicking through the ones before it. */
+ *  `?screen=planner`, `?screen=timeline` or `?screen=courseRegistration` opens a screen
+ *  directly with default data, so a screen under work doesn't require clicking through the
+ *  ones before it. */
 const requestedView = (): View => {
   const screen = new URLSearchParams(window.location.search).get('screen')
   return screen === 'character' ||
     screen === 'traits' ||
     screen === 'calendar' ||
+    screen === 'planner' ||
     screen === 'timeline' ||
     screen === 'courseRegistration'
     ? screen
@@ -109,6 +112,18 @@ function BrowserApp() {
     )
   }
 
+  if (view === 'planner') {
+    // Same reasoning as the calendar's back: with a save you came from shopping week, and
+    // going straight back is the loop — see what the card forecloses, then spend the slot
+    // differently. The planner is one year longer than the calendar and otherwise identical.
+    return (
+      <PlannerScreen
+        onBack={() => setView(gameId === null ? 'timeline' : 'courseRegistration')}
+        gameId={gameId}
+      />
+    )
+  }
+
   if (view === 'courseRegistration') {
     return (
       <CourseRegistrationScreen
@@ -116,6 +131,7 @@ function BrowserApp() {
         gameId={gameId}
         onBack={() => setView('timeline')}
         onViewTerm={() => setView('calendar')}
+        onViewPlan={() => setView('planner')}
       />
     )
   }

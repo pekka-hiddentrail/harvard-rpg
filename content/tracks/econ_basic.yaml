@@ -34,7 +34,7 @@ requirements:
     label: "Principles of micro/macro"
     kind: sequence
     need: 2
-    sequence: [ec10a, ec10b]
+    sequence: [econ10a, econ10b]
     # Both required. An AP 5 can substitute for either semester, but each semester skipped
     # this way must be replaced with an extra elective.
 
@@ -48,9 +48,8 @@ requirements:
       - stat102
       - stat104
       - stat109
-      - stat109a
       - stat110
-      - apmth101
+      - am101
       - math18b
       - math19b
       - math154
@@ -96,7 +95,7 @@ requirements:
     # permission — the only P/F exception in the whole track.
 
 courseHints:
-  - id: ec10a
+  - id: econ10a
     title: "EC 10a"
     likelyTracks: [econ_basic, econ_honors_thesis, econ_honors_advanced]
     countsToward: [principles]
@@ -104,7 +103,7 @@ courseHints:
     notes:
       - "Principles of microeconomics. Required unless replaced by an AP 5."
 
-  - id: ec10b
+  - id: econ10b
     title: "EC 10b"
     likelyTracks: [econ_basic, econ_honors_thesis, econ_honors_advanced]
     countsToward: [principles]

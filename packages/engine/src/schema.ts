@@ -181,6 +181,15 @@ export const Rules = z
          * is allowed, the game just says so. GAME_DESIGN §4.6.
          */
         semesterEffortCap: z.number().int().positive(),
+        /**
+         * The shape of the degree, which is what makes a track's feasibility a *number*
+         * rather than a vibe: `k` remaining terms × `coursesPerTerm` slots is the budget
+         * every requirement group is competing for (GAME_DESIGN §9.3). Authored here rather
+         * than as a constant in the solver because "four courses a term for eight terms" is
+         * a rule about Harvard, and the solver should not be the place it is written down.
+         */
+        coursesPerTerm: z.number().int().positive(),
+        termsToDegree: z.number().int().positive(),
       })
       .strict(),
   })
@@ -228,6 +237,14 @@ export const RequirementGroup = z
     min: z.number().int().nonnegative().optional(),
     max: z.number().int().nonnegative().optional(),
     sequence: z.array(z.string()).default([]),
+    /**
+     * What the department's brochure says that this schema cannot express — *"21b/22a are the
+     * default routes"*, *"Math Ma + Mb count as one combined credit"*, *"thesis OR four extra
+     * courses"*. Authored prose, never parsed: the solver surfaces it verbatim next to the
+     * group so a rule the graph can't enforce is at least a rule the player can read. Adding
+     * machinery for each of these would be a worse trade than saying them out loud.
+     */
+    notes: z.array(z.string()).default([]),
   })
   .strict()
   .refine((r) => !(r.kind === 'sequence' && r.sequence.length === 0), {
@@ -268,14 +285,16 @@ export const Track = z
   .strict()
 export type Track = z.infer<typeof Track>
 
-export const TrackPack = z
-  .object({
-    version: z.number().int(),
-    id: z.string().min(1),
-    tracks: z.array(Track).min(1),
-  })
-  .strict()
-export type TrackPack = z.infer<typeof TrackPack>
+/**
+ * One file under `content/tracks/`, which is one track — not a pack of them. The earlier
+ * `TrackPack` shape (`{ version, id, tracks: [...] }`) was never what any of the seven files
+ * on disk looked like, and nothing loaded them, so nothing caught it. `version` is optional
+ * because only one of the seven carries it; it is read and discarded, like every other pack's.
+ */
+export const TrackFile = Track.extend({
+  version: z.number().int().optional(),
+}).strict()
+export type TrackFile = z.infer<typeof TrackFile>
 
 // ── syllabus: the academic spine (Tier 2, GAME_DESIGN §4.1) ─────────────────────────
 export const Weekday = z.enum(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])

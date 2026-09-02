@@ -32,7 +32,7 @@ requirements:
     label: "Principles of micro/macro"
     kind: sequence
     need: 2
-    sequence: [ec10a, ec10b]
+    sequence: [econ10a, econ10b]
     # Same as the Basic track.
 
   - id: statistics
@@ -45,9 +45,8 @@ requirements:
       - stat102
       - stat104
       - stat109
-      - stat109a
       - stat110
-      - apmth101
+      - am101
       - math18b
       - math19b
       - math154

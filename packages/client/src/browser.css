@@ -1650,6 +1650,392 @@ h1 {
   font-size: 13px;
 }
 
+/* ── counts toward, and the cart's half of the study plan (§9.1–§9.3) ─────────────────
+   Deliberately quiet. A row's long-term consequence must not shout over its price: the
+   price is the decision you are making now, and this is the one you are making by
+   accident. Grey, one line, mono — the same register as a footnote. */
+
+.course-counts {
+  color: #59635c;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+}
+
+.course-counts-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.course-counts-list li {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.6fr) 1fr;
+  gap: 10px;
+  padding: 4px 0;
+  border-bottom: 1px solid #e4e8e2;
+  font-size: 13px;
+}
+
+.course-counts-list .counts-track { font-weight: 600; }
+.course-counts-list .counts-groups { color: #465048; }
+
+.cart-plan {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #e4e8e2;
+}
+
+.cart-plan .kicker { margin: 0 0 6px; color: #8c1d31; }
+
+.plan-none,
+.plan-orphans {
+  margin: 6px 0 0;
+  color: #59635c;
+  font-size: 12px;
+  font-style: italic;
+}
+
+.plan-lines {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plan-line {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.plan-line .plan-progress {
+  color: #59635c;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+}
+
+/* A track that has closed is the loudest thing on this screen after the effort cap, and
+   it should be: §9.2 calls the warnings the point of the whole planner. */
+.plan-warnings,
+.planner-warnings {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plan-warnings li,
+.planner-warnings li {
+  padding: 7px 9px;
+  color: #8c1d31;
+  font-size: 12px;
+  background: #f6e7ea;
+  border-left: 3px solid #8c1d31;
+}
+
+.plan-warnings li.tight,
+.planner-warnings li.tight {
+  color: #465048;
+  background: #eef2ea;
+  border-left-color: #59635c;
+}
+
+.cart-exits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.view-plan-button {
+  margin-top: 12px;
+  padding: 9px 12px;
+  color: #8c1d31;
+  font-size: 13px;
+  font-weight: 600;
+  background: #fff;
+  border: 1px solid #8c1d31;
+}
+
+/* ── the planner (§9.2) ───────────────────────────────────────────────────────────────
+   Same three-column frame as the term calendar, one year longer: a rail of destinations,
+   the selected one's requirements as a table, and the warnings down the side. The
+   symmetry is on purpose — both screens answer "what did the card just do", and the only
+   difference is the horizon. */
+
+.planner-shell {
+  min-height: 100vh;
+  padding: 24px;
+  background: #d9e0d6;
+}
+
+.planner-page {
+  width: min(100%, 1420px);
+  min-height: calc(100vh - 48px);
+  margin: 0 auto;
+  padding: clamp(28px, 5vw, 56px);
+  background: #f8f8f3;
+  border: 1px solid #a7b0a5;
+  box-shadow: 12px 12px 0 #8c1d31;
+}
+
+.planner-heading {
+  margin: 28px 0 26px;
+}
+
+.planner-heading h1 {
+  margin: 0;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: clamp(30px, 3vw, 40px);
+  font-weight: 650;
+}
+
+.planner-layout {
+  display: grid;
+  grid-template-columns: minmax(190px, 0.8fr) minmax(0, 2.4fr) minmax(220px, 0.9fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.planner-empty {
+  margin: 0;
+  padding: 14px 16px;
+  color: #59635c;
+  font-size: 14px;
+  background: #fff;
+  border: 1px dashed #a7b0a5;
+}
+
+.track-rail {
+  display: grid;
+  gap: 2px;
+  align-content: start;
+}
+
+.track-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: 'name status' 'slots counted';
+  gap: 2px 6px;
+  padding: 8px 10px;
+  color: #18201d;
+  font-size: 12px;
+  text-align: left;
+  background: #fff;
+  border: 1px solid #a7b0a5;
+}
+
+.track-row.selected {
+  background: #eef2ea;
+  border-color: #8c1d31;
+  box-shadow: inset 3px 0 0 #8c1d31;
+}
+
+.track-row .track-name { grid-area: name; font-weight: 600; }
+.track-row .track-status {
+  grid-area: status;
+  color: #59635c;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+.track-row .track-slots,
+.track-row .track-counted {
+  color: #59635c;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+}
+.track-row .track-slots { grid-area: slots; }
+.track-row .track-counted { grid-area: counted; text-align: right; }
+
+.track-row.closed .track-status,
+.track-row.unplannable .track-status { color: #8c1d31; font-weight: 700; }
+.track-row.closed .track-name { color: #7c867e; }
+.track-row.done .track-status { color: #2f5d3f; font-weight: 700; }
+
+.planner-main {
+  padding: 20px 24px;
+  background: #fff;
+  border: 1px solid #a7b0a5;
+}
+
+.track-header h2 {
+  margin: 0 0 4px;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 22px;
+}
+
+.track-meta {
+  margin: 0;
+  color: #8c1d31;
+  font-size: 12px;
+}
+
+.track-reasons {
+  margin: 12px 0 16px;
+  padding: 10px 12px;
+  color: #465048;
+  font-size: 13px;
+  list-style: none;
+  background: #eef2ea;
+  border-left: 3px solid #59635c;
+}
+
+.track-reasons li { margin-bottom: 3px; }
+.track-reasons li:first-child { font-weight: 600; color: #18201d; }
+
+.group-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.group-table thead th {
+  padding: 5px 8px;
+  color: #59635c;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  text-align: left;
+  text-transform: uppercase;
+  background: #eef2ea;
+  border: 1px solid #a7b0a5;
+}
+
+.group-table tbody th,
+.group-table tbody td {
+  padding: 7px 8px;
+  vertical-align: top;
+  text-align: left;
+  border-bottom: 1px solid #e4e8e2;
+}
+
+.group-table tbody th { font-weight: 600; }
+
+.group-row.done .group-mark { color: #2f5d3f; }
+.group-row.partial .group-mark { color: #8c1d31; }
+.group-row.open .group-mark { color: #a7b0a5; }
+.group-row.optional .group-label { color: #59635c; font-style: italic; }
+
+.group-mark { margin-right: 6px; }
+
+.group-optional,
+.group-kind {
+  margin-left: 6px;
+  padding: 1px 5px;
+  color: #59635c;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  font-weight: 500;
+  text-transform: uppercase;
+  background: #eef2ea;
+  border: 1px solid #c3cbc0;
+}
+
+.group-have {
+  color: #465048;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.group-courses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.course-chip {
+  padding: 1px 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  background: #d9e0d6;
+  border: 1px solid #a7b0a5;
+}
+
+/* Credited rather than assigned: the course clears a group this one contains, so it is one
+   of these eight and not a ninth. Dashed, because the distinction is real arithmetic. */
+.course-chip.credited {
+  border-style: dashed;
+  color: #59635c;
+  text-decoration: none;
+  cursor: help;
+}
+
+.group-left { display: grid; gap: 2px; }
+.group-left .group-done { color: #2f5d3f; font-weight: 600; }
+.group-left .group-next { color: #8c1d31; font-weight: 600; }
+.group-left .group-routes,
+.group-left .group-abstract {
+  color: #465048;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+}
+.group-left .group-abstract { color: #8c1d31; }
+
+.group-slots,
+.group-note {
+  color: #59635c;
+  font-size: 11px;
+  font-style: italic;
+}
+
+.group-slots { font-family: 'DM Mono', monospace; font-style: normal; font-size: 10px; }
+
+.track-wasted {
+  margin: 14px 0 0;
+  color: #59635c;
+  font-size: 12px;
+  font-style: italic;
+}
+
+.planner-notes {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  padding: 18px;
+  background: #fff;
+  border: 1px solid #a7b0a5;
+}
+
+.planner-notes .kicker { margin: 14px 0 0; color: #8c1d31; }
+.planner-notes .kicker:first-child { margin-top: 0; }
+
+.planner-fine {
+  margin: 8px 0 0;
+  color: #465048;
+  font-size: 13px;
+}
+
+.planner-warnings strong { display: block; font-size: 13px; }
+.planner-warnings .warning-why { display: block; color: #465048; font-size: 11px; }
+
+.route-list {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.route-list li {
+  display: grid;
+  gap: 1px;
+  padding: 6px 8px;
+  background: #eef2ea;
+  border-left: 3px solid #59635c;
+}
+
+.route-list .route-blocked { font-weight: 600; font-size: 12px; }
+.route-list .route-why,
+.route-list .route-via {
+  color: #59635c;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+}
+
 @media (max-width: 720px) {
   .welcome-shell {
     padding: 12px;
@@ -1793,6 +2179,41 @@ h1 {
 
   .week-grid .band-label {
     font-size: 9px;
+  }
+
+  .planner-shell {
+    padding: 12px;
+  }
+
+  .planner-page {
+    min-height: calc(100vh - 24px);
+    padding: 24px;
+    box-shadow: 6px 6px 0 #8c1d31;
+  }
+
+  .planner-page .character-header {
+    grid-template-columns: 1fr auto;
+  }
+
+  .planner-page .character-header .brand-name {
+    display: none;
+  }
+
+  /* Same trade as the term calendar: the requirement table needs the width, the rail of
+     destinations does not. */
+  .planner-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .track-rail {
+    grid-auto-flow: column;
+    grid-auto-columns: 160px;
+    overflow-x: auto;
+  }
+
+  .group-table tbody th,
+  .group-table tbody td {
+    padding: 6px 4px;
   }
 
   .timeline-shell {

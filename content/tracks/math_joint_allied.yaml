@@ -1,6 +1,11 @@
 # math_joint_allied.yaml — Mathematics as the ALLIED (non-primary) field in a Joint
-# Concentration. Much lighter than the primary-field version: no thesis, no expository
-# paper on the math side — that all belongs to the primary field's own track.
+# Concentration. Much lighter than the primary-field version: no thesis, no expository paper
+# on the math side — that all belongs to the primary field's own track. Every group here is
+# therefore solvable against real content, which makes this the one math track with no
+# abstract slots at all.
+#
+# Course references were placeholders until the requirement solver was built; they now name
+# real `courseCode`s, on the same terms as math.yaml.
 id: math_joint_allied
 name: "Mathematics (Joint Concentration, Math allied)"
 field: math
@@ -16,32 +21,46 @@ requirements:
     label: "Mathematics-labeled courses"
     kind: set
     need: 5
+    # The three breadth courses count toward these five, not on top of them.
+    counts: [breadth-analysis, breadth-algebra, breadth-geometry-topology]
     from:
-      # At least 3 of these 5 must be 100-level and satisfy breadth.
-      - math_100_level_a
-      - math_100_level_b
-      - math_100_level_c
-      - math_upper_a
-      - math_upper_b
-    # C- or higher in each, averaging B+ across the five. No thesis, no expository paper
-    # required on the math side.
+      - mathma
+      - mathmb
+      - math1a
+      - math1b
+      - math21a
+      - math21b
+      - math22a
+      - math22b
+      - math23a
+      - math25a
+      - math25b
+      - math55a
+      - math55b
+      - math101
+      - math154
+    notes:
+      - "At least 3 of the 5 must be 100-level and satisfy breadth. Content has two 100-level math courses, so this sub-rule is not enforced."
+      - "C- or higher in each, averaging B+ across the five."
 
   - id: breadth-analysis
     label: "Breadth: Analysis"
     kind: set
     need: 1
-    from: [math_analysis_a, math_analysis_b]
+    from: [math23a, math25a, math25b, math55b]
+    notes:
+      - "The three breadth courses count toward the 5 Mathematics-labeled courses above, not as 3 more on top — same convention as the non-joint track."
 
   - id: breadth-algebra
     label: "Breadth: Algebra"
     kind: set
     need: 1
-    from: [math_algebra_a, math_algebra_b]
+    from: [math55a, math101]
 
   - id: breadth-geometry-topology
     label: "Breadth: Geometry/Topology"
     kind: set
     need: 1
-    from: [math_geometry_a, math_topology_a]
-    # The three breadth courses count toward the 5 Mathematics-labeled courses above, not
-    # as an additional 3 on top — same convention as the non-joint Mathematics track.
+    from: [math101]
+    notes:
+      - "Math 101 is the only route in content, and it cannot also be the Algebra course."

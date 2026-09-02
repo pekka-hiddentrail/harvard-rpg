@@ -14,6 +14,7 @@ import {
   STRATEGIES,
   Save,
   bandOf,
+  countsToward,
   effectiveDemand,
   effectiveOfficeHourDemand,
   effectiveWorkloadHint,
@@ -21,12 +22,14 @@ import {
   fitSessions,
   formatLong,
   hasErrors,
+  openingRoutes,
   parseDate,
   previewCourse,
   priceTrait,
   replay,
   resolveAssignmentDates,
   resolveDay,
+  studyPlan,
   summarizeCart,
   termPlan,
   toCreationBlock,
@@ -233,9 +236,22 @@ export function buildApp({ content, dbFile }: ServerOptions): {
           })),
           sessions: term ? fitSessions(c, term) : c.sessions,
           assignments: term ? resolveAssignmentDates(c, term) : c.assignments,
+          /**
+           * Which requirement groups, in which concentrations, this course could serve. Pure
+           * content — identical for every player, like `demand` — so it belongs on the
+           * catalogue rather than behind a save. It is what lets shopping week answer §9.3's
+           * second question, *"what does this cost me in three years?"*, on the row itself.
+           */
+          countsToward: countsToward(c.courseCode, content.tracks),
         }
       }),
       slots: content.slots,
+      /**
+       * The tracks themselves, so a client can name a concentration and show its shape
+       * without a save. `requirements` carries the authored `notes`, which are the rules the
+       * solver cannot enforce and the player therefore has to be told.
+       */
+      tracks: content.tracks,
     }
   })
 
@@ -529,6 +545,46 @@ export function buildApp({ content, dbFile }: ServerOptions): {
         error: 'the term calendar could not be built from this card',
         detail: e instanceof Error ? e.message : String(e),
       })
+    }
+  })
+
+  /**
+   * The study plan: every track solved against this save's card (GAME_DESIGN §9.2/§9.3).
+   *
+   * Runs all seven tracks, always — that is how the planner can tell you a concentration you
+   * were not thinking about just closed (ARCHITECTURE §3.4), and seven tracks is microseconds.
+   *
+   * `taken` is every course filed in any term, not just the shopping term: `enrolled` is flat
+   * across terms by design (§4.6), and a requirement does not care which term satisfied it.
+   * `termsUsed` counts terms the save has begun — freshman fall is 1 — which is what turns
+   * feasibility into a number rather than a vibe.
+   *
+   * Still a price and never an outcome (§4.4): what a card *forecloses*, never what grade it
+   * will earn. The r11 routes are the one forward-looking field, and they name courses that
+   * ask less of a blocking tag rather than promising what a term of work would do to a level.
+   */
+  app.get('/api/game/:id/plan', (req, reply) => {
+    const found = load(req.params as { id: string })
+    if (!found) return reply.code(404).send({ error: 'no such save' })
+    const levels = revalidate(found.save)
+    if (!levels.ok) return reply.code(409).send({ problems: levels.problems })
+
+    const state = replay(found.save.actions, content.activityIndex, content.rules.day)
+    const taken = [...new Set(state.enrolled.map((e) => e.courseCode))]
+    // One term has begun as soon as there is a save: this is freshman fall.
+    const termsUsed = Math.max(1, new Set(state.enrolled.map((e) => e.term)).size)
+
+    return {
+      contentHash: content.hash,
+      levels: levels.levels,
+      taken,
+      termsUsed,
+      tracks: studyPlan({ taken, termsUsed }, content.tracks, content.courses, content.rules),
+      /**
+       * Only for courses the player is actually shut out of, which is usually none — a route
+       * list for every course in the catalogue would be 163 answers to a question nobody asked.
+       */
+      blocked: content.courses.flatMap((c) => openingRoutes(c.courseCode, levels.levels, content.courses)),
     }
   })
 

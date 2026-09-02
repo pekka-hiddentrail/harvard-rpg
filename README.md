@@ -38,8 +38,8 @@ Starts the Vite dev server on `http://localhost:5173` and opens in a browser win
 
 To jump straight to a specific screen during development rather than clicking through
 from the welcome screen, append `?screen=<name>` to the URL — `character`, `traits`,
-`calendar`, `timeline`, or `courseRegistration` (`npm run gui:character` does this for
-character creation specifically).
+`calendar`, `planner`, `timeline`, or `courseRegistration` (`npm run gui:character` does this
+for character creation specifically).
 
 Any direct jump past the trait screen skips the step that writes a save, so there would be
 nothing to shop for. The scaffolding posts the `pekka` preset to `/api/game/new` on the way
@@ -51,6 +51,13 @@ with deadlines, free bands and meeting collisions. It reads the same save, so a 
 in shopping week shows up there immediately — and shopping week's **"See the term this
 makes →"** button goes straight to it. A freshly bootstrapped save has nothing enrolled, so
 enrol something first or the term is (correctly) empty.
+
+`?screen=planner` is the same loop one year longer: all seven concentrations in content solved
+against the save's card, each requirement group's progress, and the tracks that have gone tight
+or closed. Shopping week's **"Where this leads →"** button goes straight to it, and every
+catalogue row already says which concentrations want that course. Nothing on a freshman card
+closes anything yet — a track that reports 16 courses still owed against 28 slots is telling you
+about the content, not about you.
 
 ## Test and Balance
 
