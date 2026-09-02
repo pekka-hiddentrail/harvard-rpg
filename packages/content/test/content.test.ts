@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, it } from 'node:test'
 import {
   Track,
+  countsToward,
   effectiveDemand,
   fitSessions,
   isCourseOpen,
@@ -412,6 +413,120 @@ describe('the tracks, against the courses that actually exist', () => {
         }
       }
     }
+  })
+
+  it('keeps every pair of pools in a track disjoint or nested, which is what the solver needs', () => {
+    // THE LOAD-BEARING INVARIANT OF ALL FORTY FILES, and until now it was asserted only in a
+    // commit message. `trackProgress` matches greedily over groups sorted by scarcity with no
+    // backtracking, so it is a heuristic in general and exact only when any two overlapping pools
+    // nest — one wholly inside the other. Two pools that merely *cross* let it report `needMore`
+    // too high (never too low, which is the direction to err in, but still a wrong number shown
+    // to a player as a fact).
+    //
+    // Nothing errors when this breaks. Adding one course code to one pool silently downgrades the
+    // solver from exact to approximate for that track, all four gates stay green, and the only
+    // symptom is a concentration that says you owe it a course you do not. That is precisely the
+    // class of bug a test has to hold, because no human review of a 90-line YAML file will.
+    //
+    // It is also what several authoring decisions were *for*: Gov 51 sits in Honors' Research
+    // Practice pool and not also in its methods pool, HBBE's MBB pool is absent from its
+    // related-field pool, and Philosophy's elective pool is a deliberate superset of all four
+    // area pools rather than an overlapping peer of them.
+    for (const track of content.tracks) {
+      const groups = track.requirements
+      for (let i = 0; i < groups.length; i++) {
+        for (let j = i + 1; j < groups.length; j++) {
+          const [a, b] = [pool(groups[i]!), pool(groups[j]!)]
+          const shared = a.filter((c) => b.includes(c))
+          if (shared.length === 0) continue // disjoint is fine
+          assert.ok(
+            shared.length === a.length || shared.length === b.length,
+            `${track.id}: \`${groups[i]!.id}\` and \`${groups[j]!.id}\` cross rather than nest, sharing ${shared.join(', ')} — the solver is only exact for nested pools`,
+          )
+        }
+      }
+    }
+  })
+
+  it('prices every track at the course count its file was authored to', () => {
+    // These forty files are almost entirely *numbers*, and the numbers are the deliverable. A
+    // fat-fingered `need:` passes the schema, passes the loader, passes every other test here, and
+    // quietly bills a player for four courses they do not owe. So the totals are pinned.
+    //
+    // Each is `needMore` against an empty card, which is the required bill: optional groups (every
+    // thesis that gates honors rather than the concentration) are excluded, and a `counts` parent
+    // is charged once rather than once per child.
+    //
+    // WHERE THESE DISAGREE WITH THE SOURCE, and why:
+    //   - A placement-dependent prep group costs 1 here even at `min: 0`, because `trackProgress`
+    //     reads `need` and not `min`. That is what puts cs_basic at 12 against a published 11-14
+    //     and chem_basic at 13 against 12-14 — both inside their published range, by luck rather
+    //     than by design. It is the one place these numbers are known to overstate.
+    //   - A mandatory thesis is a slot, so tracks that publish "N courses plus a thesis" read N+1:
+    //     gov_honors 14 for 13, phil_honors_thesis 12 for 11, psych_mbb 13 for 12.
+    //   - Three totals are inferred by subtraction and say so in their own headers: classics_civ
+    //     and classics_langlit (12 published, 11 enumerated), phil_mbb (15 published, 11
+    //     enumerated), physics_honors (13 published, 4 named).
+    const totals: Record<string, number> = {
+      applied_math: 12,
+      chem_basic: 13, chem_honors: 15,
+      classics_civ: 12, classics_joint_ancient_history: 8, classics_langlit: 12,
+      complit: 14,
+      cs_basic: 12, cs_honors: 14, cs_joint: 12, cs_mbb: 15,
+      econ_basic: 11, econ_honors_advanced: 15, econ_honors_thesis: 16,
+      english_elective: 11, english_honors: 14, english_joint: 7,
+      engsci: 7,
+      gov_honors: 14, gov_standard: 10,
+      hbbe_basic: 13, hbbe_mbb: 15,
+      hdrb: 7,
+      math: 13, math_joint_allied: 5, math_joint_primary: 14,
+      mcb: 12,
+      phil_basic: 11, phil_honors_nonthesis: 12, phil_honors_thesis: 12,
+      phil_joint_allied: 7, phil_joint_primary: 9, phil_mbb: 16,
+      physics_honors: 13,
+      psych_cnep: 10, psych_general: 10, psych_mbb: 13,
+      sociology: 12,
+      stat_general: 9,
+      wgs: 11,
+    }
+    const plan = studyPlan({ taken: [], termsUsed: 0 }, content.tracks, content.courses, content.rules)
+    assert.deepEqual(
+      Object.fromEntries(plan.map((t) => [t.trackId, t.needMore])),
+      totals,
+      'a requirement count moved — if that was deliberate, update this table and the file header that explains it',
+    )
+  })
+
+  it('counts the courses that count toward nothing, because that census caught a real bug', () => {
+    // Authoring 33 tracks took this from 116 of 163 courses to 30. The last five to go were
+    // ClasArch 10 and Cls-Stdy 173/177/181/190: real Classics courses that counted toward nothing
+    // while three Classics tracks sat beside them spending their non-language slots on abstract
+    // entries. That shipped, and it was found by measuring at a console rather than by a test.
+    //
+    // So the census is pinned. Adding a track that reaches one of these, or spending a real course
+    // on a slot again, fails here and has to be acknowledged.
+    //
+    // What is left is not a bug. Expos 20, the freshman seminars, Hum 10a/b, Human 20 and Math
+    // Qa/Qb are college-wide requirements, which no concentration claims and content has no file
+    // for yet. The Gen Eds are only claimed when a concentration names one (HBBE names two). The
+    // HAA courses are orphaned because HAA publishes no requirement structure and so has no track.
+    // LS 50 is the one judgment call in the list: Integrated Science would plausibly count toward
+    // MCB or HBBE, and is left out because neither department's published list names it.
+    const orphaned = content.courses
+      .map((c) => c.courseCode)
+      .filter((code) => countsToward(code, content.tracks).length === 0)
+      .sort()
+    assert.deepEqual(orphaned, [
+      'expos20',
+      'frsem23c', 'frsem30q', 'frsem56f', 'frsem63x',
+      'fysemr64i', 'fysemr65r', 'fysemr65w',
+      'gened1019', 'gened1025', 'gened1046', 'gened1074', 'gened1092', 'gened1115',
+      'gened1127', 'gened1130', 'gened1168', 'gened1185', 'gened1192',
+      'haa17k', 'haa18j', 'haa42p', 'haa56g', 'haa82g',
+      'hum10a', 'hum10b', 'human20',
+      'ls50',
+      'mathqa', 'mathqb',
+    ])
   })
 
   it('leaves only deliverables abstract in the three math tracks', () => {
