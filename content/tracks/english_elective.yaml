@@ -1,0 +1,52 @@
+# english_elective.yaml — English, Elective Program (11-14 courses).
+#
+# The non-honors route: three "Common Ground" courses, the sophomore tutorial, and the rest
+# elective. No thesis, no junior tutorial, no seminar requirement — the department's own
+# description is almost entirely about what this track does *not* ask for.
+#
+# Content carries three English courses, and one of them is the tutorial, so seven of the eleven
+# are slots. That is the largest abstract share of any file here, and it is real: a player who
+# declares this track will be told the concentration is not shoppable out of the current
+# catalogue. Filling it needs English courses in `content/courses/`, not different requirements.
+#
+# The 11-14 spread is elective count, not placement, so the eleven below is the floor.
+id: english_elective
+name: "English (Elective Program)"
+field: english
+honorsEligible: false
+thesisRequired: false
+declareBy:
+  year: 2
+  term: fall
+diploma: "English"
+
+requirements:
+  - id: common-ground
+    label: "Common Ground"
+    kind: set
+    need: 3
+    from: [english10, english20, english_common_ground_3]
+    notes:
+      - "Every concentrator takes all three, on either track. Content has two of them."
+
+  - id: sophomore-tutorial
+    label: "Sophomore tutorial"
+    kind: course
+    need: 1
+    from: [english97]
+
+  - id: electives
+    label: "English electives"
+    kind: set
+    need: 7
+    from:
+      - english_elective_1
+      - english_elective_2
+      - english_elective_3
+      - english_elective_4
+      - english_elective_5
+      - english_elective_6
+      - english_elective_7
+    notes:
+      - "Seven courses to reach eleven. The department publishes 11-14, so a concentrator may take up to three more."
+      - "All seven are slots: content's only English courses are the two Common Ground courses and the tutorial."

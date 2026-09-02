@@ -1,0 +1,68 @@
+# psych_cnep.yaml — Psychology, Life Sciences: Cognitive Neuroscience & Evolutionary Psychology
+# (CNEP) Track (~25% of concentrators).
+#
+# The source describes this track in one line — "combines Psychology with Life Sciences coursework"
+# — with no separate course count, so it inherits the General Track's ten-course minimum and spends
+# two of those ten on the LS 1a/1b sequence, leaving six electives instead of eight. That is the
+# authored part, and it is the only way to represent "combines with Life Sciences" as something a
+# player can shop for.
+#
+# The elective pool is where the track earns its name: cognitive neuroscience and evolutionary
+# psychology, so Neuro and HEB courses sit alongside the Psychology ones rather than being
+# related-field extras. Content serves this well — eleven of the twelve pool entries are real.
+id: psych_cnep
+name: "Psychology (Cognitive Neuroscience & Evolutionary Psychology)"
+field: psychology
+honorsEligible: true
+thesisRequired: false
+declareBy:
+  year: 2
+  term: fall
+diploma: "Psychology"
+
+requirements:
+  - id: foundation
+    label: "Introductory course"
+    kind: set
+    need: 1
+    from: [psy1, psych_foundational_course]
+    notes:
+      - "PSY 1, or a Foundational Course for AP/IB-qualified students. Every Psychology track starts here."
+
+  - id: statistics
+    label: "Statistics"
+    kind: course
+    need: 1
+    from: [psy1900]
+    notes:
+      - "PSY 1900, by the end of sophomore year."
+
+  - id: life-sciences
+    label: "Life sciences"
+    kind: sequence
+    need: 2
+    sequence: [ls1a, ls1b]
+    notes:
+      - "The Life Sciences coursework the track is built around. The source names no specific courses, so the standard LS 1a/1b sequence is authored here."
+
+  - id: cnep-courses
+    label: "Cognitive neuroscience and evolutionary psychology"
+    kind: set
+    need: 6
+    from:
+      - psychology11
+      - psychology14
+      - psychology16
+      - neuro57
+      - neuro80
+      - neuro105
+      - neuro115
+      - neuro120
+      - neuro125
+      - heb30
+      - heb39
+      - heb142
+    notes:
+      - "Six, which with the four above reaches the department's ten-course minimum."
+      - "Neuroscience and HEB courses count here rather than as outside electives — that is what distinguishes this track from the General one."
+      - "Joint concentrations are not permitted in Psychology."

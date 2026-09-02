@@ -1,0 +1,83 @@
+# complit.yaml — Comparative Literature (14 courses, 56 credits).
+#
+# The only concentration in this batch with no Basic/Honors split at all: it is honors-only by
+# construction, every concentrator writes a thesis, and there is no opt-out. So `thesisRequired`
+# is true and there is no `optional: true` anywhere in this file — a rarity worth noticing when
+# reading it next to Chemistry or Sociology, where the thesis is the honors switch.
+#
+# Two rules the schema cannot carry, both in notes: the B- floor on the six literature courses
+# (grades are not requirements), and the 75-minute oral exam — a thesis defence plus what the
+# department calls an intellectual autobiography, which no group can express.
+#
+# The requirement list adds cleanly to fourteen: 1 sophomore tutorial + 2 junior + 2 senior +
+# 3 Comparative Literature + 3 non-English literature + 3 electives. No inference needed.
+id: complit
+name: "Comparative Literature"
+field: complit
+honorsEligible: true
+thesisRequired: true
+declareBy:
+  year: 2
+  term: fall
+diploma: "Comparative Literature"
+
+requirements:
+  - id: sophomore-tutorial
+    label: "Sophomore tutorial"
+    kind: course
+    need: 1
+    from: [complit97]
+
+  - id: junior-tutorial
+    label: "Junior tutorial"
+    kind: set
+    need: 2
+    from: [complit98a, complit98b]
+    notes:
+      - "Both semesters, or an approved alternative the department signs off on. Not in content."
+
+  - id: senior-tutorial
+    label: "Senior tutorial"
+    kind: set
+    need: 2
+    from: [complit99a, complit99b]
+    notes:
+      - "The thesis-writing course, both semesters. Every concentrator takes it — there is no non-thesis path."
+
+  - id: comparative-literature-courses
+    label: "Comparative Literature courses"
+    kind: set
+    need: 3
+    from: [complit100, complit119, complit153]
+    notes:
+      - "Each must be B- or above. Grades are not something a requirement group can check."
+
+  - id: non-english-literatures
+    label: "Non-English literature courses"
+    kind: set
+    need: 3
+    from: [greek1, latin1, modgrkaa, non_english_literature_4]
+    notes:
+      - "Three courses in one or more literatures other than English, each B- or above."
+      - "Content's non-English offerings are language courses rather than literature courses, so a fourth slot stands in for the literature seminars the department means."
+
+  - id: related-field-electives
+    label: "Related-field electives"
+    kind: set
+    need: 3
+    from:
+      - english10
+      - english20
+      - womgen1127
+      - womgen1225
+      - womgen1274
+      - ling83
+      - ling101
+      - phil3
+      - phil34
+      - haa11
+      - haa15
+      - haa73
+    notes:
+      - "From English, non-English literatures, Folklore & Mythology, Philosophy, Art/Film/Visual Studies, WGS, Linguistics, or further language study."
+      - "A 75-minute oral exam is required at the end: thesis defence plus intellectual autobiography."

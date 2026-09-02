@@ -1,0 +1,88 @@
+# phil_basic.yaml — Philosophy, Basic Requirements (11 courses, 44 credits).
+#
+# Four distribution areas, two tutorials, five electives. No thesis and no General Exam.
+#
+# THE AREA ASSIGNMENTS ARE AUTHORED. The department names four areas — Logic, Contemporary M&E,
+# Ethics/Political/Aesthetics, History of Philosophy — but not which of its courses fall in each,
+# and content's seven Philosophy courses are intro courses that could plausibly be argued into two
+# areas apiece. Each is placed in exactly one, and the notes say where the argument was close:
+# Phil 6 (Ancient Ethics and Modern Morality) is filed under History rather than Ethics, and Phil 3
+# (The True and The Good) under Contemporary M&E rather than Ethics. Content has no logic course at
+# all, so that area is a slot.
+#
+# WHY THE ELECTIVE POOL LOOKS OVERSTUFFED: it names every course the four area groups name, plus
+# slots. That is deliberate and it is load-bearing twice over. A player who takes two ethics
+# courses should have the second count as an elective rather than be told it was wasted; and the
+# requirement solver is exact only when overlapping pools are strictly nested, so making the
+# elective pool a *superset* of every area pool is what keeps its answers exact instead of
+# approximate. Pools that merely cross would let it over-report how much is left.
+id: phil_basic
+name: "Philosophy"
+field: philosophy
+honorsEligible: false
+thesisRequired: false
+declareBy:
+  year: 2
+  term: fall
+diploma: "Philosophy"
+
+requirements:
+  - id: area-logic
+    label: "Area: Logic"
+    kind: course
+    need: 1
+    from: [phil_logic_course]
+    notes:
+      - "Content carries no logic course, so this is a slot. All four areas need a C- or better."
+
+  - id: area-contemporary-mande
+    label: "Area: Contemporary Metaphysics & Epistemology"
+    kind: set
+    need: 1
+    from: [phil3, phil_contemporary_mande]
+    notes:
+      - "Phil 3 (The True and The Good) is filed here rather than under Ethics — an authored call, since the department does not publish the mapping."
+
+  - id: area-ethics
+    label: "Area: Ethics, Political Philosophy, Aesthetics"
+    kind: set
+    need: 1
+    from: [phil11, phil18, phil27, phil34]
+
+  - id: area-history
+    label: "Area: History of Philosophy"
+    kind: set
+    need: 1
+    from: [phil6, phil8]
+    notes:
+      - "Phil 6 (Ancient Ethics and Modern Morality) is filed here rather than under Ethics, since its structure is historical."
+
+  - id: tutorials
+    label: "Tutorials"
+    kind: sequence
+    need: 2
+    sequence: [phil97, phil98]
+    notes:
+      - "Phil 97 sophomore year, Phil 98 junior year. Neither is in content."
+
+  - id: additional-philosophy
+    label: "Additional philosophy courses"
+    kind: set
+    need: 5
+    from:
+      - phil3
+      - phil6
+      - phil8
+      - phil11
+      - phil18
+      - phil27
+      - phil34
+      - phil_logic_course
+      - phil_contemporary_mande
+      - phil_elective_1
+      - phil_elective_2
+      - phil_elective_3
+      - phil_elective_4
+      - phil_elective_5
+    notes:
+      - "Five more philosophy courses, area or not. The pool includes every area course on purpose: a second course in one area counts here rather than counting for nothing."

@@ -1,0 +1,75 @@
+# hdrb.yaml — Human Developmental and Regenerative Biology, single structural path.
+#
+# No Basic/Honors split in the requirement list: honors adds SCRB 99 and a submitted thesis on top
+# of the same coursework, so this is one file with an optional thesis group.
+#
+# The one thing worth reading twice: SCRB 91r, the independent lab research course, is the
+# concentration tutorial and is mandatory for *every* concentrator, not just honors candidates.
+# That is unusual — in most departments in this catalogue the research requirement is the honors
+# switch — so it is a required group here and the note says why.
+#
+# Content carries the gateway (SCRB 10), the molecular biology course (SCRB 50) and general
+# chemistry (PS 11), which is three of the concentration's named requirements. The upper-level
+# electives and the research tutorial are slots.
+#
+# The source gives no total course count, so this file has none to reconcile: it models the five
+# named requirements and stops.
+id: hdrb
+name: "Human Developmental and Regenerative Biology"
+field: hdrb
+honorsEligible: true
+thesisRequired: false
+declareBy:
+  year: 2
+  term: fall
+diploma: "Human Developmental and Regenerative Biology"
+
+requirements:
+  - id: gateway
+    label: "Gateway course"
+    kind: course
+    need: 1
+    from: [scrb10]
+    notes:
+      - "SCRB 10 (Developmental Biology) comes first, before the molecular biology course."
+
+  - id: molecular-biology
+    label: "Molecular biology"
+    kind: set
+    need: 1
+    from: [scrb50, mcb60, mcb52]
+    notes:
+      - "SCRB 20 in the source, which content carries as SCRB 50 (Molecular Biology); MCB 60 and MCB 52 are the department's other two routes and are not in content."
+
+  - id: general-chemistry
+    label: "General chemistry"
+    kind: set
+    need: 1
+    from: [ps11, chem10, chem40]
+    notes:
+      - "Physci 11 / Chem 10 / Chem 40 or equivalent. PS 11 is the route content carries."
+
+  - id: upper-level-electives
+    label: "Upper-level lecture and lab electives"
+    kind: set
+    need: 3
+    from: [scrb_upper_level_1, scrb_upper_level_2, scrb_upper_level_3]
+    notes:
+      - "At least three. Content carries no upper-level SCRB course, so all three are slots."
+
+  - id: research-tutorial
+    label: "Concentration tutorial (independent lab research)"
+    kind: course
+    need: 1
+    from: [scrb91r]
+    notes:
+      - "SCRB 91r, ordinarily junior year. Mandatory for every concentrator, not only honors candidates — which is the opposite of how most departments in this catalogue treat research."
+
+  - id: honors-thesis
+    label: "Honors: senior tutorial and thesis"
+    kind: set
+    need: 2
+    from: [scrb99, hdrb_senior_thesis]
+    optional: true
+    notes:
+      - "Honors requires SCRB 99 plus a submitted thesis. Both, or neither — which is why they are one group of two rather than two groups."

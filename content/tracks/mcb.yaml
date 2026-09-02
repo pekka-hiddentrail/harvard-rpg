@@ -1,0 +1,123 @@
+# mcb.yaml — Molecular and Cellular Biology, single structural path.
+#
+# One requirement list for Basic and Honors: honors adds an advanced course and a second organic
+# chemistry course, with the thesis reserved for highest honors eligibility. Those three sit at the
+# bottom as optional groups.
+#
+# CONTENT CARRIES NO MCB COURSE. Not one — the intermediate biology requirement, the upper-level
+# biology courses and the research course are all slots, so roughly half this concentration is
+# unshoppable as the catalogue stands. Everything outside the department is real: LS 1a/1b, PS 11,
+# Chem 17 and Chem 27, the physics routes, and every math/computation option. That split is the
+# point of authoring the file rather than skipping it — the solver will report precisely which
+# courses the catalogue is missing, in a form somebody can act on.
+#
+# MCB 60 is separated from the 63/64/65/68 choice into two groups rather than one pool of five
+# needing two, because the department requires MCB 60 *and* one of the others. A single group would
+# let a player satisfy it with 63 and 64 and never take 60.
+#
+# Neuroscience is administratively housed inside MCB as a separate committee concentration with its
+# own tracks (Cellular Neuroscience, and a broader Behavior/Cognition track). It is not an MCB
+# track and gets no file here.
+id: mcb
+name: "Molecular and Cellular Biology"
+field: mcb
+honorsEligible: true
+thesisRequired: false
+declareBy:
+  year: 2
+  term: fall
+diploma: "Molecular and Cellular Biology"
+
+requirements:
+  - id: foundational
+    label: "Foundational life sciences"
+    kind: sequence
+    need: 2
+    sequence: [ls1a, ls1b]
+
+  - id: intermediate-biology-core
+    label: "Intermediate biology core"
+    kind: course
+    need: 1
+    from: [mcb60]
+    notes:
+      - "MCB 60 is required by name. Not in content."
+
+  - id: intermediate-biology-choice
+    label: "Intermediate biology elective"
+    kind: set
+    need: 1
+    from: [mcb63, mcb64, mcb65, mcb68]
+    notes:
+      - "One of MCB 63/64/65/68, on top of MCB 60 rather than instead of it."
+
+  - id: upper-level-biology
+    label: "Upper-level biology"
+    kind: set
+    need: 2
+    from: [mcb_upper_level_1, mcb_upper_level_2]
+    notes:
+      - "Two courses, at least one at the 100 level."
+
+  - id: general-chemistry
+    label: "General chemistry"
+    kind: course
+    need: 1
+    from: [ps11]
+
+  - id: organic-chemistry
+    label: "Organic chemistry"
+    kind: course
+    need: 1
+    from: [chem17]
+    notes:
+      - "One general plus one organic. Chem 17 is the first half of content's organic sequence; the second half is the honors addition below."
+
+  - id: math-computation
+    label: "Math or computation"
+    kind: set
+    need: 1
+    from: [math21a, math1a, stat110, stat111, cs50]
+    notes:
+      - "1-2 half-courses: Math 19a or above, or Stat 110/111, or a CS 50 combination. Modelled as one, since the second is conditional on which route you take."
+
+  - id: physics
+    label: "Physics: mechanics and E&M"
+    kind: set
+    need: 2
+    from: [ps12a, ps12b, physics15a, physics15b, ps2, ps3]
+    notes:
+      - "One half-course each in mechanics and electricity & magnetism. Which pairing depends on your intro physics route."
+
+  - id: research
+    label: "Research"
+    kind: set
+    need: 1
+    from: [ls100r, mcb91r, mcb99]
+    notes:
+      - "One semester minimum: LS 100r, MCB 91r, MCB 99, or approved summer research. None is in content."
+
+  - id: honors-advanced-course
+    label: "Honors: additional advanced course"
+    kind: course
+    need: 1
+    from: [mcb_advanced_course]
+    optional: true
+
+  - id: honors-organic-2
+    label: "Honors: second organic chemistry course"
+    kind: course
+    need: 1
+    from: [chem27]
+    optional: true
+    notes:
+      - "Chem 27, and the one honors addition a player can actually shop for today."
+
+  - id: thesis
+    label: "Senior thesis"
+    kind: course
+    need: 1
+    from: [mcb_senior_thesis]
+    optional: true
+    notes:
+      - "Not a course. Required specifically for highest honors eligibility, not for honors generally."

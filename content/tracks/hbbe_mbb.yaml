@@ -1,0 +1,114 @@
+# hbbe_mbb.yaml — Human Evolutionary Biology / Mind, Brain, and Behavior Track (15 courses).
+#
+# Affiliated with the university-wide MBB Initiative, like `cs_mbb.yaml` and `phil_mbb.yaml`.
+#
+# ARITHMETIC, DECLARED. The source lists "LS 1b, Psychology 1 (or Gen Ed 1056: Human Nature),
+# Gen Ed 1027, plus HEB courses" and then "2 additional MBB courses + 3 additional related-field
+# courses" against a published total of 15 — leaving the HEB count unstated. Reconciled here as:
+# LS 1a + LS 1b (2), the psychology foundation (1), Gen Ed 1027 (1), five HEB courses carrying the
+# same distribution as the Basic track (5), 2 MBB courses, 3 related-field courses, and the
+# sophomore tutorial (1). That is fifteen, and it keeps the HEB core identical to Basic's rather
+# than inflating it to absorb the remainder.
+#
+# The MBB pool and the related-field pool are kept disjoint: Neuro 80, Neuro 57, Psychology 14 and
+# Ling 83 sit in the MBB group and are absent from related fields, where the Basic track would have
+# listed some of them. Two crossing pools is the one shape the solver cannot answer exactly.
+id: hbbe_mbb
+name: "Human Evolutionary Biology (Mind, Brain, and Behavior)"
+field: hbbe
+honorsEligible: true
+thesisRequired: false
+declareBy:
+  year: 2
+  term: fall
+diploma: "Human Evolutionary Biology, Mind/Brain/Behavior Track"
+
+requirements:
+  - id: life-sciences
+    label: "Life sciences foundation"
+    kind: sequence
+    need: 2
+    sequence: [ls1a, ls1b]
+    notes:
+      - "The source names LS 1b explicitly; LS 1a is its prerequisite and is assumed here."
+
+  - id: psychology-foundation
+    label: "Psychology foundation"
+    kind: set
+    need: 1
+    from: [psy1, gened1056]
+    notes:
+      - "Psychology 1, or Gen Ed 1056: Human Nature — the department's own alternative, and both are in content."
+
+  - id: human-evolution-gened
+    label: "Human evolution, climate, and health"
+    kind: course
+    need: 1
+    from: [gened1027]
+    notes:
+      - "Gen Ed 1027, required by name on this track and not on the Basic one."
+
+  - id: heb-courses
+    label: "HEB courses"
+    kind: set
+    need: 5
+    counts: [distribution-behavior, distribution-evolution, distribution-anatomy]
+    from: [heb30, heb39, heb45, heb130, heb142, ls2]
+    notes:
+      - "The source says 'plus HEB courses' without a count. Held at the Basic track's five, with the same distribution, rather than inflated to absorb the published total."
+
+  - id: distribution-behavior
+    label: "Distribution: Behavior"
+    kind: set
+    need: 1
+    from: [heb30, heb130]
+
+  - id: distribution-evolution
+    label: "Distribution: Evolution"
+    kind: set
+    need: 1
+    from: [heb45, heb142]
+
+  - id: distribution-anatomy
+    label: "Distribution: Anatomy/Physiology"
+    kind: set
+    need: 1
+    from: [ls2, heb39]
+
+  - id: mbb-courses
+    label: "MBB courses"
+    kind: set
+    need: 2
+    from: [neuro80, neuro57, psychology14, ling83]
+    notes:
+      - "Two additional courses on the MBB side. This pool is deliberately absent from related fields below — one course cannot count twice."
+
+  - id: related-fields
+    label: "Related-field courses"
+    kind: set
+    need: 3
+    from:
+      - chem17
+      - chem27
+      - ps11
+      - math21a
+      - stat100
+      - stat102
+      - stat110
+      - neuro105
+      - neuro115
+      - neuro125
+      - psychology11
+      - psychology16
+      - scrb10
+      - scrb50
+    notes:
+      - "Three, from the same related fields the Basic track draws on, minus whatever the MBB group has claimed."
+
+  - id: sophomore-tutorial
+    label: "Sophomore tutorial"
+    kind: course
+    need: 1
+    from: [heb97]
+    notes:
+      - "Spring only. Not in content."

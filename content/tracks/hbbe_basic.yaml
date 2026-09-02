@@ -1,0 +1,112 @@
+# hbbe_basic.yaml — Human Biology, Behavior, and Evolution, Basic Requirements (13 courses).
+#
+# Formerly HEB, which is still how content spells the course codes. Thirteen that add up exactly:
+# LS 1a + LS 1b, 5 HEB courses, 4 related-field courses, the spring sophomore tutorial, and the
+# junior research seminar.
+#
+# THIS IS THE `counts` CASE. "5 HEB courses, 3 of which must cover the Behavior, Evolution, and
+# Anatomy/Physiology distribution" is a distribution rule that lives *inside* a larger group, which
+# is exactly what `counts` exists for (see `math.yaml`, where the three breadth courses are three
+# of the eight). Each distribution child draws from a strict subset of the parent's pool and the
+# three children are disjoint from each other, so the solver's nesting arithmetic is exact here
+# rather than approximate.
+#
+# The distribution assignments are authored, not published: HEB 30 and HEB 130 read as Behavior,
+# HEB 45 and HEB 142 as Evolution, LS 2 and HEB 39 as Anatomy/Physiology. Where a course could
+# plausibly sit in two areas it is placed in one, because a course in two crossing pools is where
+# the solver stops being exact.
+#
+# No thesis at basic level — honors is on concentration GPA alone.
+id: hbbe_basic
+name: "Human Biology, Behavior, and Evolution"
+field: hbbe
+honorsEligible: true
+thesisRequired: false
+declareBy:
+  year: 2
+  term: fall
+diploma: "Human Biology, Behavior, and Evolution"
+
+requirements:
+  - id: life-sciences
+    label: "Life sciences foundation"
+    kind: sequence
+    need: 2
+    sequence: [ls1a, ls1b]
+    notes:
+      - "LS 1a (or LPS A, which content does not carry) followed by LS 1b."
+
+  - id: heb-courses
+    label: "HEB courses"
+    kind: set
+    need: 5
+    counts: [distribution-behavior, distribution-evolution, distribution-anatomy]
+    from: [heb30, heb39, heb45, heb130, heb142, ls2]
+    notes:
+      - "Five, three of which must cover the department's three distribution areas. Those three are three of the five, not three more."
+
+  - id: distribution-behavior
+    label: "Distribution: Behavior"
+    kind: set
+    need: 1
+    from: [heb30, heb130]
+    notes:
+      - "Primate Social Behavior or Hormones and Behavior."
+
+  - id: distribution-evolution
+    label: "Distribution: Evolution"
+    kind: set
+    need: 1
+    from: [heb45, heb142]
+
+  - id: distribution-anatomy
+    label: "Distribution: Anatomy/Physiology"
+    kind: set
+    need: 1
+    from: [ls2, heb39]
+    notes:
+      - "The area assignments are authored: the department names the three areas but not which of its courses fall in each."
+
+  - id: related-fields
+    label: "Related-field courses"
+    kind: set
+    need: 4
+    from:
+      - chem17
+      - chem27
+      - ps11
+      - ps2
+      - ps3
+      - math1a
+      - math21a
+      - stat100
+      - stat102
+      - stat110
+      - neuro80
+      - neuro105
+      - neuro115
+      - neuro125
+      - psy1
+      - psychology11
+      - psychology14
+      - psychology16
+      - scrb10
+      - scrb50
+    notes:
+      - "Integrative Biology, MCB, Neurobiology, Chemistry, Physical Sciences, Math, Statistics, or approved Psychology and History of Science courses."
+
+  - id: sophomore-tutorial
+    label: "Sophomore tutorial"
+    kind: course
+    need: 1
+    from: [heb97]
+    notes:
+      - "Spring only. Not in content."
+
+  - id: junior-research-seminar
+    label: "Junior research seminar"
+    kind: course
+    need: 1
+    from: [heb98]
+    notes:
+      - "Not in content. No thesis is required at the basic level; honors depends on concentration GPA."

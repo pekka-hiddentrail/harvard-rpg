@@ -1,0 +1,103 @@
+# gov_honors.yaml — Government, Honors Track (13 courses).
+#
+# The Standard Track's ten plus three: a Research Practice Course on top of the Gov 94 seminar, and
+# two terms of Gov 99 (Senior Tutorial). The thesis is required and — the department is explicit —
+# does not count as a course itself, so it is a group of its own outside the thirteen.
+#
+# GOV 51 APPEARS IN TWO REQUIREMENTS IN THE SOURCE, and only one here. It is listed both as a
+# methods option and as one of the three Research Practice Courses, and one course cannot satisfy
+# both. The requirement solver matches greedily over pools sorted by scarcity and is only exact
+# when overlapping pools are strictly nested, so a course sitting in two crossing pools is where it
+# reports wrong. Gov 51 is therefore left in the Research Practice pool — the scarcer of the two,
+# since methods has seven routes and Research Practice has three — and the methods note says so.
+#
+# The oral exam is required "in certain circumstances" the source does not enumerate. Noted, not
+# modelled.
+id: gov_honors
+name: "Government (Honors)"
+field: gov
+honorsEligible: true
+thesisRequired: true
+declareBy:
+  year: 2
+  term: fall
+diploma: "Government"
+
+requirements:
+  - id: sophomore-tutorial
+    label: "Sophomore tutorial"
+    kind: course
+    need: 1
+    from: [gov97]
+
+  - id: methods
+    label: "Methods requirement"
+    kind: set
+    need: 1
+    from: [gov50, gov1005, stat100, stat102, stat104, stat139]
+    notes:
+      - "Gov 50 (Data) or an outside Statistics course."
+      - "Gov 51 also satisfies methods, but it is the scarcer route to the Research Practice requirement below and cannot serve both — so it is listed only there."
+
+  - id: subfield-political-theory
+    label: "Subfield: Political Theory"
+    kind: course
+    need: 1
+    from: [gov10]
+
+  - id: subfield-comparative
+    label: "Subfield: Comparative Government"
+    kind: course
+    need: 1
+    from: [gov20]
+
+  - id: subfield-american
+    label: "Subfield: American Government"
+    kind: course
+    need: 1
+    from: [gov30]
+
+  - id: subfield-international
+    label: "Subfield: International Relations"
+    kind: course
+    need: 1
+    from: [gov40]
+
+  - id: seminar
+    label: "Gov 94 seminar"
+    kind: course
+    need: 1
+    from: [gov94]
+
+  - id: research-practice
+    label: "Research Practice Course"
+    kind: set
+    need: 1
+    from: [gov51, gov62, gov63]
+    notes:
+      - "Gov 51, 62, or 63. The seminar requirement doubles on this track: one Gov 94 *and* one of these."
+
+  - id: senior-tutorial
+    label: "Senior tutorial"
+    kind: set
+    need: 2
+    from: [gov99a, gov99b]
+    notes:
+      - "Two terms of Gov 99, SAT/UNS graded. Not in content."
+
+  - id: electives
+    label: "Government electives"
+    kind: set
+    need: 3
+    from: [gov_elective_1, gov_elective_2, gov_elective_3]
+    notes:
+      - "Same as the Standard Track: three, or four if methods was satisfied outside the department."
+
+  - id: thesis
+    label: "Senior thesis"
+    kind: course
+    need: 1
+    from: [gov_senior_thesis]
+    notes:
+      - "Required, and the department states plainly that it does not count as a course — which is why it sits outside the thirteen."
+      - "An oral exam is required in certain circumstances the source does not spell out."

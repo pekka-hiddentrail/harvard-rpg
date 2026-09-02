@@ -1,0 +1,88 @@
+# phil_honors_thesis.yaml — Philosophy, Honors Eligibility (Thesis Track), 11 courses.
+#
+# The same eleven-course total as Basic, spent differently: three distribution areas instead of
+# four, two History of Philosophy courses instead of one, and four tutorials instead of two — Phil
+# 99 joins Phil 97 and 98. The electives absorb the difference, dropping from five to two.
+#
+# "3 distribution areas plus 2 history of philosophy courses" does not say which three areas. Read
+# here as the three non-history ones — Logic, Contemporary M&E, Ethics/Political/Aesthetics — since
+# History is the area the same sentence doubles. If the department means something else, the fix is
+# which groups appear, not how they are built.
+#
+# The thesis is a deliverable in its own group: max 20,000 words, defended orally before two
+# readers. It is not one of the eleven, because Phil 99 already is.
+#
+# Area assignments and the superset elective pool work exactly as in `phil_basic.yaml`, and for the
+# same two reasons.
+id: phil_honors_thesis
+name: "Philosophy (Honors, Thesis Track)"
+field: philosophy
+honorsEligible: true
+thesisRequired: true
+declareBy:
+  year: 2
+  term: fall
+diploma: "Philosophy"
+
+requirements:
+  - id: area-logic
+    label: "Area: Logic"
+    kind: course
+    need: 1
+    from: [phil_logic_course]
+
+  - id: area-contemporary-mande
+    label: "Area: Contemporary Metaphysics & Epistemology"
+    kind: set
+    need: 1
+    from: [phil3, phil_contemporary_mande]
+
+  - id: area-ethics
+    label: "Area: Ethics, Political Philosophy, Aesthetics"
+    kind: set
+    need: 1
+    from: [phil11, phil18, phil27, phil34]
+
+  - id: history-of-philosophy
+    label: "History of Philosophy"
+    kind: set
+    need: 2
+    from: [phil6, phil8, phil_history_3]
+    notes:
+      - "Two courses, where Basic wants one. Content carries two, so a third slot keeps the pool honest about what the department can offer."
+
+  - id: tutorials
+    label: "Tutorials"
+    kind: sequence
+    need: 4
+    sequence: [phil97, phil98, phil99a, phil99b]
+    notes:
+      - "Four tutorial courses: Phil 97, Phil 98, and both terms of the Phil 99 senior tutorial in which the thesis is written."
+
+  - id: additional-philosophy
+    label: "Additional philosophy courses"
+    kind: set
+    need: 2
+    from:
+      - phil3
+      - phil6
+      - phil8
+      - phil11
+      - phil18
+      - phil27
+      - phil34
+      - phil_logic_course
+      - phil_contemporary_mande
+      - phil_history_3
+      - phil_elective_1
+      - phil_elective_2
+    notes:
+      - "Two, down from Basic's five: the extra history course and the two Phil 99 terms have taken three of them."
+
+  - id: thesis
+    label: "Senior thesis"
+    kind: course
+    need: 1
+    from: [phil_senior_thesis]
+    notes:
+      - "Not a course — Phil 99 is the course. Maximum 20,000 words, with an oral examination by two readers."

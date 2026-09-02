@@ -1,0 +1,111 @@
+# applied_math.yaml — Applied Mathematics (14-15 courses), from
+# `authoring/harvard_concentrations_requirements_clean.md`.
+#
+# The department's shape is Foundation + Breadth + Area of Application, and the third of those is
+# the interesting one: five courses in a field where mathematics is substantively applied, chosen
+# by the student. That is an open-ended track system inside a single track, and the schema has no
+# way to say "all five from the *same* field" — so the pool below is the union of the documented
+# fields and the one-field rule is a note. A player who spreads five courses across five
+# departments will be told they are done when the department would not agree.
+#
+# Honors is unusual: automatically satisfied by an A- or higher in AM 115/215, or by an
+# independent modelling project (AM 91r). Neither is in content, so the honors group is one
+# optional slot rather than a grade condition the solver could check.
+id: applied_math
+name: "Applied Mathematics"
+field: applied_math
+honorsEligible: true
+thesisRequired: false
+declareBy:
+  year: 2
+  term: fall
+diploma: "Applied Mathematics"
+
+requirements:
+  - id: calculus-prep
+    label: "Calculus prep"
+    kind: sequence
+    need: 1
+    sequence: [mathma, mathmb, math1a, math1b]
+    min: 0
+    max: 4
+    notes:
+      - "Foundation is 2-5 courses depending on where placement testing starts you: Math Ma/Mb through 1a/1b, or straight into 21a/22a/21b."
+
+  - id: foundation
+    label: "Foundation: calculus and linear algebra"
+    kind: set
+    need: 2
+    from:
+      - math21a
+      - math21b
+      - math22a
+      - math22b
+      - am22a
+      - am22b
+      - math23a
+      - math25a
+      - math55a
+    notes:
+      - "Multivariable calculus and linear algebra, however you reach them. AM 22a/b does both at once with proofs."
+
+  - id: breadth-computation
+    label: "Breadth: computation"
+    kind: set
+    need: 1
+    from: [apmth10, cs50, cs51]
+
+  - id: breadth-probability
+    label: "Breadth: probability"
+    kind: set
+    need: 1
+    from: [am101, stat110, math154]
+
+  - id: breadth-discrete
+    label: "Breadth: discrete mathematics"
+    kind: set
+    need: 1
+    from: [cs20, cs1200, cs1240]
+
+  - id: breadth-continuous
+    label: "Breadth: continuous mathematics"
+    kind: course
+    need: 1
+    from: [apmth50]
+    notes:
+      - "APMTH 50 is the only continuous-methods course in content, so it is the only route."
+
+  - id: area-of-application
+    label: "Area of Application"
+    kind: set
+    need: 5
+    from:
+      - econ10a
+      - econ10b
+      - econ1010a
+      - econ1010b
+      - econ50
+      - gov10
+      - gov20
+      - gov30
+      - psy1
+      - psychology11
+      - psychology14
+      - neuro80
+      - neuro120
+      - chem17
+      - ps2
+      - ps3
+    notes:
+      - "Five courses in one field where mathematics is substantively applied. Economics, Government, Psychology, Astrophysics, Chemistry, Theoretical Neuroscience, Data Science and Digital Humanities are all documented options."
+      - "All five must come from the *same* field — the rule that makes this a track system. The schema cannot express it, so the pool above is the union of the documented fields."
+
+  - id: honors-project
+    label: "Honors requirement"
+    kind: course
+    need: 1
+    from: [am_modeling_project]
+    optional: true
+    notes:
+      - "Not a course you shop for: honors is automatically satisfied by an A- or higher in AM 115/215, or by an independent modelling project (AM 91r)."
+      - "Applied Mathematics cannot be combined with another field as a joint concentration."

@@ -1,0 +1,80 @@
+# english_honors.yaml — English, Honors Program (14 courses).
+#
+# Three additions to the Elective Program: a junior tutorial, at least one 90-level seminar, and a
+# Senior Thesis or Senior Project. The last of those is genuinely either/or — critical *or*
+# creative — and since the schema has no group-level alternative, it is one group with both names
+# in the label and the choice in a note.
+#
+# The thesis is counted as one of the fourteen rather than sitting outside them, because the
+# department writes it as English 99 and the source gives no separate deliverable count. That
+# decision is why `electives` is seven here and seven in the Elective Program: 3 Common Ground +
+# tutorial + junior tutorial + seminar + thesis + 7 = 14.
+#
+# The concentration GPA cutoff (3.65 or below for the Class of 2026) is a note. It varies by year,
+# it gates admission to the program rather than completion of it, and nothing in the schema reads
+# grades.
+id: english_honors
+name: "English (Honors)"
+field: english
+honorsEligible: true
+thesisRequired: true
+declareBy:
+  year: 2
+  term: fall
+diploma: "English"
+
+requirements:
+  - id: common-ground
+    label: "Common Ground"
+    kind: set
+    need: 3
+    from: [english10, english20, english_common_ground_3]
+    notes:
+      - "Same three as the Elective Program."
+
+  - id: sophomore-tutorial
+    label: "Sophomore tutorial"
+    kind: course
+    need: 1
+    from: [english97]
+
+  - id: junior-tutorial
+    label: "Junior tutorial"
+    kind: course
+    need: 1
+    from: [english98]
+    notes:
+      - "Required on this track and not on the Elective Program. Not in content."
+
+  - id: seminar
+    label: "90-level seminar"
+    kind: course
+    need: 1
+    from: [english_90_level_seminar]
+    notes:
+      - "At least one. Content carries no 90-level English seminar."
+
+  - id: thesis
+    label: "Senior Thesis or Senior Project"
+    kind: course
+    need: 1
+    from: [english_senior_thesis]
+    notes:
+      - "Either a critical thesis or a creative project — the department's own alternative, which the schema cannot express as a choice."
+      - "Counted as one of the fourteen, since it is written as English 99."
+
+  - id: electives
+    label: "English electives"
+    kind: set
+    need: 7
+    from:
+      - english_elective_1
+      - english_elective_2
+      - english_elective_3
+      - english_elective_4
+      - english_elective_5
+      - english_elective_6
+      - english_elective_7
+    notes:
+      - "Seven, the same as the Elective Program: the honors additions replace the three courses that track's 11-14 spread allows for."
+      - "Admission to the program is gated on concentration GPA — 3.65 or below for the Class of 2026, and it moves year to year."

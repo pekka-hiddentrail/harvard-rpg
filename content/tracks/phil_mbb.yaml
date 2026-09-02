@@ -1,0 +1,116 @@
+# phil_mbb.yaml — Philosophy, Mind, Brain, and Behavior Track (15 courses, 60 credits).
+#
+# The heaviest Philosophy track, and the one that reaches furthest outside the department:
+# three basic MBB courses, Phil 156 (Philosophy of Mind, the track's anchor), logic, two
+# Contemporary M&E courses, two ethics/history courses, and two MBB electives outside Philosophy.
+# Thesis required.
+#
+# ARITHMETIC, DECLARED. The source enumerates eleven courses against a published total of fifteen.
+# The four-course gap is authored as additional philosophy courses, on the reasoning that every
+# other Philosophy track carries an elective group and this enumeration simply omits one. It is
+# flagged on that group rather than hidden.
+#
+# MCB 80 in the source is content's `neuro80` (Neurobiology of Behavior) — the same course under
+# the listing it now carries. PSY 1 is real too, so two of the three basic MBB courses are
+# shoppable; the junior MBB seminar is not.
+#
+# Area assignments follow `phil_basic.yaml`. The outside-MBB elective pool holds no Philosophy
+# course, so it cannot collide with the philosophy groups.
+id: phil_mbb
+name: "Philosophy (Mind, Brain, and Behavior)"
+field: philosophy
+honorsEligible: true
+thesisRequired: true
+declareBy:
+  year: 2
+  term: fall
+diploma: "Philosophy, Mind/Brain/Behavior Track"
+
+requirements:
+  - id: mbb-foundation
+    label: "Basic MBB courses"
+    kind: set
+    need: 3
+    from: [psy1, neuro80, mbb_junior_seminar]
+    notes:
+      - "All three: PSY 1, MCB 80 — which content lists as Neuro 80 — and the junior MBB seminar."
+
+  - id: philosophy-of-mind
+    label: "Philosophy of Mind"
+    kind: course
+    need: 1
+    from: [phil156]
+    notes:
+      - "Phil 156, required by name and the reason this is an MBB track. Not in content."
+
+  - id: area-logic
+    label: "Area: Logic"
+    kind: course
+    need: 1
+    from: [phil_logic_course]
+
+  - id: contemporary-mande
+    label: "Contemporary Metaphysics & Epistemology"
+    kind: set
+    need: 2
+    from: [phil3, phil_contemporary_mande, phil_mande_3]
+    notes:
+      - "Two courses, where the other tracks want one."
+
+  - id: ethics-and-history
+    label: "Ethics and History of Philosophy"
+    kind: set
+    need: 2
+    from: [phil6, phil8, phil11, phil18, phil27, phil34]
+    notes:
+      - "Two courses across both areas together — this track pools them rather than requiring one of each."
+
+  - id: outside-mbb-electives
+    label: "MBB electives outside Philosophy"
+    kind: set
+    need: 2
+    from:
+      - ling83
+      - ling101
+      - ling107
+      - psychology11
+      - psychology14
+      - neuro57
+      - neuro105
+      - neuro120
+      - heb39
+      - heb142
+      - cs50
+    notes:
+      - "Two, drawn from the MBB Initiative's other departments. No Philosophy course appears here, so nothing double-counts."
+
+  - id: additional-philosophy
+    label: "Additional philosophy courses"
+    kind: set
+    need: 4
+    from:
+      - phil3
+      - phil6
+      - phil8
+      - phil11
+      - phil18
+      - phil27
+      - phil34
+      - phil156
+      - phil_logic_course
+      - phil_contemporary_mande
+      - phil_mande_3
+      - phil_elective_1
+      - phil_elective_2
+      - phil_elective_3
+      - phil_elective_4
+    notes:
+      - "The source enumerates eleven courses against a published fifteen. These four are the remainder, inferred rather than named."
+
+  - id: thesis
+    label: "Senior thesis"
+    kind: course
+    need: 1
+    from: [phil_mbb_thesis]
+    notes:
+      - "Not a course. Required on this track, and MBB-related by construction."

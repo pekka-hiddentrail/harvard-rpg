@@ -1,0 +1,84 @@
+# gov_standard.yaml — Government, Standard Track (10 courses).
+#
+# The best-served concentration in content: Gov 10, 20, 30 and 40 are exactly the four subfields
+# the department requires — Political Theory, Comparative Government, American Government,
+# International Relations — and Gov 97 and Gov 50 are both here too. Eight of the ten are real,
+# and the two that are not are the Gov 94 seminar and the electives.
+#
+# One subtlety in the elective count: the department wants 3 electives, or 4 if the methods
+# requirement was satisfied outside the department. The schema cannot make one group's size depend
+# on which course satisfied another, so the group is 3 and the conditional fourth is a note. The
+# solver will under-report by one course for a player who takes Stat 100 as their methods course,
+# which is the direction to err in — it never claims a requirement is met when it is not.
+#
+# The five Informal Programs of Study (Data Science, Tech Science, Political Economy, Public
+# Policy, Law and Justice) layer on top of these requirements without changing them, so they are
+# not tracks and get no files.
+id: gov_standard
+name: "Government"
+field: gov
+honorsEligible: false
+thesisRequired: false
+declareBy:
+  year: 2
+  term: fall
+diploma: "Government"
+
+requirements:
+  - id: sophomore-tutorial
+    label: "Sophomore tutorial"
+    kind: course
+    need: 1
+    from: [gov97]
+
+  - id: methods
+    label: "Methods requirement"
+    kind: set
+    need: 1
+    from: [gov50, gov51, gov1005, stat100, stat102, stat104, stat139]
+    notes:
+      - "Gov 50 (Data), Gov 51, or an outside Statistics course."
+      - "Satisfying it outside the department costs a fourth elective — a conditional the schema cannot express, so the elective group below stays at three."
+
+  - id: subfield-political-theory
+    label: "Subfield: Political Theory"
+    kind: course
+    need: 1
+    from: [gov10]
+
+  - id: subfield-comparative
+    label: "Subfield: Comparative Government"
+    kind: course
+    need: 1
+    from: [gov20]
+
+  - id: subfield-american
+    label: "Subfield: American Government"
+    kind: course
+    need: 1
+    from: [gov30]
+
+  - id: subfield-international
+    label: "Subfield: International Relations"
+    kind: course
+    need: 1
+    from: [gov40]
+    notes:
+      - "One course in each of the four subfields. Content carries exactly one route to each, so all four are forced."
+
+  - id: seminar
+    label: "Gov 94 seminar"
+    kind: course
+    need: 1
+    from: [gov94]
+    notes:
+      - "One seminar. Not in content."
+
+  - id: electives
+    label: "Government electives"
+    kind: set
+    need: 3
+    from: [gov_elective_1, gov_elective_2, gov_elective_3]
+    notes:
+      - "Three, or four if methods was satisfied outside the department."
+      - "No thesis and no senior tutorial on this track — that is the whole difference from Honors."

@@ -1,0 +1,71 @@
+# phil_joint_allied.yaml — Philosophy as the allied field, another field primary
+# (6 Philosophy courses, 24 credits).
+#
+# The lightest Philosophy track: one course in *three of the four* areas, plus three more.
+#
+# "THREE OF THE FOUR AREAS" IS THE SHAPE THE SCHEMA CANNOT SAY. There is no way to write "satisfy
+# any three of these four groups", so the four area groups collapse into one pool of every area
+# course, needing three. What is lost is the one-per-area rule: a player could satisfy this group
+# with three ethics courses and be told they are done when the department wants three different
+# areas. That loss is stated here and in the group's own notes rather than papered over, because
+# the alternative — four groups each marked optional — would let a player satisfy *none* of them
+# and still look finished, which is a worse lie.
+#
+# The thesis is directed in the primary field with one reader from Philosophy, which is the real
+# difference from `phil_joint_primary.yaml` beyond the two-course discount.
+id: phil_joint_allied
+name: "Philosophy (Joint Concentration, allied field)"
+field: philosophy
+honorsEligible: true
+thesisRequired: true
+declareBy:
+  year: 2
+  term: fall
+diploma: "Joint Concentration — a paired field and Philosophy"
+
+requirements:
+  - id: distribution-areas
+    label: "Distribution: three of the four areas"
+    kind: set
+    need: 3
+    from:
+      - phil_logic_course
+      - phil3
+      - phil_contemporary_mande
+      - phil6
+      - phil8
+      - phil11
+      - phil18
+      - phil27
+      - phil34
+    notes:
+      - "One course in three of the four areas: Logic, Contemporary M&E, Ethics/Political/Aesthetics, History of Philosophy."
+      - "The schema cannot say 'three of these four groups', so this is one pool of all four areas' courses. Three courses from the *same* area would satisfy it here and would not satisfy the department."
+
+  - id: additional-philosophy
+    label: "Additional philosophy courses"
+    kind: set
+    need: 3
+    from:
+      - phil3
+      - phil6
+      - phil8
+      - phil11
+      - phil18
+      - phil27
+      - phil34
+      - phil_logic_course
+      - phil_contemporary_mande
+      - phil_elective_1
+      - phil_elective_2
+      - phil_elective_3
+    notes:
+      - "Three more, bringing the Philosophy side to six."
+
+  - id: thesis
+    label: "Senior thesis"
+    kind: course
+    need: 1
+    from: [phil_allied_thesis]
+    notes:
+      - "Not a course. Directed in the primary field, with one reader from Philosophy — where the primary-field version is read by two, one per department."

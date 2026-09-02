@@ -1,0 +1,116 @@
+# cs_honors.yaml — Computer Science, Honors Requirements (13-16 courses).
+#
+# Basic's eleven-to-fourteen becomes thirteen-to-sixteen through the CS core alone: same math
+# prep, same five named components, but a required Artificial Intelligence course and five
+# advanced courses instead of four. That is the whole delta, and it is why this is a separate
+# file rather than a flag — the schema has no group-level "if honors" branch, and inventing one
+# would make every track file harder to read for the benefit of two groups in one department.
+#
+# "Intermediate Algorithms instead of Algorithms" is authored as a note on the advanced pool
+# rather than as its own group. The department is naming a substitution *inside* the advanced
+# courses (CS 124 rather than CS 120), not adding a twelfth requirement — modelling it as a
+# group would bill honors students for a course they are not owed.
+#
+# Thesis is optional here and required only for high/highest honors, which is exactly the shape
+# `optional: true` exists for (see math.yaml).
+id: cs_honors
+name: "Computer Science (Honors)"
+field: cs
+honorsEligible: true
+thesisRequired: false
+declareBy:
+  year: 2
+  term: fall
+diploma: "Computer Science"
+
+requirements:
+  - id: math-prep
+    label: "Math prep"
+    kind: sequence
+    need: 1
+    sequence: [math1a, math1b]
+    min: 0
+    max: 2
+    notes:
+      - "Same as the Basic track: only if placement testing shows you need it."
+
+  - id: linear-algebra
+    label: "Linear algebra"
+    kind: set
+    need: 1
+    from:
+      - math21b
+      - math22a
+      - math23a
+      - math25a
+      - math55a
+      - am22a
+    notes:
+      - "Same pool as the Basic track. The department reads 23a/25a/55a as the stronger program."
+
+  - id: probability
+    label: "Probability"
+    kind: set
+    need: 1
+    from:
+      - stat110
+      - stat111
+      - math154
+      - am101
+    notes:
+      - "Same pool as the Basic track."
+
+  - id: programming
+    label: "Programming 1 & 2"
+    kind: sequence
+    need: 2
+    sequence: [cs50, cs51]
+
+  - id: formal-reasoning
+    label: "Formal reasoning"
+    kind: set
+    need: 1
+    from: [cs20, cs1240]
+
+  - id: systems
+    label: "Systems"
+    kind: course
+    need: 1
+    from: [cs61]
+
+  - id: computation-and-the-world
+    label: "Computation and the World"
+    kind: set
+    need: 1
+    from: [cs1200, cs1210, cs32]
+
+  - id: artificial-intelligence
+    label: "Artificial intelligence"
+    kind: set
+    need: 1
+    from: [cs1810, cs182]
+    notes:
+      - "Required for honors and not for Basic. Neither CS 1810 nor CS 182 is in content yet, so this is a slot."
+
+  - id: advanced-cs
+    label: "Advanced CS"
+    kind: set
+    need: 5
+    from:
+      - advanced_cs_course_1
+      - advanced_cs_course_2
+      - advanced_cs_course_3
+      - advanced_cs_course_4
+      - advanced_cs_course_5
+    notes:
+      - "Five rather than Basic's four. Content does not carry the advanced pool, so these are slots."
+      - "One of the five must be Intermediate Algorithms (CS 124) rather than Algorithms (CS 120) — a substitution inside this pool, not an extra course."
+
+  - id: thesis
+    label: "Senior thesis"
+    kind: course
+    need: 1
+    from: [cs_senior_thesis]
+    optional: true
+    notes:
+      - "Not a course. Optional for Honors, required for High or Highest Honors."

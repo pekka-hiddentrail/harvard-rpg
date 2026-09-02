@@ -1,0 +1,63 @@
+# classics_joint_ancient_history.yaml — Joint Concentration in Ancient History (Greek and Roman),
+# 7 courses on the Classics side.
+#
+# Co-sponsored with the History Department, and the source calls it a de facto third Classics
+# track — which is why it is a track file rather than a variant of the other two. Only the
+# Classics half is here. The History half is a department content does not carry at all, so the
+# solver sees half the bill and says so, exactly as `math_joint_primary.yaml` does.
+#
+# The source names four of the seven: one semester of Classical Studies 97a *or* 97b (not both,
+# which is the visible difference from the two primary tracks), one semester of Classics 98, and
+# two courses in Greek or Latin. The remaining three are authored as Ancient History slots and
+# labelled as inferred.
+id: classics_joint_ancient_history
+name: "Ancient History (Joint Concentration, Classics side)"
+field: classics
+honorsEligible: true
+thesisRequired: true
+declareBy:
+  year: 2
+  term: fall
+diploma: "Joint Concentration — Classics and History"
+
+requirements:
+  - id: introductory-civilization
+    label: "Introductory civilization course"
+    kind: set
+    need: 1
+    from: [clsstdy97a, clsstdy97b]
+    notes:
+      - "One semester, Greek *or* Roman. The primary tracks want both."
+
+  - id: junior-tutorial
+    label: "Junior tutorial"
+    kind: course
+    need: 1
+    from: [classics98]
+    notes:
+      - "One semester of Classics 98. Not in content."
+
+  - id: greek-and-latin
+    label: "Greek and/or Latin"
+    kind: set
+    need: 2
+    from: [greek1, latin1]
+    notes:
+      - "Two courses, both satisfiable out of the catalogue as it stands."
+
+  - id: ancient-history-courses
+    label: "Ancient History courses"
+    kind: set
+    need: 3
+    from: [ancient_history_1, ancient_history_2, ancient_history_3]
+    notes:
+      - "The source names four of the seven Classics-side courses; these three are the remainder, inferred by subtraction."
+      - "Ordinarily drawn from the History Department's ancient offerings, which content does not carry."
+
+  - id: senior-thesis
+    label: "Senior thesis"
+    kind: course
+    need: 1
+    from: [ancient_history_thesis]
+    notes:
+      - "Not a course. Honors-only by definition, as every joint concentration is; the thesis spans both departments."

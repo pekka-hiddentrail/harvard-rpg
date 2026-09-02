@@ -1,0 +1,86 @@
+# sociology.yaml — Sociology (12 courses, single structural path).
+#
+# One requirement list, with the thesis as the honors switch: Sociol 99A/B is always optional and
+# required only for Honors. So `thesisRequired` is false and there is exactly one `optional: true`
+# group, the same shape `math.yaml` uses.
+#
+# Five of the twelve are named courses and content carries three of them — Sociol 1000, Sociol 97,
+# and four elective courses. Sociol 1128 (Models of Social Science Research, spring only) and Sociol
+# 98 (the junior tutorial) are slots, as is Sociol 1156.
+#
+# The honors GPA formula is quoted in a note because it is genuinely unusual and no group could
+# enforce it: 60% concentration GPA computed from the best 8 of 12 letter grades, plus thesis
+# grades, with High Honors needing an A- GPA and Highest Honors an A- GPA *plus* a Summa-range
+# thesis. That "best 8 of 12" is the interesting part — four bad grades are survivable here in a way
+# they are not in most departments.
+id: sociology
+name: "Sociology"
+field: sociology
+honorsEligible: true
+thesisRequired: false
+declareBy:
+  year: 2
+  term: fall
+diploma: "Sociology"
+
+requirements:
+  - id: introductory-course
+    label: "Introductory course"
+    kind: course
+    need: 1
+    from: [sociol1000]
+
+  - id: sophomore-tutorial
+    label: "Sophomore tutorial in Social Theory"
+    kind: course
+    need: 1
+    from: [sociol97]
+
+  - id: models-of-research
+    label: "Models of Social Science Research"
+    kind: course
+    need: 1
+    from: [sociol1128]
+    notes:
+      - "Spring only, which makes it the one course here that can force a term's shape. Not in content."
+
+  - id: quantitative-methods
+    label: "Quantitative methods"
+    kind: set
+    need: 1
+    from: [sociol1156, stat100, stat102, stat104, stat139]
+    notes:
+      - "Sociol 1156, or Stat 100/102/104/139 by petition — the department's own word, so it is not automatic."
+
+  - id: junior-tutorial
+    label: "Junior tutorial"
+    kind: course
+    need: 1
+    from: [sociol98]
+    notes:
+      - "An independent research project, required of all concentrators. Not in content."
+
+  - id: electives
+    label: "Sociology electives"
+    kind: set
+    need: 7
+    from:
+      - sociol1023
+      - sociol1024
+      - sociol1046
+      - sociol1058
+      - sociol_elective_5
+      - sociol_elective_6
+      - sociol_elective_7
+    notes:
+      - "Seven, which completes the twelve. Content carries four of them."
+
+  - id: thesis
+    label: "Senior thesis"
+    kind: set
+    need: 2
+    from: [sociol99a, sociol99b]
+    optional: true
+    notes:
+      - "Two terms of Sociol 99. Always optional — required only for Honors."
+      - "Honors GPA is 60% concentration GPA from the best 8 of 12 letter grades plus thesis grades. High Honors needs an A- GPA; Highest Honors needs that plus a Summa-range thesis grade."

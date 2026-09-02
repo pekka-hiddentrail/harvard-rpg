@@ -1,0 +1,60 @@
+# psych_general.yaml — Psychology, General Track (~70% of concentrators).
+#
+# The department publishes minimums rather than a course list: at least 10 courses counting only
+# toward Psychology on a non-thesis track, 12 on a thesis track. Two things are named — PSY 1 (or a
+# Foundational Course, for students who arrive AP/IB-qualified) and PSY 1900, statistics, by the end
+# of sophomore year — and the remaining eight are electives. So this file is two named courses and
+# one large elective group, which is an honest reading of a track whose selling point is flexibility.
+#
+# Content is well stocked here: five Psychology courses and two Neuroscience courses sit in the
+# elective pool alongside three slots, so a player can genuinely shop most of this concentration.
+#
+# JOINT CONCENTRATIONS ARE NOT PERMITTED IN PSYCHOLOGY. Worth stating on every Psychology file,
+# since a player working across this catalogue will have seen joint variants of almost everything
+# else.
+id: psych_general
+name: "Psychology (General Track)"
+field: psychology
+honorsEligible: true
+thesisRequired: false
+declareBy:
+  year: 2
+  term: fall
+diploma: "Psychology"
+
+requirements:
+  - id: foundation
+    label: "Introductory course"
+    kind: set
+    need: 1
+    from: [psy1, psych_foundational_course]
+    notes:
+      - "PSY 1, or a Foundational Course instead for students who arrive AP/IB-qualified."
+
+  - id: statistics
+    label: "Statistics"
+    kind: course
+    need: 1
+    from: [psy1900]
+    notes:
+      - "PSY 1900, required by the end of sophomore year — the one deadline the department states outright."
+
+  - id: psychology-electives
+    label: "Psychology courses"
+    kind: set
+    need: 8
+    from:
+      - psychology11
+      - psychology14
+      - psychology15
+      - psychology16
+      - psychology18
+      - neuro57
+      - neuro80
+      - psych_elective_8
+      - psych_elective_9
+      - psych_elective_10
+    notes:
+      - "Eight, bringing the concentration to the department's ten-course minimum for a non-thesis student. A thesis track needs twelve."
+      - "The department publishes minimums rather than a required list, so this group is the whole of the flexibility the track is known for."
+      - "Joint concentrations are not permitted in Psychology, on any track."

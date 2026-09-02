@@ -1,0 +1,80 @@
+# phil_honors_nonthesis.yaml — Philosophy, Honors Eligibility (Non-Thesis Track), 12 courses.
+#
+# Honors without a thesis, which costs a course: twelve instead of eleven. Same distribution as the
+# Thesis Track — three areas plus two History of Philosophy courses — but only the two ordinary
+# tutorials, and five electives rather than two.
+#
+# The trade is stated plainly in the source and worth surfacing to a player: this track is eligible
+# for "Honors" only, never High or Highest, and it demands a 3.7+ honors GPA weighted by class year
+# (multipliers 1.0 / 1.2 / 1.4 / 1.5, so later years count for more). Nothing in the schema reads
+# grades, so that is a note on the last group rather than a requirement.
+#
+# Area assignments and the superset elective pool follow `phil_basic.yaml`.
+id: phil_honors_nonthesis
+name: "Philosophy (Honors, Non-Thesis Track)"
+field: philosophy
+honorsEligible: true
+thesisRequired: false
+declareBy:
+  year: 2
+  term: fall
+diploma: "Philosophy"
+
+requirements:
+  - id: area-logic
+    label: "Area: Logic"
+    kind: course
+    need: 1
+    from: [phil_logic_course]
+
+  - id: area-contemporary-mande
+    label: "Area: Contemporary Metaphysics & Epistemology"
+    kind: set
+    need: 1
+    from: [phil3, phil_contemporary_mande]
+
+  - id: area-ethics
+    label: "Area: Ethics, Political Philosophy, Aesthetics"
+    kind: set
+    need: 1
+    from: [phil11, phil18, phil27, phil34]
+
+  - id: history-of-philosophy
+    label: "History of Philosophy"
+    kind: set
+    need: 2
+    from: [phil6, phil8, phil_history_3]
+    notes:
+      - "Two courses, the same as the Thesis Track."
+
+  - id: tutorials
+    label: "Tutorials"
+    kind: sequence
+    need: 2
+    sequence: [phil97, phil98]
+    notes:
+      - "Two, not four: there is no Phil 99 on this track because there is no thesis to write in it."
+
+  - id: additional-philosophy
+    label: "Additional philosophy courses"
+    kind: set
+    need: 5
+    from:
+      - phil3
+      - phil6
+      - phil8
+      - phil11
+      - phil18
+      - phil27
+      - phil34
+      - phil_logic_course
+      - phil_contemporary_mande
+      - phil_history_3
+      - phil_elective_1
+      - phil_elective_2
+      - phil_elective_3
+      - phil_elective_4
+      - phil_elective_5
+    notes:
+      - "Five, which is what turns eleven courses into twelve once the two Phil 99 terms are gone."
+      - "This track is eligible for Honors only — never High or Highest — and requires a 3.7+ honors GPA, weighted 1.0/1.2/1.4/1.5 by class year."

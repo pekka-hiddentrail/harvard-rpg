@@ -1,0 +1,82 @@
+# classics_civ.yaml — Classics, Classical Civilizations Track (12 courses).
+#
+# The two Classics tracks are structurally identical and differ only in emphasis: this one reads
+# more in translation, `classics_langlit.yaml` reads more in the original. Since the schema
+# expresses structure and not emphasis, the two files are near-copies whose difference lives
+# entirely in notes — which is the honest representation of two tracks that really do share a
+# requirement list.
+#
+# ARITHMETIC, DECLARED: the source publishes 12 courses, and its own enumeration comes to eleven
+# (2 introductory + 6 Greek/Latin + 1 Classics 98 + 2 Classics 99). The twelfth is derived by
+# subtraction and authored as one Classics elective, labelled as such. If that inference is wrong
+# the fix is one group, not a rewrite.
+#
+# `counts` carries the sub-rule inside the language group: at least two of the six must be
+# numbered 100 or above, one of them a capstone. Those two are drawn from the same pool as the
+# six, which is what makes the nesting exact rather than double-billing the player.
+id: classics_civ
+name: "Classics (Classical Civilizations)"
+field: classics
+honorsEligible: true
+thesisRequired: true
+declareBy:
+  year: 2
+  term: fall
+diploma: "Classics"
+
+requirements:
+  - id: introductory-civilizations
+    label: "Introductory civilization courses"
+    kind: set
+    need: 2
+    from: [clsstdy97a, clsstdy97b]
+    notes:
+      - "Both: the Greek world and the Roman world."
+
+  - id: greek-and-latin
+    label: "Greek and/or Latin"
+    kind: set
+    need: 6
+    counts: [language-advanced]
+    from:
+      - greek1
+      - latin1
+      - greek_or_latin_3
+      - greek_or_latin_4
+      - greek_or_latin_5
+      - greek_or_latin_6
+    notes:
+      - "Six courses in either language or split between them. Content carries only the two introductory courses, so the four that follow them are slots."
+      - "This track's lighter language emphasis is about what you read, not how many courses you take — the count is the same as Languages & Literatures."
+
+  - id: language-advanced
+    label: "Advanced Greek/Latin, including the capstone"
+    kind: set
+    need: 2
+    from: [greek_or_latin_5, greek_or_latin_6]
+    notes:
+      - "At least two of the six above must be numbered 100 or higher, and one of those two is the capstone. These are two of the six, not two more."
+
+  - id: junior-tutorial
+    label: "Junior tutorial"
+    kind: course
+    need: 1
+    from: [classics98]
+    notes:
+      - "One semester of Classics 98. Not in content."
+
+  - id: senior-thesis-tutorial
+    label: "Senior thesis tutorial"
+    kind: set
+    need: 2
+    from: [classics99a, classics99b]
+    notes:
+      - "Two semesters of Classics 99, in which the thesis is written. The thesis is required of every concentrator on this track."
+
+  - id: classics-elective
+    label: "Classics elective"
+    kind: course
+    need: 1
+    from: [classics_elective]
+    notes:
+      - "The published total is twelve; the department's enumeration comes to eleven. This is the twelfth, inferred by subtraction rather than named in the source."

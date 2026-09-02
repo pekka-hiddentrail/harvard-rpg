@@ -1,0 +1,76 @@
+# classics_langlit.yaml — Classics, Classical Languages and Literatures Track (12 courses).
+#
+# The source is explicit that this track has the same structure as Classical Civilizations and
+# differs only in emphasis: heavier reading of Greek and Latin literature in the original. So
+# this file is `classics_civ.yaml`'s requirement list unchanged, with the emphasis stated in the
+# notes on the language group.
+#
+# It is worth being blunt about why both files exist rather than one with a note. A track id is
+# what a player declares and what the solver reports against, and these are two declarations with
+# two diplomas' worth of departmental expectation behind them. Collapsing them would make the
+# catalogue tidier and the choice invisible.
+#
+# The same arithmetic caveat applies: 12 published, eleven enumerated, and the twelfth authored as
+# one elective by subtraction.
+id: classics_langlit
+name: "Classics (Classical Languages and Literatures)"
+field: classics
+honorsEligible: true
+thesisRequired: true
+declareBy:
+  year: 2
+  term: fall
+diploma: "Classics"
+
+requirements:
+  - id: introductory-civilizations
+    label: "Introductory civilization courses"
+    kind: set
+    need: 2
+    from: [clsstdy97a, clsstdy97b]
+
+  - id: greek-and-latin
+    label: "Greek and/or Latin"
+    kind: set
+    need: 6
+    counts: [language-advanced]
+    from:
+      - greek1
+      - latin1
+      - greek_or_latin_3
+      - greek_or_latin_4
+      - greek_or_latin_5
+      - greek_or_latin_6
+    notes:
+      - "Six courses, read in the original language — this is where the track earns its name."
+      - "Content carries only the two introductory language courses, so the four above them are slots."
+
+  - id: language-advanced
+    label: "Advanced Greek/Latin, including the capstone"
+    kind: set
+    need: 2
+    from: [greek_or_latin_5, greek_or_latin_6]
+    notes:
+      - "Two of the six must be numbered 100 or higher, one of them the capstone. These are two of the six, not two more."
+
+  - id: junior-tutorial
+    label: "Junior tutorial"
+    kind: course
+    need: 1
+    from: [classics98]
+
+  - id: senior-thesis-tutorial
+    label: "Senior thesis tutorial"
+    kind: set
+    need: 2
+    from: [classics99a, classics99b]
+    notes:
+      - "Two semesters of Classics 99. The thesis is required of every concentrator."
+
+  - id: classics-elective
+    label: "Classics elective"
+    kind: course
+    need: 1
+    from: [classics_elective]
+    notes:
+      - "The twelfth course, inferred by subtraction from the published total rather than named in the source."

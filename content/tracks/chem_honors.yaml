@@ -1,0 +1,102 @@
+# chem_honors.yaml — Chemistry, Honors Eligibility (14-16 courses, 56-64 credits).
+#
+# The same twelve as Basic plus two advanced courses, which is the whole delta: 14-16 instead of
+# 12-14, with the two-course spread again being Math 1a/1b for students who place into them.
+#
+# Two departmental rules live in notes rather than in groups. "At least 4 courses numbered 100+"
+# cannot be checked because content carries no 100-level chemistry course at all, so enforcing it
+# would require inventing the courses it counts. And there is no General Examination, which is
+# worth saying out loud precisely because most honors programs in this file have one.
+#
+# The thesis is optional even at honors level (Chem 99r) — unusual enough that it is the reason
+# `thesisRequired` is false on an honors track.
+id: chem_honors
+name: "Chemistry (Honors)"
+field: chemistry
+honorsEligible: true
+thesisRequired: false
+declareBy:
+  year: 2
+  term: fall
+diploma: "Chemistry"
+
+requirements:
+  - id: math-prep
+    label: "Math prep"
+    kind: sequence
+    need: 1
+    sequence: [math1a, math1b]
+    min: 0
+    max: 2
+    notes:
+      - "Same as the Basic track: only if placement requires it."
+
+  - id: general-chemistry
+    label: "General chemistry"
+    kind: set
+    need: 2
+    from: [ps11, chem_general_chemistry_2]
+
+  - id: inorganic-chemistry
+    label: "Inorganic chemistry"
+    kind: course
+    need: 1
+    from: [chem40]
+    notes:
+      - "Chem 40 or equivalent. Not in content."
+
+  - id: organic-chemistry
+    label: "Organic chemistry"
+    kind: sequence
+    need: 2
+    sequence: [chem17, chem27]
+
+  - id: physical-chemistry
+    label: "Physical chemistry"
+    kind: set
+    need: 2
+    from: [chem_physical_1, chem_physical_2]
+
+  - id: advanced-laboratory
+    label: "Advanced laboratory"
+    kind: course
+    need: 1
+    from: [chem_advanced_laboratory]
+
+  - id: biological-chemistry
+    label: "Chemistry with a strong biological orientation"
+    kind: course
+    need: 1
+    from: [chem_biological_orientation]
+
+  - id: math
+    label: "Mathematics"
+    kind: set
+    need: 1
+    from: [math21a, math21b, am22a]
+    notes:
+      - "Math 21a or equivalent; 21b strongly recommended."
+
+  - id: physics
+    label: "Physics"
+    kind: set
+    need: 2
+    from: [ps12a, ps12b, physics15a, physics15b, apphy50a, apphy50b, ps2, ps3]
+
+  - id: advanced-chemistry
+    label: "Advanced chemistry"
+    kind: set
+    need: 2
+    from: [chem_advanced_1, chem_advanced_2]
+    notes:
+      - "Two additional advanced courses in chemistry, biochemistry, or a related field. This is the entire difference from the Basic track."
+      - "At least 4 of the concentration's courses must be numbered 100 or above. Content has no 100-level chemistry course, so that sub-rule is not enforced."
+
+  - id: thesis
+    label: "Senior thesis"
+    kind: course
+    need: 1
+    from: [chem_senior_thesis]
+    optional: true
+    notes:
+      - "Not a course: written through Chem 99r. Optional even at honors level, and there is no General Examination."

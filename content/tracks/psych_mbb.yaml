@@ -1,0 +1,93 @@
+# psych_mbb.yaml — Psychology, Mind/Brain/Behavior: Cognitive Science Track (the smallest group).
+#
+# The thesis track, and the source is unusually pointed about what that means: a senior honors
+# thesis is required, and abandoning the thesis later means switching *tracks*, not just dropping a
+# requirement. That is a design detail worth surfacing to a player, because it is a door that shuts
+# behind them.
+#
+# The department's twelve-course minimum for a thesis track (against ten for non-thesis) is what
+# this file is built to: 1 foundation + 1 statistics + 4 Psychology + 4 MBB electives outside
+# Psychology + the junior MBB seminar + the senior thesis tutorial. The thesis itself is a
+# deliverable in its own group, as everywhere else in this catalogue.
+#
+# The two elective pools are kept disjoint — Psychology courses in one, the MBB Initiative's other
+# departments in the other. The source names those departments explicitly (Linguistics, Philosophy,
+# HEB, History and Science, Neuroscience, CS), which is rare enough to be worth honouring exactly.
+id: psych_mbb
+name: "Psychology (Mind/Brain/Behavior: Cognitive Science)"
+field: psychology
+honorsEligible: true
+thesisRequired: true
+declareBy:
+  year: 2
+  term: fall
+diploma: "Psychology, Mind/Brain/Behavior Track"
+
+requirements:
+  - id: foundation
+    label: "Introductory course"
+    kind: set
+    need: 1
+    from: [psy1, psych_foundational_course]
+
+  - id: statistics
+    label: "Statistics"
+    kind: course
+    need: 1
+    from: [psy1900]
+    notes:
+      - "PSY 1900, by the end of sophomore year."
+
+  - id: psychology-core
+    label: "Psychology courses"
+    kind: set
+    need: 4
+    from: [psychology11, psychology14, psychology15, psychology16, psychology18]
+    notes:
+      - "Four from the department's own offerings. Cognition and Cognitive Neuroscience are the track's natural centre."
+
+  - id: mbb-electives
+    label: "MBB electives outside Psychology"
+    kind: set
+    need: 4
+    from:
+      - ling83
+      - ling101
+      - ling107
+      - phil3
+      - phil34
+      - heb39
+      - heb142
+      - neuro57
+      - neuro80
+      - neuro120
+      - cs50
+      - cs51
+    notes:
+      - "Four, drawn from Linguistics, Philosophy, HEB, History and Science, Neuroscience, and CS — the departments the source names."
+      - "No Psychology course appears here, so nothing counts twice."
+
+  - id: junior-mbb-seminar
+    label: "Junior MBB seminar"
+    kind: course
+    need: 1
+    from: [mbb_junior_seminar]
+    notes:
+      - "Not in content. Shared with the other MBB tracks in this catalogue."
+
+  - id: senior-thesis-tutorial
+    label: "Senior thesis tutorial"
+    kind: course
+    need: 1
+    from: [psych_thesis_tutorial]
+    notes:
+      - "The course in which the thesis is written, and the twelfth of the twelve."
+
+  - id: thesis
+    label: "Senior honors thesis"
+    kind: course
+    need: 1
+    from: [psych_senior_thesis]
+    notes:
+      - "Not a course. Required: switching away from a thesis later means switching tracks, not merely dropping the thesis."
+      - "Joint concentrations are not permitted in Psychology."

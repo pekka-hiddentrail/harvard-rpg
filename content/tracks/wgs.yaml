@@ -1,0 +1,77 @@
+# wgs.yaml — Studies of Women, Gender, and Sexuality (single structural path).
+#
+# Regular, Thesis Track and Joint share one requirement list; juniors apply to the Thesis Track for
+# honors or for a joint concentration. So this is one file with an optional thesis, and the joint
+# variant is a note rather than a second file — unlike English or Philosophy, the department
+# publishes no different course count for it.
+#
+# The foundational courses are an "and/or": WGS 1200 approaches the field historically, WGS 1210
+# theoretically, and a concentrator may take either or both. Modelled as one course from a pool of
+# two, with the "both" case falling into the additional-courses group below.
+#
+# Content carries the sophomore tutorial and four courses that count toward the concentration, none
+# of which are the foundational pair or the 1400-level seminars. The source publishes no total, so
+# the eleven here is the sum of what it does name plus the seven additional WGS-credit courses it
+# asks for.
+id: wgs
+name: "Studies of Women, Gender, and Sexuality"
+field: wgs
+honorsEligible: true
+thesisRequired: false
+declareBy:
+  year: 2
+  term: fall
+diploma: "Studies of Women, Gender, and Sexuality"
+
+requirements:
+  - id: foundational
+    label: "Foundational course"
+    kind: set
+    need: 1
+    from: [womgen1200, womgen1210]
+    notes:
+      - "WGS 1200 (history approach) and/or WGS 1210 (theory approach) — either satisfies this; taking both puts the second in the additional courses below."
+      - "Neither is in content."
+
+  - id: sophomore-tutorial
+    label: "Sophomore tutorial"
+    kind: course
+    need: 1
+    from: [womgen97]
+    notes:
+      - "WomGen 97, \"Dreams of a Common Language\", usually by the end of sophomore year."
+
+  - id: upper-level-seminars
+    label: "Upper-level seminars"
+    kind: set
+    need: 2
+    from: [wgs_upper_seminar_1, wgs_upper_seminar_2]
+    notes:
+      - "Two WGS seminars numbered 1400 or above, or an Engaged Scholarship / Civic Engagement course in their place."
+      - "Content carries no 1400-level WGS course, so both are slots."
+
+  - id: additional-courses
+    label: "Additional WGS-credit courses"
+    kind: set
+    need: 7
+    from:
+      - womgen1127
+      - womgen1225
+      - womgen1274
+      - genedlgbt
+      - sociol1058
+      - wgs_credit_6
+      - wgs_credit_7
+      - wgs_credit_8
+    notes:
+      - "Seven courses carrying WGS credit, which need not be taught in the department — GenEd LGBT Lives and Sociol 1058 both count."
+
+  - id: thesis
+    label: "Senior thesis"
+    kind: course
+    need: 1
+    from: [wgs_senior_thesis]
+    optional: true
+    notes:
+      - "Optional. Juniors apply to a Thesis Track for honors or for a joint concentration."
+      - "About half of concentrators go joint, drawing on an unusually wide range of allied fields — the department publishes no separate course count for that route."

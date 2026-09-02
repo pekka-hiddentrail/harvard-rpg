@@ -1,0 +1,110 @@
+# cs_basic.yaml — Computer Science, Basic Requirements (11-14 courses), from
+# `authoring/harvard_concentrations_requirements_clean.md`.
+#
+# `cs_mbb.yaml` was the only CS track on disk, and its own `courseHints` name `cs_basic`,
+# `cs_honors` and `cs_joint` under `likelyTracks` — three tracks that did not exist. This file
+# and its two siblings are those three.
+#
+# Two deliberate departures from cs_mbb.yaml, which predates them:
+#
+#   - The CS core is split into the five components the department actually names (Programming
+#     1 & 2, Formal Reasoning, Systems, Computation and the World) plus the Advanced CS pool,
+#     rather than one group of nine. Nine-out-of-one-pool solves fine and tells a player
+#     nothing about *which* nine, and the sub-requirements are where the real choices sit.
+#   - Advanced CS slots are numbered. A pool must name at least as many entries as it needs, so
+#     a single shared `advanced_cs_course` entry standing for four courses understates the bill;
+#     four named slots report four.
+#
+# What is abstract and why: Harvard's advanced CS courses are a large rotating pool that content
+# does not carry, so they are slots rather than courses. Everything else here is a real
+# `courseCode` in `content/courses/`.
+id: cs_basic
+name: "Computer Science"
+field: cs
+honorsEligible: false
+thesisRequired: false
+declareBy:
+  year: 2
+  term: fall
+diploma: "Computer Science"
+
+requirements:
+  - id: math-prep
+    label: "Math prep"
+    kind: sequence
+    need: 1
+    sequence: [math1a, math1b]
+    min: 0
+    max: 2
+    notes:
+      - "Only if placement testing shows you need it."
+
+  - id: linear-algebra
+    label: "Linear algebra"
+    kind: set
+    need: 1
+    from:
+      - math21b
+      - math22a
+      - math23a
+      - math25a
+      - math55a
+      - am22a
+    notes:
+      - "21b/22a are the default routes."
+      - "23a/25a/55a are progressively more rigorous honors routes; any advanced linear algebra course counts."
+
+  - id: probability
+    label: "Probability"
+    kind: set
+    need: 1
+    from:
+      - stat110
+      - stat111
+      - math154
+      - am101
+    notes:
+      - "Stat 110 is the standard default. Any more advanced probability course qualifies."
+
+  - id: programming
+    label: "Programming 1 & 2"
+    kind: sequence
+    need: 2
+    sequence: [cs50, cs51]
+    notes:
+      - "The order is the requirement: CS 51 assumes CS 50."
+
+  - id: formal-reasoning
+    label: "Formal reasoning"
+    kind: set
+    need: 1
+    from: [cs20, cs1240]
+    notes:
+      - "CS 20 is the usual route; CS 124's proof load can serve instead for students who have it."
+
+  - id: systems
+    label: "Systems"
+    kind: course
+    need: 1
+    from: [cs61]
+
+  - id: computation-and-the-world
+    label: "Computation and the World"
+    kind: set
+    need: 1
+    from: [cs1200, cs1210, cs32]
+    notes:
+      - "The department's breadth slot — algorithms and their limits, computability, or computational thinking."
+
+  - id: advanced-cs
+    label: "Advanced CS"
+    kind: set
+    need: 4
+    from:
+      - advanced_cs_course_1
+      - advanced_cs_course_2
+      - advanced_cs_course_3
+      - advanced_cs_course_4
+    notes:
+      - "Four courses from the department's advanced pool, which content does not carry — these are slots, not courses."
+      - "The honors track wants five of these instead of four, and one of them to be Intermediate Algorithms (CS 124)."

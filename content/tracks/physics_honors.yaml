@@ -1,0 +1,73 @@
+# physics_honors.yaml — Physics, Honors Track (13-15 courses).
+#
+# The only Physics track in this batch, and it is the one most students take: the source notes that
+# Physics honors is "relatively unencumbered compared to other departments' honors programs" — no
+# thesis, no tutorial, no general examination. Which is why `thesisRequired` is false on a track
+# called Honors, and why there is no thesis group at all.
+#
+# THE OTHER PHYSICS TRACKS ARE DELIBERATELY ABSENT. The Basic Track's only published description is
+# that "core requirements are kept low to encourage interdisciplinary study" — no counts, no course
+# list, nothing a requirement group could be built from. Biophysics and Applied Physics are
+# described only as specialized and honors-only unless second in a joint concentration. A file of
+# guessed counts would be reported by the solver with exactly the same confidence as Chemistry's
+# enumerated twelve, so those three get nothing rather than something invented. Chemistry and
+# Physics is a separate concentration in the same department, not a track, and Astrophysics is a
+# fully separate concentration.
+#
+# ARITHMETIC, DECLARED: the source names four requirements (intro sequence, two math courses beyond
+# multivariable and linear algebra, advanced laboratory) against a published 13-15. The advanced
+# physics group is the remainder, inferred by subtraction to reach thirteen.
+id: physics_honors
+name: "Physics (Honors)"
+field: physics
+honorsEligible: true
+thesisRequired: false
+declareBy:
+  year: 2
+  term: fall
+diploma: "Physics"
+
+requirements:
+  - id: intro-sequence
+    label: "Introductory physics sequence"
+    kind: sequence
+    need: 3
+    sequence: [physics15a, physics15b, physics15c]
+    notes:
+      - "Physics 15a-c. Content carries the first two; 15c is a slot."
+      - "The department accepts other routes into the sequence (PS 12a/12b, APPHY 50A/B), but a sequence group cannot express alternatives to its own steps."
+
+  - id: math-foundation
+    label: "Multivariable calculus and linear algebra"
+    kind: set
+    need: 2
+    from: [math21a, math21b, am22a, am22b]
+
+  - id: math-beyond
+    label: "Math beyond multivariable and linear algebra"
+    kind: set
+    need: 2
+    from: [math_beyond_1, math_beyond_2]
+    notes:
+      - "Two courses past the foundation — the department's phrasing, which rules out counting 21a/21b twice."
+      - "Ordinarily Math 23/25/55 or applied methods courses like AM 105/108, none of which content carries at that level."
+
+  - id: advanced-laboratory
+    label: "Advanced laboratory"
+    kind: course
+    need: 1
+    from: [physics_advanced_laboratory]
+
+  - id: advanced-physics
+    label: "Advanced physics courses"
+    kind: set
+    need: 5
+    from:
+      - advanced_physics_1
+      - advanced_physics_2
+      - advanced_physics_3
+      - advanced_physics_4
+      - advanced_physics_5
+    notes:
+      - "Five, inferred by subtraction from the published 13-15 rather than named in the source."
+      - "No thesis, no tutorial, and no general examination on this track — which is why most Physics concentrators take it."

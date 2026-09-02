@@ -1,0 +1,55 @@
+# english_joint.yaml — English as a field in a Joint Concentration (6-8 courses, English side).
+#
+# The English half only. Which half it is matters: the source says English may be either the
+# primary or the allied field, and unlike Philosophy — which publishes two different course counts
+# for the two positions — English publishes one range for both. So this is one file, and the
+# primary/allied distinction is a note.
+#
+# Seven is authored as the middle of 6-8: three Common Ground courses, the sophomore tutorial, two
+# electives, and the thesis. The department's own floor of six is reachable by dropping an elective
+# and its ceiling of eight by adding one, so a player at either end is inside the range.
+#
+# The GPA floor here is 3.60 or *higher*, which reads oddly next to the Honors Program's "3.65 or
+# below" — the two numbers are doing different jobs in the source, and both are quoted verbatim
+# rather than reconciled.
+id: english_joint
+name: "English (Joint Concentration)"
+field: english
+honorsEligible: true
+thesisRequired: true
+declareBy:
+  year: 2
+  term: fall
+diploma: "Joint Concentration — paired field varies by student"
+
+requirements:
+  - id: common-ground
+    label: "Common Ground"
+    kind: set
+    need: 3
+    from: [english10, english20, english_common_ground_3]
+    notes:
+      - "All three, on every English track."
+
+  - id: sophomore-tutorial
+    label: "Sophomore tutorial"
+    kind: course
+    need: 1
+    from: [english97]
+
+  - id: electives
+    label: "English electives"
+    kind: set
+    need: 2
+    from: [english_elective_1, english_elective_2, english_elective_3]
+    notes:
+      - "Two of the three slots, which is what puts this file at seven courses inside the published 6-8."
+
+  - id: thesis
+    label: "Senior thesis"
+    kind: course
+    need: 1
+    from: [english_joint_thesis]
+    notes:
+      - "Required, with English as either the primary or the allied field."
+      - "Admission requires a concentration GPA of 3.60 or higher. The other half of the bill belongs to the paired department and is not modelled here."

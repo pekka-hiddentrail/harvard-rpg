@@ -353,14 +353,65 @@ describe('the tracks, against the courses that actually exist', () => {
   const pool = (g: { kind: string; from: string[]; oneOf: string[]; anyOf: string[]; sequence: string[] }) =>
     g.kind === 'sequence' ? g.sequence : [...g.from, ...g.oneOf, ...g.anyOf]
 
-  it('loads all seven', () => {
+  it('loads all forty', () => {
     // Nothing read `content/tracks/` until the solver did, so none of these files had ever
-    // been schema-validated. Two of the seven did not parse.
-    assert.equal(content.tracks.length, 7)
-    assert.deepEqual(
-      content.tracks.map((t) => t.id).sort(),
-      ['cs_mbb', 'econ_basic', 'econ_honors_advanced', 'econ_honors_thesis', 'math', 'math_joint_allied', 'math_joint_primary'],
-    )
+    // been schema-validated. Two of the original seven did not parse.
+    //
+    // The list is spelled out rather than counted so that adding a track is a deliberate edit
+    // here too. That is the whole job of this test: `authoring/harvard_concentrations_requirements_clean.md`
+    // documents 22 concentrations, and five of them — East Asian Studies, Linguistics, HAA,
+    // Physics *basic*, and Statistics' three branch tracks — publish no requirement structure to
+    // build a file from. Their absence is a decision, and this list is where it is recorded.
+    assert.equal(content.tracks.length, 40)
+    assert.deepEqual(content.tracks.map((t) => t.id).sort(), [
+      'applied_math',
+      'chem_basic', 'chem_honors',
+      'classics_civ', 'classics_joint_ancient_history', 'classics_langlit',
+      'complit',
+      'cs_basic', 'cs_honors', 'cs_joint', 'cs_mbb',
+      'econ_basic', 'econ_honors_advanced', 'econ_honors_thesis',
+      'english_elective', 'english_honors', 'english_joint',
+      'engsci',
+      'gov_honors', 'gov_standard',
+      'hbbe_basic', 'hbbe_mbb',
+      'hdrb',
+      'math', 'math_joint_allied', 'math_joint_primary',
+      'mcb',
+      'phil_basic', 'phil_honors_nonthesis', 'phil_honors_thesis',
+      'phil_joint_allied', 'phil_joint_primary', 'phil_mbb',
+      'physics_honors',
+      'psych_cnep', 'psych_general', 'psych_mbb',
+      'sociology',
+      'stat_general',
+      'wgs',
+    ])
+  })
+
+  it('nests every `counts` child inside its parent pool, which is what makes the solver exact', () => {
+    // `counts` says "those are some of mine, not extra", and the solver prices a parent and its
+    // children at `max(parent deficit, sum of child deficits)`. That arithmetic is only right if
+    // the children really are drawn from the parent's pool — a child naming a course its parent
+    // does not would be satisfiable without moving the parent an inch, and the `max` would
+    // swallow the difference silently.
+    //
+    // Three files rely on this: `math.yaml` (breadth inside the eight math courses), both HBBE
+    // tracks (the Behavior/Evolution/Anatomy distribution inside the five HEB courses), and both
+    // Classics tracks (the two advanced language courses inside the six). The loader checks the
+    // *shape* of `counts`; this checks the containment the arithmetic actually depends on.
+    for (const track of content.tracks) {
+      const byId = new Map(track.requirements.map((g) => [g.id, g]))
+      for (const parent of track.requirements) {
+        for (const childId of parent.counts) {
+          const child = byId.get(childId)!
+          const outside = pool(child).filter((c) => !pool(parent).includes(c))
+          assert.deepEqual(
+            outside,
+            [],
+            `${track.id}: \`${childId}\` counts toward \`${parent.id}\` but names ${outside.join(', ')}, which ${parent.id} does not`,
+          )
+        }
+      }
+    }
   })
 
   it('leaves only deliverables abstract in the three math tracks', () => {
@@ -408,7 +459,7 @@ describe('the tracks, against the courses that actually exist', () => {
       content.courses,
       content.rules,
     )
-    assert.equal(plan.length, 7)
+    assert.equal(plan.length, 40)
     const mbb = plan.find((t) => t.trackId === 'cs_mbb')!
     // Math 21b is the linear algebra requirement; CS 50 is one of the eight CS core courses.
     assert.deepEqual(mbb.counted.sort(), ['cs50', 'math21b'])

@@ -1,0 +1,94 @@
+# cs_joint.yaml — Computer Science as a field in a Joint Concentration (10-13 courses, CS side).
+#
+# Eight CS core courses instead of nine, same math prep, and a thesis that is mandatory rather
+# than optional: a joint thesis must combine both fields and is read by both departments, which
+# is the constraint no file here can express. What the allied department wants on its own side is
+# out of scope, and that is exactly why GAME_DESIGN §9.1 calls a joint concentration the hardest
+# road — the solver sees half the bill and says so (see math_joint_primary.yaml).
+#
+# The eight are the five named components plus three advanced courses rather than four.
+id: cs_joint
+name: "Computer Science (Joint Concentration)"
+field: cs
+honorsEligible: true
+thesisRequired: true
+declareBy:
+  year: 2
+  term: fall
+diploma: "Joint Concentration — paired field varies by student"
+
+requirements:
+  - id: math-prep
+    label: "Math prep"
+    kind: sequence
+    need: 1
+    sequence: [math1a, math1b]
+    min: 0
+    max: 2
+    notes:
+      - "Same as the Basic track."
+
+  - id: linear-algebra
+    label: "Linear algebra"
+    kind: set
+    need: 1
+    from:
+      - math21b
+      - math22a
+      - math23a
+      - math25a
+      - math55a
+      - am22a
+
+  - id: probability
+    label: "Probability"
+    kind: set
+    need: 1
+    from:
+      - stat110
+      - stat111
+      - math154
+      - am101
+
+  - id: programming
+    label: "Programming 1 & 2"
+    kind: sequence
+    need: 2
+    sequence: [cs50, cs51]
+
+  - id: formal-reasoning
+    label: "Formal reasoning"
+    kind: set
+    need: 1
+    from: [cs20, cs1240]
+
+  - id: systems
+    label: "Systems"
+    kind: course
+    need: 1
+    from: [cs61]
+
+  - id: computation-and-the-world
+    label: "Computation and the World"
+    kind: set
+    need: 1
+    from: [cs1200, cs1210, cs32]
+
+  - id: advanced-cs
+    label: "Advanced CS"
+    kind: set
+    need: 3
+    from:
+      - advanced_cs_course_1
+      - advanced_cs_course_2
+      - advanced_cs_course_3
+    notes:
+      - "Three rather than Basic's four — the joint side is lighter by one advanced course."
+
+  - id: thesis
+    label: "Joint senior thesis"
+    kind: course
+    need: 1
+    from: [cs_joint_thesis]
+    notes:
+      - "Not a course. Mandatory: it must combine both fields and is read by both departments."

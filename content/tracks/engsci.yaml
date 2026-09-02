@@ -1,0 +1,65 @@
+# engsci.yaml — Engineering Sciences, First-Year Track.
+#
+# The source is unusually candid: there are no separate named sub-tracks, and students specialize
+# through electives after the first year rather than through a branded track system. So this file
+# is deliberately short. It models the first year the department actually prescribes and stops
+# there, rather than inventing an "advanced electives, need 6" group to make the number look like
+# a full concentration. A player declaring this track should see a first year they can actually
+# shop for, and reasons rather than slots.
+#
+# That is also why there is no elective group at all: the specialization is real, but the source
+# gives no count, and a slot count guessed here would be reported by the solver with the same
+# confidence as Chemistry's enumerated twelve.
+id: engsci
+name: "Engineering Sciences"
+field: engsci
+honorsEligible: true
+thesisRequired: false
+declareBy:
+  year: 2
+  term: fall
+diploma: "Engineering Sciences"
+
+requirements:
+  - id: engineering-core
+    label: "Engineering Sciences core"
+    kind: set
+    need: 2
+    from: [engsci51, engsci53]
+    notes:
+      - "Both: Eng-Sci 51 and Eng-Sci 53 (Quantitative Physiology as a Basis for Engineering)."
+
+  - id: life-sciences
+    label: "Life sciences"
+    kind: course
+    need: 1
+    from: [ls1a]
+    notes:
+      - "LS 1A, or LPS A, which content does not carry."
+
+  - id: math-prep
+    label: "Math prep"
+    kind: sequence
+    need: 1
+    sequence: [mathma, mathmb, math1a, math1b]
+    min: 0
+    max: 4
+    notes:
+      - "Per placement: Ma, Mb, 1a, 1b — as far up the ladder as you start."
+
+  - id: math-multivariable
+    label: "Multivariable calculus and linear algebra"
+    kind: set
+    need: 2
+    from: [math21a, math21b]
+    notes:
+      - "Placement decides whether you reach 21a/21b through the M/1 sequence above or start here."
+
+  - id: physics
+    label: "Physics"
+    kind: set
+    need: 1
+    from: [apphy50a, apphy50b, ps2, ps3, ps12a, ps12b, physics15a, physics15b]
+    notes:
+      - "One of APPHY 50A/B, Physical Sciences 2/3, Physical Sciences 12a/12b, or Physics 15a/15b — four routes, any of which the department accepts."
+      - "After the first year, specialization happens through electives the source does not enumerate, so this file stops here rather than guessing at them."

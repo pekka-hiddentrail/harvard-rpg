@@ -1,0 +1,79 @@
+# phil_joint_primary.yaml — Philosophy as the Primary field in a Joint Concentration
+# (8 Philosophy courses, 36 credits).
+#
+# Philosophy is one of the few departments in this catalogue that publishes *different* counts
+# depending on which side of a joint concentration it is on: eight courses as primary, six as
+# allied. So there are two files, and this is the heavier one. Both require a thesis.
+#
+# One course in each of the four areas, plus four more. No tutorials appear in the source's
+# enumeration for either joint track, which is a real difference from the primary tracks and is
+# noted rather than quietly patched with a tutorial group.
+#
+# The thesis must relate to both fields and is examined orally by two readers, one from each
+# department. The other department's requirements are not modelled here — the solver sees the
+# Philosophy half of the bill and says so.
+id: phil_joint_primary
+name: "Philosophy (Joint Concentration, Philosophy primary)"
+field: philosophy
+honorsEligible: true
+thesisRequired: true
+declareBy:
+  year: 2
+  term: fall
+diploma: "Joint Concentration — Philosophy and a paired field"
+
+requirements:
+  - id: area-logic
+    label: "Area: Logic"
+    kind: course
+    need: 1
+    from: [phil_logic_course]
+
+  - id: area-contemporary-mande
+    label: "Area: Contemporary Metaphysics & Epistemology"
+    kind: set
+    need: 1
+    from: [phil3, phil_contemporary_mande]
+
+  - id: area-ethics
+    label: "Area: Ethics, Political Philosophy, Aesthetics"
+    kind: set
+    need: 1
+    from: [phil11, phil18, phil27, phil34]
+
+  - id: area-history
+    label: "Area: History of Philosophy"
+    kind: set
+    need: 1
+    from: [phil6, phil8]
+    notes:
+      - "One course in each of all four areas — the allied-field version drops to three of the four."
+
+  - id: additional-philosophy
+    label: "Additional philosophy courses"
+    kind: set
+    need: 4
+    from:
+      - phil3
+      - phil6
+      - phil8
+      - phil11
+      - phil18
+      - phil27
+      - phil34
+      - phil_logic_course
+      - phil_contemporary_mande
+      - phil_elective_1
+      - phil_elective_2
+      - phil_elective_3
+      - phil_elective_4
+    notes:
+      - "Four more, area or not. The source lists no tutorial requirement for either joint track, unlike every primary Philosophy track."
+
+  - id: thesis
+    label: "Senior thesis"
+    kind: course
+    need: 1
+    from: [phil_joint_thesis]
+    notes:
+      - "Not a course. Must relate to both fields, with an oral examination by two readers — one from each department."

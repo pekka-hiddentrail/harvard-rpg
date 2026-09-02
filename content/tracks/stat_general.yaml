@@ -1,0 +1,71 @@
+# stat_general.yaml — Statistics, General Track.
+#
+# THE OTHER THREE STATISTICS TRACKS ARE DELIBERATELY ABSENT. The source names four — General, Data
+# Science, Quantitative Finance (which some catalogues call Machine Learning, terminology the source
+# itself flags as unstable), and Bioinformatics & Computational Biology — but publishes no
+# requirement structure for any of them beyond the shared core. All four lead to the same degree and
+# the transcript does not distinguish them, so a player loses nothing real by the three missing
+# files, and would lose something by three files of invented counts.
+#
+# ARITHMETIC, DECLARED — and this one needs saying loudly. The source publishes no total course
+# count for Statistics at all. What is real below is the shared core (multivariable calculus and
+# linear algebra to at least Math 19a/b, most commonly 21a/21b) and the three courses named as
+# needing letter grades: Stat 110, 111 and 139. The four elective slots are an authored allowance,
+# not a departmental figure. Nothing in the solver's output will distinguish them from Chemistry's
+# enumerated twelve, so the distinction has to live here.
+#
+# The thesis is required for honors eligibility and for joint concentrations, and roughly half of
+# graduating concentrators write one — a note, since neither condition is coursework.
+id: stat_general
+name: "Statistics (General Track)"
+field: statistics
+honorsEligible: true
+thesisRequired: false
+declareBy:
+  year: 2
+  term: fall
+diploma: "Statistics"
+
+requirements:
+  - id: math-core
+    label: "Multivariable calculus and linear algebra"
+    kind: set
+    need: 2
+    from: [math21a, math21b, math22a, math22b, am22a, am22b]
+    notes:
+      - "At least Math 19a/b, which content does not carry; 21a/21b is the common route and the floor here."
+      - "Shared by all four Statistics tracks before they branch."
+
+  - id: probability-and-inference
+    label: "Probability and theoretical statistics"
+    kind: sequence
+    need: 2
+    sequence: [stat110, stat111]
+    notes:
+      - "Stat 110 then Stat 111. Both must be letter-graded — the department says so explicitly."
+
+  - id: linear-models
+    label: "Linear models"
+    kind: course
+    need: 1
+    from: [stat139]
+    notes:
+      - "Stat 139, letter-graded like 110 and 111."
+
+  - id: statistics-electives
+    label: "Statistics electives"
+    kind: set
+    need: 4
+    from: [stat_elective_1, stat_elective_2, stat_elective_3, stat_elective_4]
+    notes:
+      - "AUTHORED, NOT PUBLISHED: the source gives no total course count for Statistics, so these four are an allowance rather than a departmental figure."
+      - "On the other three tracks these four would be the branch — Data Science, Quantitative Finance, or Bioinformatics & Computational Biology. All four tracks lead to the same degree and the transcript does not distinguish them."
+
+  - id: thesis
+    label: "Senior thesis"
+    kind: course
+    need: 1
+    from: [stat_senior_thesis]
+    optional: true
+    notes:
+      - "Not a course. Required for honors eligibility and for joint concentrations; roughly half of graduating concentrators write one."
