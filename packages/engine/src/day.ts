@@ -142,10 +142,23 @@ export function validatePlan(
       say('error', 'wrong_band', `${a.name} belongs in ${where}`, p.start)
     }
 
-    if (a.targets === 'subject') {
+    /**
+     * A course target is checked for *shape* here and for *membership* in `coursework.ts`,
+     * which is the layer that has the card. This file deliberately never learns what a course
+     * is: `validatePlan` is called with activities and rules and nothing else, and threading
+     * the catalogue through it to reject one typo would put the syllabi inside the day
+     * resolver — where §4.4's two ledgers do not live and where every existing caller would
+     * have to grow an argument. So `study ▸ psy15` with no Psych 15 on the card passes here
+     * and is refused, by name, one layer up.
+     */
+    const wantsSubject = a.targets === 'subject' || a.targets === 'subjectOrCourse'
+    const wantsCourse = a.targets === 'course' || a.targets === 'subjectOrCourse'
+
+    if (wantsSubject || wantsCourse) {
+      const noun = wantsCourse ? (wantsSubject ? 'a subject or a course' : 'a course') : 'a subject'
       if (p.target === undefined) {
-        say('error', 'no_target', `${a.name} has to be aimed at a subject`, p.start)
-      } else if (!(SUBJECT_TAGS as readonly string[]).includes(p.target)) {
+        say('error', 'no_target', `${a.name} has to be aimed at ${noun}`, p.start)
+      } else if (!wantsCourse && !(SUBJECT_TAGS as readonly string[]).includes(p.target)) {
         say('error', 'bad_target', `\`${p.target}\` is not a subject tag`, p.start)
       }
     } else if (p.target !== undefined) {

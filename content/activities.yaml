@@ -108,7 +108,7 @@ activities:
     blurb: Problem sets, essays, the actual work. Costs a half-band to get into, and pays
       the cheapest hour in the game once you are already in it.
     kind: study
-    targets: subject
+    targets: subjectOrCourse
     minHalves: 1
     maxHalves: 6
     # 0.5 band banks nothing · 1 band = 1.0 h · 1.5 bands = 1.7 h · then it flattens.
@@ -120,11 +120,32 @@ activities:
     blurb: Assigned reading, notes already open. Usable in a leftover half at full rate,
       and worth less per band than real work.
     kind: study
-    targets: subject
+    targets: subjectOrCourse
     minHalves: 1
     maxHalves: 6
     curve: [0.4, 0.8, 1.2, 1.5, 1.8, 2.0]
     perBand: { energy: -0.5, stress: 1 }
+
+  # Attending is an activity, not an absence of one (§4.3). A lecture occupies its bands, costs
+  # energy, and pushes the meal clock exactly like anything else — which is the point: skipping
+  # a Wednesday morning to sleep is a trade the day has to be able to price, and it cannot if
+  # class time sits outside the grid. The server pre-places these from the term calendar; the
+  # player skips by deleting one or scheduling over it.
+  #
+  # The curve is flat and linear because there is no spin-up in a lecture — you are either in
+  # the room or you are not, and half a lecture is half a lecture. The ×1.25 that makes contact
+  # worth more than solo study is `ATTENDANCE_SUPPORT_MULTIPLIER`, applied where the hours are
+  # banked rather than baked in here, so the two can be retuned independently.
+  - id: attend_class
+    name: Class
+    blurb: Lecture, section, lab or workshop. Guaranteed contact with the material, at
+      whatever hour the registrar chose.
+    kind: class
+    targets: course
+    minHalves: 1
+    maxHalves: 8
+    curve: [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
+    perBand: { energy: -0.75, stress: 0.5 }
 
   # ── everything else ──────────────────────────────────────────────────────────────────
   - id: gym

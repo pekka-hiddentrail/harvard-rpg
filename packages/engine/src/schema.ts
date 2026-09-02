@@ -656,11 +656,19 @@ export type CreationBlock = z.infer<typeof CreationBlock>
 // ── activities: what you can put in a band (§3.1) ────────────────────────────────────
 
 /**
- * What an activity is *aimed at*. Tier 1 aims study at a subject tag because there are no
- * courses yet; Tier 2 replaces `'subject'` with assessments and assignments, and the
- * `target` field on a placement stops changing shape after that.
+ * What an activity is *aimed at*. Tier 1 had only `'subject'`, because there were no courses
+ * to aim at; Tier 2 adds `'course'` and keeps both, since they are not two spellings of one
+ * thing. A band aimed at a course banks into that course's next unfinished item *and* splits
+ * across every tag it demands (§4.4 step 1, `splitHoursByDemand`); a band aimed at a bare
+ * subject banks only the tag, and at half rate when nothing on the card demands it
+ * (`ISOLATED_STUDY_DISCOUNT`). Teaching yourself Greek nobody is examining you on is a real
+ * and deliberately worse use of an afternoon, so the distinction has to survive in the data.
+ *
+ * `'subjectOrCourse'` is study and reading, which legitimately do either. The four-way enum
+ * beats an array of allowed kinds: three activities use it, and `validatePlan` gets to stay a
+ * switch rather than a set-membership test.
  */
-export const ActivityTargets = z.enum(['none', 'subject'])
+export const ActivityTargets = z.enum(['none', 'subject', 'course', 'subjectOrCourse'])
 export type ActivityTargets = z.infer<typeof ActivityTargets>
 
 export const Activity = z
@@ -731,7 +739,13 @@ export const Placement = z
     start: z.number().int().min(0),
     halves: z.number().int().positive(),
     activity: z.string().min(1),
-    /** A subject tag at Tier 1 (see `ActivityTargets`). */
+    /**
+     * A subject tag or an enrolled course code, per the activity's `targets`. A bare code and
+     * never `course.item`: the player aims at the course and the engine banks into whatever
+     * that course's nearest unfinished item is (§4.4 step 1). Which item that was is reported
+     * back afterwards rather than chosen up front — "work on what's next" is both how a term
+     * actually goes and one fewer decision per band.
+     */
     target: z.string().optional(),
     withPeople: z.array(z.string()).default([]),
   })

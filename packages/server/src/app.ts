@@ -14,6 +14,7 @@ import {
   STRATEGIES,
   Save,
   bandOf,
+  checkCourseTargets,
   countsToward,
   effectiveDemand,
   effectiveOfficeHourDemand,
@@ -34,8 +35,10 @@ import {
   termPlan,
   toCreationBlock,
   validateBuild,
+  type AcademicSetup,
   type Activity,
   type EnrolledCourse,
+  type GameState,
   type Levels,
   type Placement,
 } from '@harvard/engine'
@@ -193,7 +196,7 @@ export function buildApp({ content, dbFile }: ServerOptions): {
       actionCount: save.actions.length,
       // Replayed, never stored (ARCHITECTURE §3). The character sheet leads into the day.
       state: (() => {
-        const s = replay(save.actions, content.activityIndex, content.rules.day)
+        const s = fold(save)
         return {
           day: s.day,
           date: s.date,
@@ -296,6 +299,40 @@ export function buildApp({ content, dbFile }: ServerOptions): {
   const PreviewBody = z.object({ placements: PlanDay.shape.placements }).strict()
 
   /**
+   * `replay`, with the academic context always attached (§4.4). Every fold in this file goes
+   * through here for one reason: `replay`'s `academic` parameter is optional, so forgetting it
+   * does not fail — it silently produces an empty ledger, which is indistinguishable from a
+   * term in which nothing was studied. One helper means there is one place to forget.
+   *
+   * The seed goes in and never comes out. It is what the draw hashes (§3.3), and no route
+   * serialises `GameState` wholesale — every response picks its fields by hand, which is the
+   * habit the leak test will grow teeth around.
+   */
+  function fold(save: Save): GameState {
+    const levels = revalidate(save)
+    const academic: AcademicSetup | undefined = shoppingTerm
+      ? {
+          saveSeed: save.seed,
+          term: shoppingTerm,
+          syllabi: courseByCode,
+          // A build that no longer validates against current content has no derived levels; the
+          // ledger then starts from zero rather than refusing to fold. The sheet already
+          // reports that case as `levels: null`, so the drift is visible where it belongs.
+          ...(levels.ok ? { startingLevels: levels.levels } : {}),
+        }
+      : undefined
+    return replay(save.actions, content.activityIndex, content.rules.day, academic)
+  }
+
+  /**
+   * The course codes a study band may legitimately name today. Empty before shopping week has
+   * produced a card, which is the right answer rather than a missing one: it means every course
+   * target is refused by name until there is something to aim at.
+   */
+  const cardCodes = (state: GameState): string[] =>
+    shoppingTerm ? enrolledIn(state, shoppingTerm.id).map((e) => e.courseCode) : []
+
+  /**
    * Resolve a candidate day without committing it. This is the day planner's whole loop:
    * the client holds a `Placement[]`, posts it on every edit, and renders what comes back.
    * It computes nothing itself — not a duration, not an hour, not a conflict.
@@ -306,13 +343,16 @@ export function buildApp({ content, dbFile }: ServerOptions): {
     const parsed = PreviewBody.safeParse(req.body)
     if (!parsed.success) return reply.code(400).send({ problems: flatten(parsed.error) })
 
-    const state = replay(found.save.actions, content.activityIndex, content.rules.day)
+    const state = fold(found.save)
     const result = resolveDay(
       { date: state.date, placements: parsed.data.placements },
       content.activityIndex,
       content.rules.day,
       state.body,
     )
+    // A course target is checked here rather than in `resolveDay`, which has no catalogue.
+    // Preview reports them alongside the day's own problems; `resolve` refuses on them.
+    result.problems.push(...checkCourseTargets(result.placements, content.activityIndex, cardCodes(state)))
     return dayView(state.day, result, parsed.data.placements)
   })
 
@@ -323,7 +363,7 @@ export function buildApp({ content, dbFile }: ServerOptions): {
     const parsed = PreviewBody.safeParse(req.body)
     if (!parsed.success) return reply.code(400).send({ problems: flatten(parsed.error) })
 
-    const before = replay(found.save.actions, content.activityIndex, content.rules.day)
+    const before = fold(found.save)
     const action = PlanDay.parse({
       type: 'plan_day',
       date: before.date,
@@ -331,6 +371,7 @@ export function buildApp({ content, dbFile }: ServerOptions): {
     })
 
     const dry = resolveDay(action, content.activityIndex, content.rules.day, before.body)
+    dry.problems.push(...checkCourseTargets(dry.placements, content.activityIndex, cardCodes(before)))
     if (hasErrors(dry.problems)) {
       return reply.code(422).send({ problems: dry.problems.filter((p) => p.severity === 'error') })
     }
@@ -338,7 +379,7 @@ export function buildApp({ content, dbFile }: ServerOptions): {
     const save = Save.parse({ ...found.save, actions: [...found.save.actions, action] })
     db.prepare('UPDATE saves SET json = ? WHERE id = ?').run(JSON.stringify(save), save.id)
 
-    const after = replay(save.actions, content.activityIndex, content.rules.day)
+    const after = fold(save)
     return {
       day: dayView(before.day, dry, parsed.data.placements),
       log: after.log,
@@ -387,7 +428,7 @@ export function buildApp({ content, dbFile }: ServerOptions): {
     const levels = revalidate(found.save)
     if (!levels.ok) return reply.code(409).send({ problems: levels.problems })
 
-    const state = replay(found.save.actions, content.activityIndex, content.rules.day)
+    const state = fold(found.save)
     const term = shoppingTerm?.id ?? null
     const enrolled = term === null ? [] : enrolledIn(state, term)
     const priced = priceCourses(found.save) ?? []
@@ -523,7 +564,7 @@ export function buildApp({ content, dbFile }: ServerOptions): {
     const levels = revalidate(found.save)
     if (!levels.ok) return reply.code(409).send({ problems: levels.problems })
 
-    const state = replay(found.save.actions, content.activityIndex, content.rules.day)
+    const state = fold(found.save)
     const enrolled: EnrolledCourse[] = []
     for (const e of enrolledIn(state, shoppingTerm.id)) {
       const syllabus = courseByCode.get(e.courseCode)
@@ -569,7 +610,7 @@ export function buildApp({ content, dbFile }: ServerOptions): {
     const levels = revalidate(found.save)
     if (!levels.ok) return reply.code(409).send({ problems: levels.problems })
 
-    const state = replay(found.save.actions, content.activityIndex, content.rules.day)
+    const state = fold(found.save)
     const taken = [...new Set(state.enrolled.map((e) => e.courseCode))]
     // One term has begun as soon as there is a save: this is freshman fall.
     const termsUsed = Math.max(1, new Set(state.enrolled.map((e) => e.term)).size)
@@ -597,7 +638,7 @@ export function buildApp({ content, dbFile }: ServerOptions): {
     const parsed = DropBody.safeParse(req.body)
     if (!parsed.success) return reply.code(400).send({ problems: flatten(parsed.error) })
 
-    const before = replay(found.save.actions, content.activityIndex, content.rules.day)
+    const before = fold(found.save)
     // Replay is idempotent about this, so the fold would survive it — but a drop for a course
     // that was never filed is a client that has lost track of the card, and swallowing it
     // would append a no-op action to a log that is supposed to be a history of what happened.
@@ -621,7 +662,7 @@ export function buildApp({ content, dbFile }: ServerOptions): {
     const next = Save.parse({ ...save, actions: [...save.actions, action] })
     db.prepare('UPDATE saves SET json = ? WHERE id = ?').run(JSON.stringify(next), next.id)
 
-    const after = replay(next.actions, content.activityIndex, content.rules.day)
+    const after = fold(next)
     const enrolled = enrolledIn(after, term)
     const priced = enrolled
       .map((e) => courseByCode.get(e.courseCode))

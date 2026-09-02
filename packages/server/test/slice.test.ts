@@ -398,6 +398,55 @@ describe('POST /api/game/:id/day/resolve', () => {
   })
 })
 
+describe('a band aimed at a course (§4.4)', () => {
+  const enrol = async (id: string, courseCode: string) =>
+    await app.inject({ method: 'POST', url: `/api/game/${id}/shopping/enrol`, payload: { courseCode } })
+  const aimed = (target: string) => [
+    { start: 4, halves: 4, activity: 'study', target, withPeople: [] },
+    { start: 20, halves: 2, activity: 'sleep', withPeople: [] },
+  ]
+  const preview = async (id: string, target: string) =>
+    await app.inject({ method: 'POST', url: `/api/game/${id}/day/preview`, payload: { placements: aimed(target) } })
+  const resolve = async (id: string, target: string) =>
+    await app.inject({ method: 'POST', url: `/api/game/${id}/day/resolve`, payload: { placements: aimed(target) } })
+
+  it('refuses a course you are not in, rather than dropping the afternoon silently', async () => {
+    // The one thing `validatePlan` cannot decide: it has no catalogue, so `chem17` and a typo
+    // look identical to it. Without the membership check here the day would commit and the
+    // ledger would quietly bank the hours nowhere — four hours that counted toward nothing.
+    const id = await newGame()
+    const res = await resolve(id, 'chem17')
+    assert.equal(res.statusCode, 422)
+    assert.ok(res.json().problems.some((p: { code: string }) => p.code === 'not_enrolled'))
+    assert.equal((await app.inject({ method: 'GET', url: `/api/game/${id}` })).json().actionCount, 0)
+  })
+
+  it('says so on the preview too, before the player has committed anything', async () => {
+    const id = await newGame()
+    const res = await preview(id, 'chem17')
+    assert.equal(res.statusCode, 200, 'a preview always answers; it just answers "no"')
+    assert.equal(res.json().ok, false)
+    assert.ok(res.json().problems.some((p: { code: string }) => p.code === 'not_enrolled'))
+  })
+
+  it('accepts the same day once the course is on the card', async () => {
+    const id = await newGame()
+    assert.equal((await enrol(id, 'chem17')).statusCode, 200)
+    assert.equal((await preview(id, 'chem17')).json().ok, true)
+    assert.equal((await resolve(id, 'chem17')).statusCode, 200)
+  })
+
+  it('still refuses a typo that is neither a subject nor a course', async () => {
+    const id = await newGame()
+    assert.equal((await resolve(id, 'basketry')).statusCode, 422)
+  })
+
+  it('leaves a plain subject band alone', async () => {
+    const id = await newGame()
+    assert.equal((await resolve(id, 'math')).statusCode, 200)
+  })
+})
+
 describe('the day routes leak nothing', () => {
   it('never returns the seed', async () => {
     const id = await newGame()

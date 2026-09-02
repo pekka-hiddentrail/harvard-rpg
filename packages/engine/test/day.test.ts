@@ -7,6 +7,7 @@ import {
   HALF_COUNT,
   NIGHT_BAND,
   bandOf,
+  courseGrade,
   enrolledIn,
   firstHalfOf,
   hasErrors,
@@ -17,10 +18,13 @@ import {
   resolveDay,
   startingBody,
   validatePlan,
+  zeroLevels,
   type Action,
   type Body,
   type DayProblem,
   type Placement,
+  type Syllabus,
+  type Term,
 } from '@harvard/engine'
 
 /**
@@ -62,6 +66,27 @@ const FIXTURES = [
     minHalves: 1,
     maxHalves: 4,
     curve: [0.4, 0.8, 1.2, 1.5],
+  }),
+  // The two shapes a course-aware activity can take. `study` above stays subject-only on
+  // purpose, so the `bad_target` assertion below keeps testing the thing it was written for:
+  // for an activity that cannot mean a course, a non-tag target is decidably a typo.
+  act({
+    id: 'attend_class',
+    name: 'Class',
+    kind: 'class',
+    targets: 'course',
+    minHalves: 1,
+    maxHalves: 8,
+    curve: [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],
+  }),
+  act({
+    id: 'revise',
+    name: 'Revision',
+    kind: 'study',
+    targets: 'subjectOrCourse',
+    minHalves: 1,
+    maxHalves: 6,
+    curve: [0.0, 1.0, 1.7, 2.3, 2.8, 3.2],
   }),
   act({ id: 'meal', name: 'Meal', kind: 'meal', minHalves: 2, maxHalves: 2, food: 'meal' }),
   act({ id: 'bite', name: 'Snack', kind: 'snack', minHalves: 1, maxHalves: 1, food: 'snack' }),
@@ -214,6 +239,18 @@ describe('validatePlan', () => {
     assert.ok(only([p(4, 2, 'study')]).includes('no_target'))
     assert.ok(only([p(4, 2, 'study', 'basketry')]).includes('bad_target'))
     assert.ok(only([p(4, 2, 'idle', 'math')]).includes('unwanted_target'))
+  })
+
+  it('takes a course code on trust, because it has no catalogue to check it against', () => {
+    // The line this file will not cross: `validatePlan` knows the *shape* of a target and
+    // nothing about the world. `cs50` and `basketry` are indistinguishable to it once the
+    // activity admits course codes, so both pass here and membership is `checkCourseTargets`'s
+    // question — asked by the routes, before the action is ever appended.
+    assert.equal(hasErrors(validatePlan([p(4, 2, 'attend_class', 'cs50')], ACTS)), false)
+    assert.equal(hasErrors(validatePlan([p(4, 2, 'revise', 'cs50')], ACTS)), false)
+    assert.equal(hasErrors(validatePlan([p(4, 2, 'revise', 'math')], ACTS)), false, 'either noun')
+    assert.ok(only([p(4, 2, 'attend_class')]).includes('no_target'))
+    assert.ok(only([p(4, 2, 'revise')]).includes('no_target'))
   })
 
   it('refuses anything after you went to bed', () => {
@@ -572,6 +609,109 @@ describe('replay: enrolment (§4.6)', () => {
     assert.equal(s.day, 2, 'enrolling is not a day and does not advance the clock')
     assert.equal(s.log.length, 1)
     assert.deepEqual(run(actions), s)
+  })
+})
+
+describe('replay: the academic ledger (§4.4)', () => {
+  // `coursework.test.ts` tests the fold in isolation. What is under test here is the *seam*:
+  // that a committed day reaches the ledger at all, that only enrolled courses are folded, and
+  // that adding the academic context changes nothing about the day it was already resolving.
+  const term: Term = { id: 'fall2027', firstDay: '2027-08-30', lastDay: '2027-12-10', holidays: [] }
+  const syllabus: Syllabus = {
+    id: '050',
+    courseCode: 'cs50',
+    title: 'Introduction to Computer Science',
+    demand: 7,
+    demands: { code: 2 },
+    officeHours: [],
+    sessions: [{ n: 1, topic: 'x' }],
+    meetings: [
+      { type: 'lecture', days: ['Mon', 'Wed'], time: '09:00-10:30', size: 850, attendance: 'flexible', sections: false },
+    ],
+    assignments: [
+      {
+        id: 'ps1',
+        kind: 'pset',
+        due: { week: 2, day: 'Fri' },
+        weight: 1,
+        estHours: 4,
+        dependsOnSessions: [],
+        coversSessions: [],
+        stages: [],
+        notes: [],
+      },
+    ],
+  }
+  const academic = { saveSeed: 'seed-1', term, syllabi: new Map([['cs50', syllabus]]) }
+  const enrol = { type: 'enrol_course' as const, term: 'fall2027', courseCode: 'cs50' }
+  const day = (date: string, placements: Placement[]) => ({ type: 'plan_day' as const, date, placements })
+  const revising = (halves: number, target = 'cs50') => [
+    p(firstHalfOf(2), halves, 'revise', target),
+    p(firstHalfOf(9), 4, 'bed'),
+  ]
+
+  it('banks a course-targeted band into the ledger and levels the tags it demands', () => {
+    const s = replay([enrol, day('2027-08-30', revising(4))], ACTS, RULES, academic)
+    assert.equal(s.coursework.items['cs50/ps1']?.hours, 2.3, 'the curve’s hours, not the halves')
+    assert.ok(s.levelHours.code > 0, 'and the same hours reached the level ledger')
+    assert.deepEqual(s.academicDays.length, 1)
+    assert.deepEqual(s.academicDays[0]?.hoursByCourse, { cs50: 2.3 })
+  })
+
+  it('keeps the two ledgers disjoint rather than double-counting the hour', () => {
+    // `hoursBySubject` is the raw tally the log line prints; a course band is not in it,
+    // because `resolveDay` only routes a target it recognises as a tag. This is the assertion
+    // that says the two loops in `replay` are reading different halves of the same day.
+    const s = replay([enrol, day('2027-08-30', revising(4))], ACTS, RULES, academic)
+    assert.equal(s.hoursBySubject.code, 0)
+    assert.equal(s.days[0]?.hours.total, 2.3, 'the day still banked them')
+  })
+
+  it('folds nothing for a course you are not in, and starts folding once you file it', () => {
+    const before = replay([day('2027-08-30', revising(4))], ACTS, RULES, academic)
+    assert.deepEqual(before.coursework.items, {}, 'not enrolled: no items, not even at zero')
+    assert.equal(before.levelHours.code, 0)
+
+    const after = replay([day('2027-08-30', revising(4)), enrol, day('2027-08-31', revising(4))], ACTS, RULES, academic)
+    assert.equal(after.coursework.items['cs50/ps1']?.hours, 2.3, 'only the day after filing it')
+  })
+
+  it('grades the pset on its due date and reports the course grade', () => {
+    // Week 2 Friday is 2027-09-10, and the last afternoon before it still counts toward it.
+    // Two of these days clear the four-hour estimate with room to spare — deliberately, since
+    // these plans skip lunch and the hunger multiplier is quietly taking a cut of the later
+    // bands. `startingLevels: code 2` meets the course's demands, so the estimate is honest.
+    const actions = [enrol, day('2027-09-09', revising(6)), day('2027-09-10', revising(6))]
+    const s = replay(actions, ACTS, RULES, { ...academic, startingLevels: { ...zeroLevels(), code: 2 } })
+    const item = s.coursework.items['cs50/ps1']
+    assert.equal(item?.percentage, 100)
+    assert.equal(item?.cards, undefined, 'a pset never draws')
+    assert.deepEqual(courseGrade(s.coursework, 'cs50'), { percentage: 100, weightGraded: 1 })
+    assert.deepEqual(s.academicDays[1]?.graded, ['cs50/ps1'])
+  })
+
+  it('is still a fold, and without the context behaves exactly as Tier 1 did', () => {
+    const actions = [enrol, day('2027-08-30', revising(4)), day('2027-08-31', revising(4))]
+    assert.deepEqual(replay(actions, ACTS, RULES, academic), replay(actions, ACTS, RULES, academic))
+
+    const bare = replay(actions, ACTS, RULES)
+    assert.deepEqual(bare.coursework, { items: {}, attended: {} })
+    assert.deepEqual(bare.academicDays, [])
+    assert.deepEqual(bare.days, replay(actions, ACTS, RULES, academic).days, 'the day is unchanged')
+  })
+
+  it('records attendance from the placement, so skipping is deleting the band', () => {
+    const seat = replay(
+      [enrol, day('2027-08-30', [p(firstHalfOf(1), 3, 'attend_class', 'cs50'), p(firstHalfOf(9), 4, 'bed')])],
+      ACTS,
+      RULES,
+      academic,
+    )
+    assert.deepEqual(seat.coursework.attended.cs50, ['2027-08-30'])
+    assert.deepEqual(seat.academicDays[0]?.attended, ['cs50'])
+
+    const skipped = replay([enrol, day('2027-08-30', revising(4))], ACTS, RULES, academic)
+    assert.deepEqual(skipped.coursework.attended, {})
   })
 })
 

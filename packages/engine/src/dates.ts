@@ -93,3 +93,25 @@ export function addDays(dt: CalDate, n: number): CalDate {
 
 export const toISO = ({ y, m, d }: CalDate): string =>
   `${String(y).padStart(4, '0')}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+
+/**
+ * Signed day difference, `to - from`. Stepping rather than epoch math, same rule as `addDays`
+ * — and bounded by the question rather than by a guard, since every caller is asking about two
+ * dates inside one term (§4.4's "is this due within 48 hours") or at worst one degree. Four
+ * years is ~1,460 iterations of an integer compare.
+ *
+ * Lexicographic comparison decides the direction, which is exactly correct for zero-padded
+ * `YYYY-MM-DD` and is why `toISO` pads the year to four digits.
+ */
+export function daysBetween(from: string, to: string): number {
+  if (from === to) return 0
+  const backwards = to < from
+  const target = backwards ? from : to
+  let cur = parseDate(backwards ? to : from)
+  let n = 0
+  while (toISO(cur) !== target) {
+    cur = nextDay(cur)
+    n++
+  }
+  return backwards ? -n : n
+}
