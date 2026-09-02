@@ -592,8 +592,10 @@ export function buildApp({ content, dbFile }: ServerOptions): {
   /**
    * The study plan: every track solved against this save's card (GAME_DESIGN §9.2/§9.3).
    *
-   * Runs all seven tracks, always — that is how the planner can tell you a concentration you
-   * were not thinking about just closed (ARCHITECTURE §3.4), and seven tracks is microseconds.
+   * Runs every track, always — that is how the planner can tell you a concentration you were not
+   * thinking about just closed (ARCHITECTURE §3.4). It was seven tracks when this was written and
+   * it is forty now, which is still microseconds; the cost that grew is the response, not the
+   * solve, and that is a payload problem rather than a reason to solve fewer.
    *
    * `taken` is every course filed in any term, not just the shopping term: `enrolled` is flat
    * across terms by design (§4.6), and a requirement does not care which term satisfied it.
