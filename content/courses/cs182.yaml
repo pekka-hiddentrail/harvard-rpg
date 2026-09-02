@@ -1,0 +1,57 @@
+# CS 182 — Artificial Intelligence. The linked official course page currently returns HTTP 503,
+# so its detailed schedule, assessments, and logistics cannot be transcribed. The course
+# identity follows the supplied URL; all other fields are authored estimates for the game.
+id: "182"
+courseCode: "cs182"
+title: "CS 182: Artificial Intelligence"
+demand: 9
+workloadHint: "~12-15h/week"
+demands:
+  math: 2
+  code: 2
+  proof: 1
+meetings:
+  - { type: lecture, days: [Tue, Thu], pattern: TTh, size: 80, attendance: expected }
+officeHours:
+  - { type: officeHour, length: free, booked: false, days: [Mon, Wed], time: "14:00-16:00", location: "Maxwell Dworkin", demand: 8 }
+sessions:
+  - { n: 1, topic: "Course orientation and foundations of artificial intelligence" }
+  - { n: 2, topic: "Intelligent agents and problem formulation" }
+  - { n: 3, topic: "Uninformed search" }
+  - { n: 4, topic: "Heuristic search and A*" }
+  - { n: 5, topic: "Local search and optimization" }
+  - { n: 6, topic: "Constraint satisfaction problems" }
+  - { n: 7, topic: "Adversarial search and games" }
+  - { n: 8, topic: "Reasoning under uncertainty" }
+  - { n: 9, topic: "Probability review and Bayesian networks" }
+  - { n: 10, topic: "Probabilistic inference" }
+  - { n: 11, topic: "Markov models and sequential decision making" }
+  - { n: 12, topic: "Review for Midterm" }
+  - { n: 13, topic: "Supervised machine learning" }
+  - { n: 14, topic: "Linear models and generalization" }
+  - { n: 15, topic: "Neural networks" }
+  - { n: 16, topic: "Reinforcement learning" }
+  - { n: 17, topic: "Planning" }
+  - { n: 18, topic: "Natural language processing" }
+  - { n: 19, topic: "Computer vision" }
+  - { n: 20, topic: "Robotics" }
+  - { n: 21, topic: "Knowledge representation" }
+  - { n: 22, topic: "AI safety, fairness, and ethics" }
+  - { n: 23, topic: "Integrated AI systems" }
+  - { n: 24, topic: "Project workshop" }
+  - { n: 25, topic: "Course synthesis" }
+  - { n: 26, topic: "Final review" }
+assignments:
+  # The inaccessible source supplies no assessment policy. This programming assignment,
+  # project, and examination structure is authored; the final pset absorbs rounding.
+  - { id: ps1, title: "Problem Set 1: Search", kind: pset, assigned: { week: 1, session: 1 }, due: { week: 2, session: 1 }, estHours: 9, weight: 0.05, dependsOnSessions: [1, 2] }
+  - { id: ps2, title: "Problem Set 2: Constraint Satisfaction", kind: pset, assigned: { week: 2, session: 1 }, due: { week: 3, session: 1 }, estHours: 9, weight: 0.05, dependsOnSessions: [3, 4] }
+  - { id: ps3, title: "Problem Set 3: Probabilistic Reasoning", kind: pset, assigned: { week: 3, session: 1 }, due: { week: 4, session: 1 }, estHours: 9, weight: 0.05, dependsOnSessions: [5, 6] }
+  - { id: ps4, title: "Problem Set 4: Bayesian Inference", kind: pset, assigned: { week: 4, session: 1 }, due: { week: 5, session: 1 }, estHours: 9, weight: 0.05, dependsOnSessions: [7, 8] }
+  - { id: ps5, title: "Problem Set 5: Machine Learning", kind: pset, assigned: { week: 5, session: 1 }, due: { week: 6, session: 1 }, estHours: 9, weight: 0.05, dependsOnSessions: [9, 10] }
+  - { id: ps6, title: "Problem Set 6: Reinforcement Learning", kind: pset, assigned: { week: 6, session: 1 }, due: { week: 7, session: 1 }, estHours: 9, weight: 0.05, dependsOnSessions: [11, 12] }
+  - { id: ps7, title: "Problem Set 7: Planning", kind: pset, assigned: { week: 7, session: 1 }, due: { week: 8, session: 1 }, estHours: 9, weight: 0.05, dependsOnSessions: [13, 14] }
+  - { id: ps8, title: "Problem Set 8: Ethics and Applications", kind: pset, assigned: { week: 8, session: 1 }, due: { week: 9, session: 1 }, estHours: 9, weight: 0.05, dependsOnSessions: [15, 16] }
+  - { id: ai_project, title: "Artificial Intelligence Project", kind: project, assigned: { week: 9, session: 1 }, due: { week: 14, day: Fri }, weight: 0.15, brackets: { moderate: 15, narrow: 20 } }
+  - { id: midterm, title: "Midterm Exam", kind: exam, date: { week: 8, day: Thu }, weight: 0.20, coversSessions: ["1-12"] }
+  - { id: final, title: "Final Exam", kind: final, date: { week: 16, day: Wed }, weight: 0.25, coversSessions: ["1-26"] }

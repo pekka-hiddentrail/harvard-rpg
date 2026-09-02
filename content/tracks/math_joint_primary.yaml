@@ -98,6 +98,7 @@ requirements:
     from: [math_expository_paper]
     notes:
       - "Same as the non-joint Mathematics track. Not a course."
+      - "A Math 99r tutorial's final paper can satisfy this requirement."
 
   - id: thesis
     label: "Senior thesis"
@@ -107,3 +108,4 @@ requirements:
     notes:
       - "Mandatory here, unlike the non-joint track's optional thesis — full Math Honors requirements apply when Math is the primary field."
       - "It must also be acceptable to the allied department, which is a constraint no file here can express."
+      - "The Mathematics Department may display an electronic thesis online with the author's voluntary permission; PDF is an accepted submission format."

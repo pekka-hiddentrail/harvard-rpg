@@ -1,0 +1,59 @@
+# CS 1810 — Machine Learning. Course logistics, prerequisites, topics, staff, homework,
+# assessment structure, and grading weights are from the official 2026 course site. The
+# Google-hosted detailed schedule requires sign-in, so session-level sequencing is an authored
+# ordering of the published topic list. Fall 2026's TTh calendar has 26 non-holiday meetings.
+id: "180"
+courseCode: "cs1810"
+title: "CS 1810: Machine Learning"
+demand: 9
+workloadHint: "~12-15h/week"
+demands:
+  math: 2
+  stats: 2
+  code: 2
+meetings:
+  - { type: lecture, days: [Tue, Thu], time: "09:45-11:00", size: 100, attendance: expected }
+officeHours:
+  # The syllabus says office hours rotate between the SEC and Cambridge, with exact times on
+  # the sign-in-gated schedule; this is an authored schedulable representation.
+  - { type: officeHour, length: free, booked: false, days: [Mon, Wed], time: "14:00-16:00", location: "SEC / Cambridge", demand: 8 }
+sessions:
+  - { n: 1, topic: "Course orientation and machine learning foundations" }
+  - { n: 2, topic: "Probability review and probabilistic reasoning" }
+  - { n: 3, topic: "Supervised learning and generalization" }
+  - { n: 4, topic: "Linear regression" }
+  - { n: 5, topic: "Regularization and bias-variance tradeoff" }
+  - { n: 6, topic: "Logistic regression and classification" }
+  - { n: 7, topic: "Maximum likelihood estimation" }
+  - { n: 8, topic: "Gradient-based optimization" }
+  - { n: 9, topic: "Neural networks" }
+  - { n: 10, topic: "Backpropagation and representation learning" }
+  - { n: 11, topic: "Support vector machines" }
+  - { n: 12, topic: "Kernel methods" }
+  - { n: 13, topic: "Midterm review" }
+  - { n: 14, topic: "Ensemble methods and boosting" }
+  - { n: 15, topic: "Unsupervised learning and clustering" }
+  - { n: 16, topic: "Dimensionality reduction" }
+  - { n: 17, topic: "Graphical models" }
+  - { n: 18, topic: "Inference methods" }
+  - { n: 19, topic: "Hidden Markov models" }
+  - { n: 20, topic: "Sequential decision making" }
+  - { n: 21, topic: "Reinforcement learning" }
+  - { n: 22, topic: "Machine learning ethics" }
+  - { n: 23, topic: "Robustness and responsible deployment" }
+  - { n: 24, topic: "Applied machine learning with real data" }
+  - { n: 25, topic: "Course synthesis" }
+  - { n: 26, topic: "Final review" }
+assignments:
+  # HW0 (4%) and six homework assignments (11% each) have theory and Python components.
+  # Homeworks are due at midnight on Gradescope; students have six late days, at most two per
+  # assignment. The dates are Fall 2026 estimates because the detailed calendar is gated.
+  - { id: hw0, title: "Homework 0: Prerequisite Review", kind: pset, assigned: { week: 1, session: 1 }, due: { week: 2, day: Mon }, estHours: 5, weight: 0.04, dependsOnSessions: [1, 2] }
+  - { id: hw1, title: "Homework 1: Supervised Learning", kind: pset, assigned: { week: 2, session: 1 }, due: { week: 3, day: Mon }, estHours: 10, weight: 0.11, dependsOnSessions: [3, 4] }
+  - { id: hw2, title: "Homework 2: Classification", kind: pset, assigned: { week: 4, session: 1 }, due: { week: 5, day: Mon }, estHours: 10, weight: 0.11, dependsOnSessions: [5, 6, 7] }
+  - { id: hw3, title: "Homework 3: Neural Networks", kind: pset, assigned: { week: 6, session: 1 }, due: { week: 7, day: Mon }, estHours: 10, weight: 0.11, dependsOnSessions: [8, 9, 10] }
+  - { id: hw4, title: "Homework 4: Kernels and Ensembles", kind: pset, assigned: { week: 8, session: 1 }, due: { week: 9, day: Mon }, estHours: 10, weight: 0.11, dependsOnSessions: [14, 15] }
+  - { id: hw5, title: "Homework 5: Probabilistic Models", kind: pset, assigned: { week: 10, session: 1 }, due: { week: 11, day: Mon }, estHours: 10, weight: 0.11, dependsOnSessions: [16, 17, 18] }
+  - { id: hw6, title: "Homework 6: Reinforcement Learning", kind: pset, assigned: { week: 12, session: 1 }, due: { week: 14, day: Mon }, estHours: 10, weight: 0.11, dependsOnSessions: [19, 20, 21] }
+  - { id: midterm, title: "Midterm Exam", kind: exam, date: { week: 8, day: Thu }, weight: 0.15, coversSessions: ["1-13"], notes: ["Closed book; one double-sided letter-size notes sheet permitted."] }
+  - { id: final, title: "Final Exam", kind: final, date: { week: 16, day: Wed }, weight: 0.15, coversSessions: ["1-26"], notes: ["Closed book; one double-sided letter-size notes sheet permitted."] }

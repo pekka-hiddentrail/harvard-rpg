@@ -116,6 +116,7 @@ requirements:
     notes:
       - "A 5-page expository paper on an approved topic, due by end of third year."
       - "Not a course: usually satisfied inside a tutorial (Math 99r), a reading course (Math 91r), or a 100/200-level course you are already taking."
+      - "The Department confirms that a Math 99r tutorial's final paper can count toward this requirement."
 
   - id: thesis
     label: "Senior thesis"
@@ -127,6 +128,7 @@ requirements:
       - "Not a course. High or Highest Honors requires it: original exposition, no new theorems needed, any pure or applied topic not directly covered by coursework."
       - "Straight Honors is thesis OR four extra courses beyond the required twelve — an either/or the schema cannot express."
       - "The department urges everyone to write one anyway, calling it better research preparation than coursework alone."
+      - "Optional online display: send an electronic thesis to the Department; preferred formats are DVI, PostScript, or PDF, with LaTeX or Word source also accepted."
 
 courseHints:
   - id: mathma

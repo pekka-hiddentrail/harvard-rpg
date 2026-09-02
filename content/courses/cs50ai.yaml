@@ -1,0 +1,40 @@
+# CS50 AI — Introduction to Artificial Intelligence with Python. Course description,
+# prerequisites, seven-project structure, and topic sequence are from CS50 AI 2023.
+# It is an asynchronous seven-week OpenCourseWare course, so the weekly Fall 2026 sessions
+# and workshop/review meetings are authored adaptations for this game's term calendar.
+id: "081"
+courseCode: "cs50ai"
+title: "CS50 AI: Introduction to Artificial Intelligence with Python"
+demand: 8
+workloadHint: "~10-12h/week"
+demands:
+  math: 1
+  code: 3
+meetings:
+  - { type: tutorial, days: [Wed], pattern: W, size: 30, attendance: flexible }
+officeHours:
+  - { type: officeHour, length: free, booked: false, days: [Mon, Thu], time: "16:00-18:00", location: "Online", demand: 7 }
+sessions:
+  - { n: 1, topic: "Introduction to artificial intelligence and Python tools" }
+  - { n: 2, topic: "Search" }
+  - { n: 3, topic: "Knowledge" }
+  - { n: 4, topic: "Uncertainty" }
+  - { n: 5, topic: "Optimization" }
+  - { n: 6, topic: "Learning" }
+  - { n: 7, topic: "Neural networks" }
+  - { n: 8, topic: "Language and large language models" }
+  - { n: 9, topic: "Search and knowledge project workshop" }
+  - { n: 10, topic: "Uncertainty and optimization project workshop" }
+  - { n: 11, topic: "Learning and neural networks project workshop" }
+  - { n: 12, topic: "Language project workshop" }
+  - { n: 13, topic: "Course synthesis and portfolio review" }
+assignments:
+  # CS50 AI publishes seven projects, one for each week. Exact due dates and weights are not
+  # stated for the OpenCourseWare version, so equal weights and Fall-calendar dates are authored.
+  - { id: project0, title: "Project 0: Search", kind: pset, assigned: { week: 1, session: 1 }, due: { week: 3, session: 1 }, estHours: 8, weight: 0.1429, dependsOnSessions: [1, 2] }
+  - { id: project1, title: "Project 1: Knowledge", kind: pset, assigned: { week: 3, session: 1 }, due: { week: 5, session: 1 }, estHours: 8, weight: 0.1429, dependsOnSessions: [3] }
+  - { id: project2, title: "Project 2: Uncertainty", kind: pset, assigned: { week: 5, session: 1 }, due: { week: 7, session: 1 }, estHours: 8, weight: 0.1429, dependsOnSessions: [4] }
+  - { id: project3, title: "Project 3: Optimization", kind: pset, assigned: { week: 7, session: 1 }, due: { week: 9, session: 1 }, estHours: 8, weight: 0.1429, dependsOnSessions: [5] }
+  - { id: project4, title: "Project 4: Learning", kind: pset, assigned: { week: 9, session: 1 }, due: { week: 11, session: 1 }, estHours: 8, weight: 0.1429, dependsOnSessions: [6] }
+  - { id: project5, title: "Project 5: Neural Networks", kind: pset, assigned: { week: 11, session: 1 }, due: { week: 12, session: 1 }, estHours: 8, weight: 0.1429, dependsOnSessions: [7] }
+  - { id: project6, title: "Project 6: Language", kind: pset, assigned: { week: 12, session: 1 }, due: { week: 14, session: 1 }, estHours: 8, weight: 0.1426, dependsOnSessions: [8, 9, 10, 11, 12, 13] }
