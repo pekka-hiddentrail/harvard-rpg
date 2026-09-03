@@ -55,8 +55,9 @@ sessions:
 assignments:
   # The directory has no assessment policy. These problem sets, computational project, and
   # examination weights are authored estimates; the final set absorbs rounding.
-  - { id: ps1, title: "Problem Set 1", kind: pset, assigned: { week: 1, session: 1 }, due: { week: 2, session: 3 }, estHours: 7, weight: 0.025, dependsOnSessions: [1, 2, 3] }
-  - { id: ps2, title: "Problem Set 2", kind: pset, assigned: { week: 2, session: 3 }, due: { week: 3, session: 3 }, estHours: 7, weight: 0.025, dependsOnSessions: [4, 5, 6] }
+  # Week 2 is short — Labor Day takes the Monday — so its Friday is session 2, not session 3.
+  - { id: ps1, title: "Problem Set 1", kind: pset, assigned: { week: 1, session: 1 }, due: { week: 2, session: 2 }, estHours: 7, weight: 0.025, dependsOnSessions: [1, 2, 3] }
+  - { id: ps2, title: "Problem Set 2", kind: pset, assigned: { week: 2, session: 2 }, due: { week: 3, session: 3 }, estHours: 7, weight: 0.025, dependsOnSessions: [4, 5, 6] }
   - { id: ps3, title: "Problem Set 3", kind: pset, assigned: { week: 3, session: 3 }, due: { week: 4, session: 3 }, estHours: 7, weight: 0.025, dependsOnSessions: [7, 8, 9] }
   - { id: ps4, title: "Problem Set 4", kind: pset, assigned: { week: 4, session: 3 }, due: { week: 5, session: 3 }, estHours: 7, weight: 0.025, dependsOnSessions: [10, 11, 12] }
   - { id: ps5, title: "Problem Set 5", kind: pset, assigned: { week: 5, session: 3 }, due: { week: 6, session: 3 }, estHours: 7, weight: 0.025, dependsOnSessions: [13, 14, 15] }

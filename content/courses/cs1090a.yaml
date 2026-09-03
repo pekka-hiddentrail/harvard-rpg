@@ -43,12 +43,14 @@ sessions:
   - { n: 25, topic: "Course synthesis" }
   - { n: 26, topic: "Final project presentations" }
 assignments:
+  # Authored, like the rest of the logistics: 30% on the six problem sets, 30% on the project,
+  # 20% each on the two exams. It has to sum to 1.0, so the project carries the odd 5%.
   - { id: ps1, title: "Problem Set 1: Data Wrangling", kind: pset, assigned: { week: 1, session: 1 }, due: { week: 2, session: 1 }, estHours: 7, weight: 0.05, dependsOnSessions: [1, 2] }
   - { id: ps2, title: "Problem Set 2: Visualization", kind: pset, assigned: { week: 2, session: 1 }, due: { week: 3, session: 1 }, estHours: 7, weight: 0.05, dependsOnSessions: [3, 4] }
   - { id: ps3, title: "Problem Set 3: Inference", kind: pset, assigned: { week: 3, session: 1 }, due: { week: 4, session: 1 }, estHours: 7, weight: 0.05, dependsOnSessions: [5, 6] }
   - { id: ps4, title: "Problem Set 4: Regression", kind: pset, assigned: { week: 4, session: 1 }, due: { week: 5, session: 1 }, estHours: 7, weight: 0.05, dependsOnSessions: [7, 8] }
   - { id: ps5, title: "Problem Set 5: Classification", kind: pset, assigned: { week: 5, session: 1 }, due: { week: 6, session: 1 }, estHours: 7, weight: 0.05, dependsOnSessions: [9, 10] }
   - { id: ps6, title: "Problem Set 6: Machine Learning", kind: pset, assigned: { week: 6, session: 1 }, due: { week: 7, session: 1 }, estHours: 7, weight: 0.05, dependsOnSessions: [11, 12] }
-  - { id: data_project, title: "Data Science Project", kind: project, assigned: { week: 8, session: 1 }, due: { week: 14, day: Fri }, weight: 0.25, brackets: { moderate: 15, narrow: 20 } }
+  - { id: data_project, title: "Data Science Project", kind: project, assigned: { week: 8, session: 1 }, due: { week: 14, day: Fri }, weight: 0.30, brackets: { moderate: 15, narrow: 20 } }
   - { id: midterm, title: "Midterm Exam", kind: exam, date: { week: 8, day: Thu }, weight: 0.20, coversSessions: ["1-12"] }
   - { id: final, title: "Final Exam", kind: final, date: { week: 16, day: Wed }, weight: 0.20, coversSessions: ["1-26"] }

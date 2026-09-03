@@ -45,14 +45,16 @@ sessions:
   - { n: 26, topic: "Course synthesis and reflection" }
 assignments:
   # The directory explicitly says activities replace lectures and exams but gives no weights.
-  # Individual reflections and team projects are authored estimates for the game.
-  - { id: investigation1, title: "Kinematics Investigation", kind: pset, assigned: { week: 1, session: 1 }, due: { week: 3, session: 1 }, estHours: 7, weight: 0.08, dependsOnSessions: [1, 2, 3, 4] }
-  - { id: investigation2, title: "Forces and Energy Investigation", kind: pset, assigned: { week: 3, session: 1 }, due: { week: 5, session: 1 }, estHours: 7, weight: 0.08, dependsOnSessions: [5, 6, 7, 8] }
-  - { id: investigation3, title: "Momentum Investigation", kind: pset, assigned: { week: 5, session: 1 }, due: { week: 7, session: 1 }, estHours: 7, weight: 0.08, dependsOnSessions: [9, 10, 11, 12] }
-  - { id: investigation4, title: "Mechanics Modeling Investigation", kind: pset, assigned: { week: 7, session: 1 }, due: { week: 9, session: 1 }, estHours: 7, weight: 0.08, dependsOnSessions: [13, 14, 15, 16] }
-  - { id: investigation5, title: "Waves Investigation", kind: pset, assigned: { week: 9, session: 1 }, due: { week: 11, session: 1 }, estHours: 7, weight: 0.08, dependsOnSessions: [17, 18, 19, 20] }
+  # Individual reflections and team projects are authored estimates for the game: 45% on the six
+  # investigations, 45% on the three team projects, 10% on collaboration — summing to 1.0, which
+  # every course has to do because a course's weights are its grade (GAME_DESIGN §4.1).
+  - { id: investigation1, title: "Kinematics Investigation", kind: pset, assigned: { week: 1, session: 1 }, due: { week: 3, session: 1 }, estHours: 7, weight: 0.07, dependsOnSessions: [1, 2, 3, 4] }
+  - { id: investigation2, title: "Forces and Energy Investigation", kind: pset, assigned: { week: 3, session: 1 }, due: { week: 5, session: 1 }, estHours: 7, weight: 0.07, dependsOnSessions: [5, 6, 7, 8] }
+  - { id: investigation3, title: "Momentum Investigation", kind: pset, assigned: { week: 5, session: 1 }, due: { week: 7, session: 1 }, estHours: 7, weight: 0.07, dependsOnSessions: [9, 10, 11, 12] }
+  - { id: investigation4, title: "Mechanics Modeling Investigation", kind: pset, assigned: { week: 7, session: 1 }, due: { week: 9, session: 1 }, estHours: 7, weight: 0.07, dependsOnSessions: [13, 14, 15, 16] }
+  - { id: investigation5, title: "Waves Investigation", kind: pset, assigned: { week: 9, session: 1 }, due: { week: 11, session: 1 }, estHours: 7, weight: 0.07, dependsOnSessions: [17, 18, 19, 20] }
   - { id: investigation6, title: "Applied Physics Investigation", kind: pset, assigned: { week: 11, session: 1 }, due: { week: 14, session: 1 }, estHours: 7, weight: 0.10, dependsOnSessions: [21, 22, 23, 24] }
-  - { id: mechanics_project, title: "Mechanics Team Project", kind: project, assigned: { week: 4, session: 1 }, due: { week: 8, day: Fri }, weight: 0.20, brackets: { moderate: 12, narrow: 18 } }
-  - { id: waves_project, title: "Waves Team Project", kind: project, assigned: { week: 9, session: 1 }, due: { week: 14, day: Fri }, weight: 0.20, brackets: { moderate: 12, narrow: 18 } }
-  - { id: final_project, title: "Final Physics Project", kind: project, assigned: { week: 11, session: 1 }, due: { week: 15, day: Mon }, weight: 0.20, brackets: { moderate: 15, narrow: 20 } }
+  - { id: mechanics_project, title: "Mechanics Team Project", kind: project, assigned: { week: 4, session: 1 }, due: { week: 8, day: Fri }, weight: 0.15, brackets: { moderate: 12, narrow: 18 } }
+  - { id: waves_project, title: "Waves Team Project", kind: project, assigned: { week: 9, session: 1 }, due: { week: 14, day: Fri }, weight: 0.15, brackets: { moderate: 12, narrow: 18 } }
+  - { id: final_project, title: "Final Physics Project", kind: project, assigned: { week: 11, session: 1 }, due: { week: 15, day: Mon }, weight: 0.15, brackets: { moderate: 15, narrow: 20 } }
   - { id: collaboration, title: "Collaboration and Self-Directed Learning", kind: pset, due: { week: 14, day: Fri }, estHours: 3, weight: 0.10 }

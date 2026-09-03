@@ -68,5 +68,6 @@ assignments:
   - { id: ps11, title: "Problem Set 11", kind: pset, assigned: { week: 11, session: 1 }, due: { week: 12, day: Wed }, estHours: 8, weight: 0.025, dependsOnSessions: [31, 32, 33] }
   - { id: ps12, title: "Problem Set 12", kind: pset, assigned: { week: 12, session: 1 }, due: { week: 14, day: Wed }, estHours: 8, weight: 0.025, dependsOnSessions: [34, 35, 36] }
   - { id: reading_quizzes, title: "Pre-Class Reading Quizzes", kind: pset, due: { week: 14, day: Fri }, estHours: 3, weight: 0.05, notes: ["Aggregates the required checkbox quizzes before each class."] }
-  - { id: midterm, title: "Midterm Exam", kind: exam, date: { week: 7, session: 3 }, weight: 0.25, coversSessions: ["1-18"] }
+  # Week 7 is short — the October holiday takes the Monday — so its Friday is session 2, not 3.
+  - { id: midterm, title: "Midterm Exam", kind: exam, date: { week: 7, session: 2 }, weight: 0.25, coversSessions: ["1-18"] }
   - { id: final, title: "Final Exam", kind: final, date: { week: 16, day: Wed }, time: "09:00-12:00", weight: 0.40, coversSessions: ["1-36"] }

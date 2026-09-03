@@ -55,7 +55,9 @@ assignments:
   - { id: hw10, title: "Homework 10", kind: pset, assigned: { week: 10, session: 1 }, due: { week: 11, session: 1 }, estHours: 7, weight: 0.0333, dependsOnSessions: [18, 19] }
   - { id: hw11, title: "Homework 11", kind: pset, assigned: { week: 11, session: 1 }, due: { week: 12, session: 1 }, estHours: 7, weight: 0.0333, dependsOnSessions: [20, 21] }
   - { id: hw12, title: "Homework 12", kind: pset, assigned: { week: 12, session: 1 }, due: { week: 14, session: 1 }, estHours: 7, weight: 0.0337, dependsOnSessions: [22, 23] }
-  - { id: midterm_in_class, title: "Midterm: In-Class Part", kind: exam, date: { week: 7, session: 2 }, weight: 0.15, coversSessions: ["1-11"] }
+  # This one meets Mon/Wed, and the October holiday takes week 7's Monday — so the Wednesday
+  # the midterm was authored for is that week's session 1, not session 2.
+  - { id: midterm_in_class, title: "Midterm: In-Class Part", kind: exam, date: { week: 7, session: 1 }, weight: 0.15, coversSessions: ["1-11"] }
   - { id: midterm_take_home, title: "Midterm: Take-Home Part", kind: essay, due: { week: 8, day: Fri }, weight: 0.15, coversSessions: ["1-11"] }
   - { id: final_in_class, title: "Final: In-Class Part", kind: final, date: { week: 14, session: 2 }, weight: 0.15, coversSessions: ["1-23"] }
   - { id: final_paper, title: "Final Paper", kind: essay, due: { week: 16, day: Wed }, weight: 0.15, coversSessions: ["1-23"] }

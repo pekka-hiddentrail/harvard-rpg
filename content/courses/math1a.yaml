@@ -56,13 +56,15 @@ assignments:
   # The course site says five homework problems are due every class and homework is 30%
   # of the grade. The game groups that cadence into twelve weekly sets; individual hours
   # and weights are authored estimates because the site does not publish them.
-  - { id: ps1, title: "Problem Set 1", kind: pset, assigned: { week: 1, session: 1 }, due: { week: 2, session: 3 }, estHours: 7, weight: 0.025, dependsOnSessions: [1, 2, 3] }
-  - { id: ps2, title: "Problem Set 2", kind: pset, assigned: { week: 2, session: 3 }, due: { week: 3, session: 3 }, estHours: 7, weight: 0.025, dependsOnSessions: [4, 5, 6] }
+  # Week 2 is short — Labor Day takes the Monday — so its Friday is session 2, not session 3.
+  - { id: ps1, title: "Problem Set 1", kind: pset, assigned: { week: 1, session: 1 }, due: { week: 2, session: 2 }, estHours: 7, weight: 0.025, dependsOnSessions: [1, 2, 3] }
+  - { id: ps2, title: "Problem Set 2", kind: pset, assigned: { week: 2, session: 2 }, due: { week: 3, session: 3 }, estHours: 7, weight: 0.025, dependsOnSessions: [4, 5, 6] }
   - { id: ps3, title: "Problem Set 3", kind: pset, assigned: { week: 3, session: 3 }, due: { week: 4, session: 3 }, estHours: 7, weight: 0.025, dependsOnSessions: [7, 8, 9] }
   - { id: ps4, title: "Problem Set 4", kind: pset, assigned: { week: 4, session: 3 }, due: { week: 5, session: 2 }, estHours: 7, weight: 0.025, dependsOnSessions: [10, 11, 12] }
   - { id: ps5, title: "Problem Set 5", kind: pset, assigned: { week: 5, session: 2 }, due: { week: 6, session: 3 }, estHours: 7, weight: 0.025, dependsOnSessions: [13, 14, 15] }
-  - { id: ps6, title: "Problem Set 6", kind: pset, assigned: { week: 6, session: 3 }, due: { week: 7, session: 3 }, estHours: 7, weight: 0.025, dependsOnSessions: [16, 17, 18] }
-  - { id: ps7, title: "Problem Set 7", kind: pset, assigned: { week: 7, session: 3 }, due: { week: 8, session: 3 }, estHours: 7, weight: 0.025, dependsOnSessions: [19, 20, 21] }
+  # Week 7 is short too — the October holiday takes its Monday — so its Friday is session 2.
+  - { id: ps6, title: "Problem Set 6", kind: pset, assigned: { week: 6, session: 3 }, due: { week: 7, session: 2 }, estHours: 7, weight: 0.025, dependsOnSessions: [16, 17, 18] }
+  - { id: ps7, title: "Problem Set 7", kind: pset, assigned: { week: 7, session: 2 }, due: { week: 8, session: 3 }, estHours: 7, weight: 0.025, dependsOnSessions: [19, 20, 21] }
   - { id: ps8, title: "Problem Set 8", kind: pset, assigned: { week: 8, session: 3 }, due: { week: 9, session: 3 }, estHours: 7, weight: 0.025, dependsOnSessions: [22, 23, 24] }
   - { id: ps9, title: "Problem Set 9", kind: pset, assigned: { week: 9, session: 3 }, due: { week: 10, session: 3 }, estHours: 7, weight: 0.025, dependsOnSessions: [25, 26, 27] }
   - { id: ps10, title: "Problem Set 10", kind: pset, assigned: { week: 10, session: 3 }, due: { week: 11, session: 3 }, estHours: 7, weight: 0.025, dependsOnSessions: [28, 29, 30] }

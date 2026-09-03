@@ -45,14 +45,16 @@ sessions:
   - { n: 26, topic: "Course synthesis and reflection" }
 assignments:
   # Lectures and exams are replaced by interactive activities; the source has no grading
-  # breakdown. Individual investigations and team projects below are authored estimates.
-  - { id: investigation1, title: "Electrostatics Investigation", kind: pset, assigned: { week: 1, session: 1 }, due: { week: 3, session: 1 }, estHours: 7, weight: 0.08, dependsOnSessions: [1, 2, 3, 4] }
-  - { id: investigation2, title: "Circuits Investigation", kind: pset, assigned: { week: 3, session: 1 }, due: { week: 5, session: 1 }, estHours: 7, weight: 0.08, dependsOnSessions: [5, 6, 7] }
-  - { id: investigation3, title: "Electromagnetism Investigation", kind: pset, assigned: { week: 5, session: 1 }, due: { week: 7, session: 1 }, estHours: 7, weight: 0.08, dependsOnSessions: [8, 9, 10, 11] }
-  - { id: investigation4, title: "Geometric Optics Investigation", kind: pset, assigned: { week: 7, session: 1 }, due: { week: 9, session: 1 }, estHours: 7, weight: 0.08, dependsOnSessions: [12, 13, 14, 15] }
-  - { id: investigation5, title: "Wave Optics Investigation", kind: pset, assigned: { week: 9, session: 1 }, due: { week: 11, session: 1 }, estHours: 7, weight: 0.08, dependsOnSessions: [16, 17, 18, 19] }
+  # breakdown. Individual investigations and team projects below are authored estimates, split
+  # 45/45/10 across investigations, team projects and collaboration so that they sum to 1.0 —
+  # the same split APPHY 50A uses, since the two halves are the same course.
+  - { id: investigation1, title: "Electrostatics Investigation", kind: pset, assigned: { week: 1, session: 1 }, due: { week: 3, session: 1 }, estHours: 7, weight: 0.07, dependsOnSessions: [1, 2, 3, 4] }
+  - { id: investigation2, title: "Circuits Investigation", kind: pset, assigned: { week: 3, session: 1 }, due: { week: 5, session: 1 }, estHours: 7, weight: 0.07, dependsOnSessions: [5, 6, 7] }
+  - { id: investigation3, title: "Electromagnetism Investigation", kind: pset, assigned: { week: 5, session: 1 }, due: { week: 7, session: 1 }, estHours: 7, weight: 0.07, dependsOnSessions: [8, 9, 10, 11] }
+  - { id: investigation4, title: "Geometric Optics Investigation", kind: pset, assigned: { week: 7, session: 1 }, due: { week: 9, session: 1 }, estHours: 7, weight: 0.07, dependsOnSessions: [12, 13, 14, 15] }
+  - { id: investigation5, title: "Wave Optics Investigation", kind: pset, assigned: { week: 9, session: 1 }, due: { week: 11, session: 1 }, estHours: 7, weight: 0.07, dependsOnSessions: [16, 17, 18, 19] }
   - { id: investigation6, title: "Optics Applications Investigation", kind: pset, assigned: { week: 11, session: 1 }, due: { week: 14, session: 1 }, estHours: 7, weight: 0.10, dependsOnSessions: [20, 21, 22, 23] }
-  - { id: electromagnetism_project, title: "Electromagnetism Team Project", kind: project, assigned: { week: 4, session: 1 }, due: { week: 8, day: Fri }, weight: 0.20, brackets: { moderate: 12, narrow: 18 } }
-  - { id: optics_project, title: "Optics Team Project", kind: project, assigned: { week: 9, session: 1 }, due: { week: 14, day: Fri }, weight: 0.20, brackets: { moderate: 12, narrow: 18 } }
-  - { id: final_project, title: "Final Physics Project", kind: project, assigned: { week: 11, session: 1 }, due: { week: 15, day: Mon }, weight: 0.20, brackets: { moderate: 15, narrow: 20 } }
+  - { id: electromagnetism_project, title: "Electromagnetism Team Project", kind: project, assigned: { week: 4, session: 1 }, due: { week: 8, day: Fri }, weight: 0.15, brackets: { moderate: 12, narrow: 18 } }
+  - { id: optics_project, title: "Optics Team Project", kind: project, assigned: { week: 9, session: 1 }, due: { week: 14, day: Fri }, weight: 0.15, brackets: { moderate: 12, narrow: 18 } }
+  - { id: final_project, title: "Final Physics Project", kind: project, assigned: { week: 11, session: 1 }, due: { week: 15, day: Mon }, weight: 0.15, brackets: { moderate: 15, narrow: 20 } }
   - { id: collaboration, title: "Collaboration and Self-Directed Learning", kind: pset, due: { week: 14, day: Fri }, estHours: 3, weight: 0.10 }
