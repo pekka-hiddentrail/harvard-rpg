@@ -92,9 +92,10 @@ requirements:
     label: "Computation and the World"
     kind: set
     need: 1
-    from: [cs1200, cs1210, cs32]
+    from: [cs1200, cs1210, cs32, cs1090a]
     notes:
       - "The department's breadth slot — algorithms and their limits, computability, or computational thinking."
+      - "CS 1090a is here because CS Advising's own course-tag directory tags it Computation and the World."
 
   - id: advanced-cs
     label: "Advanced CS"

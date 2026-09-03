@@ -82,7 +82,9 @@ requirements:
     label: "Computation and the World"
     kind: set
     need: 1
-    from: [cs1200, cs1210, cs32]
+    from: [cs1200, cs1210, cs32, cs1090a]
+    notes:
+      - "CS 1090a is here because CS Advising's own course-tag directory tags it Computation and the World."
 
   - id: artificial-intelligence
     label: "Artificial intelligence"
@@ -90,7 +92,7 @@ requirements:
     need: 1
     from: [cs1810, cs182]
     notes:
-      - "Required for honors and not for Basic. Neither CS 1810 nor CS 182 is in content yet, so this is a slot."
+      - "Required for honors and not for Basic. Both CS 1810 and CS 182 are in content, so this is shoppable."
 
   - id: advanced-cs
     label: "Advanced CS"

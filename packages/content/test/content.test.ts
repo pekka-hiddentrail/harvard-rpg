@@ -511,12 +511,17 @@ describe('the tracks, against the courses that actually exist', () => {
     // for yet. The Gen Eds are only claimed when a concentration names one (HBBE names two). The
     // HAA courses are orphaned because HAA publishes no requirement structure and so has no track.
     // LS 50 is the one judgment call in the list: Integrated Science would plausibly count toward
-    // MCB or HBBE, and is left out because neither department's published list names it.
+    // MCB or HBBE, and is left out because neither department's published list names it. CS50 AI is
+    // the other: it is asynchronous OpenCourseWare rather than a Harvard course a concentrator
+    // enrols in, so no requirement group claims it. Its sibling CS 1090a *was* a bug of the
+    // Classics kind — the department tags it Computation and the World and no track said so — and
+    // the census is how that got caught the second time, which is what this test is for.
     const orphaned = content.courses
       .map((c) => c.courseCode)
       .filter((code) => countsToward(code, content.tracks).length === 0)
       .sort()
     assert.deepEqual(orphaned, [
+      'cs50ai',
       'expos20',
       'frsem23c', 'frsem30q', 'frsem56f', 'frsem63x',
       'fysemr64i', 'fysemr65r', 'fysemr65w',
